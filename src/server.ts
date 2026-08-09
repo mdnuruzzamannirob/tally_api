@@ -1,6 +1,7 @@
 import { app } from "./app.js";
+import { env } from "./config/env.js";
 
-const port = Number(process.env.PORT ?? 4000);
+const port = env.PORT;
 
 app.listen(port, () => {
   console.info(`Tally API listening on port ${port}`);
