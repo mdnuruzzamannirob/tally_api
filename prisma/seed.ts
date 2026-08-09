@@ -111,7 +111,7 @@ async function seed(): Promise<void> {
       data: { applicationId: archivedApplication.id, tagId: referralTag.id },
     });
 
-    console.info(`Seeded ${DEMO_EMAIL}. Demo password: ${DEMO_PASSWORD}`);
+    console.info("Development seed completed.");
   } finally {
     await prisma.$disconnect();
   }
