@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseEnvironment } from "../../src/config/env.schema.js";
 
 const developmentEnvironment = {
-  DATABASE_URL: "postgresql://jobtrack:jobtrack@localhost:5433/jobtrack",
+  DATABASE_URL: "postgresql://tally:tally@localhost:5433/tally",
   WEB_APP_URL: "http://localhost:3000",
   ACCESS_TOKEN_SECRET: "a-local-development-secret",
   EMAIL_FROM: "no-reply@tally.local",

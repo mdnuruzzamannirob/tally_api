@@ -1207,7 +1207,7 @@ Seed should create:
 Recommended demo credentials:
 
 ```txt
-email: demo@jobtrack.local
+email: demo@tally.local
 password: password123
 ```
 
@@ -1222,7 +1222,7 @@ Use a separate test database.
 Example:
 
 ```txt
-jobtrack_test
+tally_test
 ```
 
 CI pipeline should:

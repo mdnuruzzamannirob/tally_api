@@ -1,1 +1,1 @@
-CREATE DATABASE jobtrack_test;
+CREATE DATABASE tally_test;

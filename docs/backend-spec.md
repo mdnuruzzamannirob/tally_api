@@ -436,7 +436,7 @@ createdAt
 Cookie name:
 
 ```txt
-jobtrack_rt
+tally_rt
 ```
 
 Settings:
@@ -1754,7 +1754,7 @@ Required headers:
 
 ```txt
 Content-Type: application/json
-Content-Disposition: attachment; filename="jobtrack-backup-YYYY-MM-DD.json"
+Content-Disposition: attachment; filename="tally-backup-YYYY-MM-DD.json"
 ```
 
 Canonical shape:
@@ -2238,7 +2238,7 @@ Repository layer should avoid exposing Prisma internals to controllers.
 NODE_ENV=development
 PORT=4000
 
-DATABASE_URL=postgresql://jobtrack:jobtrack@localhost:5433/jobtrack
+DATABASE_URL=postgresql://tally:tally@localhost:5433/tally
 MIGRATION_DATABASE_URL=
 
 WEB_APP_URL=http://localhost:3000
@@ -2250,7 +2250,7 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 
 EMAIL_PROVIDER=console
 EMAIL_API_KEY=
-EMAIL_FROM=no-reply@jobtrack.local
+EMAIL_FROM=no-reply@tally.local
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -2362,7 +2362,7 @@ Use a separate PostgreSQL test database.
 Example:
 
 ```txt
-jobtrack_test
+tally_test
 ```
 
 CI should:

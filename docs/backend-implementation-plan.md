@@ -16,6 +16,8 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 1 — API Package and Tooling
 - Completed: Phase 2 — Runtime Configuration
 - Completed: Phase 3 — Prisma Foundation
+- Completed: Phase 4 — Core User and Auth Schema
+- Completed: Phase 5 — Application Data Schema
 
 ## Delivery Rules
 
@@ -121,7 +123,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 ### Exit criteria
 
 - Seed works locally and never runs automatically in production.
-- Integration tests can run independently against `jobtrack_test`.
+- Integration tests can run independently against `tally_test`.
 
 ## Phase 7 — HTTP Foundation
 

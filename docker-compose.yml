@@ -1,12 +1,12 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: jobtrack-postgres
+    container_name: tally-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-jobtrack}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobtrack}
-      POSTGRES_DB: ${POSTGRES_DB:-jobtrack}
+      POSTGRES_USER: ${POSTGRES_USER:-tally}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tally}
+      POSTGRES_DB: ${POSTGRES_DB:-tally}
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:

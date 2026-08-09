@@ -189,7 +189,7 @@ Expected local URLs:
 ```txt
 Frontend: http://localhost:3000
 Backend:  http://localhost:4000
-Database: postgresql://jobtrack:jobtrack@localhost:5433/jobtrack
+Database: postgresql://tally:tally@localhost:5433/tally
 ```
 
 ---
@@ -228,21 +228,21 @@ services:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: jobtrack
-      POSTGRES_PASSWORD: jobtrack
-      POSTGRES_DB: jobtrack
+      POSTGRES_USER: tally
+      POSTGRES_PASSWORD: tally
+      POSTGRES_DB: tally
     ports:
       - "5432:5432"
     volumes:
-      - jobtrack_pgdata:/var/lib/postgresql/data
+      - tally_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jobtrack -d jobtrack"]
+      test: ["CMD-SHELL", "pg_isready -U tally -d tally"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  jobtrack_pgdata:
+  tally_pgdata:
 ```
 
 Rules:
@@ -279,8 +279,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 Production example:
 
 ```txt
-NEXT_PUBLIC_API_URL=https://api.jobtrack.example.com/api/v1
-NEXT_PUBLIC_APP_URL=https://jobtrack.example.com
+NEXT_PUBLIC_API_URL=https://api.tally.example.com/api/v1
+NEXT_PUBLIC_APP_URL=https://tally.example.com
 ```
 
 Rules:
@@ -305,7 +305,7 @@ Required variables:
 NODE_ENV=development
 PORT=4000
 
-DATABASE_URL=postgresql://jobtrack:jobtrack@localhost:5433/jobtrack
+DATABASE_URL=postgresql://tally:tally@localhost:5433/tally
 MIGRATION_DATABASE_URL=
 
 WEB_APP_URL=http://localhost:3000
@@ -317,7 +317,7 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 
 EMAIL_PROVIDER=console
 EMAIL_API_KEY=
-EMAIL_FROM=no-reply@jobtrack.local
+EMAIL_FROM=no-reply@tally.local
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -340,7 +340,7 @@ PORT=4000
 DATABASE_URL=postgresql://...
 MIGRATION_DATABASE_URL=postgresql://...privileged-migration-role...
 
-WEB_APP_URL=https://jobtrack.example.com
+WEB_APP_URL=https://tally.example.com
 
 ACCESS_TOKEN_SECRET=...
 
@@ -349,7 +349,7 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 
 EMAIL_PROVIDER=sendgrid
 EMAIL_API_KEY=...
-EMAIL_FROM=no-reply@jobtrack.example.com
+EMAIL_FROM=no-reply@tally.example.com
 
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
@@ -510,19 +510,19 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: jobtrack
-          POSTGRES_PASSWORD: jobtrack
-          POSTGRES_DB: jobtrack_test
+          POSTGRES_USER: tally
+          POSTGRES_PASSWORD: tally
+          POSTGRES_DB: tally_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U jobtrack"
+          --health-cmd "pg_isready -U tally"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://jobtrack:jobtrack@localhost:5432/jobtrack_test
+      DATABASE_URL: postgresql://tally:tally@localhost:5432/tally_test
       ACCESS_TOKEN_SECRET: ci_test_access_secret_at_least_32_bytes
       WEB_APP_URL: http://localhost:3000
 
@@ -810,7 +810,7 @@ Required configuration:
 - Add authorized redirect URI:
 
 ```txt
-https://api.jobtrack.example.com/api/v1/auth/google/callback
+https://api.tally.example.com/api/v1/auth/google/callback
 ```
 
 Local redirect:
@@ -836,7 +836,7 @@ Required configuration:
 - Set callback URL:
 
 ```txt
-https://api.jobtrack.example.com/api/v1/auth/github/callback
+https://api.tally.example.com/api/v1/auth/github/callback
 ```
 
 Local callback:
