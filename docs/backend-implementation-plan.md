@@ -10,6 +10,13 @@ This plan turns the PRD, backend specification, database specification, operatio
 - `web/` is the separate Next.js frontend project and is deployed independently.
 - Cross-repository contracts are versioned API schemas/types, not a pnpm workspace package.
 
+## Implementation Status
+
+- Completed: Phase 0 — API Repository Bootstrap
+- Completed: Phase 1 — API Package and Tooling
+- Completed: Phase 2 — Runtime Configuration
+- Completed: Phase 3 — Prisma Foundation
+
 ## Delivery Rules
 
 - Use `/api/v1` for all API routes.

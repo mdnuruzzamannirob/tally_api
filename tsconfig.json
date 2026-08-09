@@ -11,11 +11,7 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "resolveJsonModule": true,
-    "types": ["node", "vitest/globals"],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "tests", "eslint.config.js", "vitest.config.ts"]
+  "include": ["src", "tests", "eslint.config.js", "vitest.config.ts", "prisma.config.ts"]
 }
