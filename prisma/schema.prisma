@@ -6,3 +6,102 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum OauthProvider {
+  GOOGLE
+  GITHUB
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum LandingPagePreference {
+  DASHBOARD
+  APPLICATIONS
+}
+
+model User {
+  id                   String                 @id @default(cuid())
+  name                 String?
+  email                String                 @unique
+  passwordHash         String?                @map("password_hash")
+  emailVerified        Boolean                @default(false) @map("email_verified")
+  emailVerifiedAt      DateTime?              @db.Timestamptz(3) @map("email_verified_at")
+  theme                ThemePreference        @default(SYSTEM)
+  defaultLandingPage   LandingPagePreference  @default(DASHBOARD) @map("default_landing_page")
+  timeZone             String                 @default("UTC") @map("time_zone")
+  notificationsEnabled Boolean                @default(false) @map("notifications_enabled")
+  createdAt            DateTime               @default(now()) @db.Timestamptz(3) @map("created_at")
+  updatedAt            DateTime               @updatedAt @db.Timestamptz(3) @map("updated_at")
+
+  oauthAccounts       OauthAccount[]
+  refreshTokens       RefreshToken[]
+  verificationTokens  EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model OauthAccount {
+  id                String        @id @default(cuid())
+  userId            String        @map("user_id")
+  provider          OauthProvider
+  providerAccountId String        @map("provider_account_id")
+  email             String?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+model RefreshToken {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  tokenHash      String    @unique @map("token_hash")
+  expiresAt      DateTime  @db.Timestamptz(3) @map("expires_at")
+  revokedAt      DateTime? @db.Timestamptz(3) @map("revoked_at")
+  replacedByHash String?   @map("replaced_by_hash")
+  userAgent      String?   @map("user_agent")
+  ip             String?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @db.Timestamptz(3) @map("expires_at")
+  createdAt DateTime @default(now()) @db.Timestamptz(3) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @db.Timestamptz(3) @map("expires_at")
+  usedAt    DateTime? @db.Timestamptz(3) @map("used_at")
+  createdAt DateTime  @default(now()) @db.Timestamptz(3) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
