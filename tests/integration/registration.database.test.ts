@@ -52,9 +52,10 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
       password: "safe-test-password",
     });
     expect(registration.status).toBe(201);
-    expect(registration.body).toEqual({
+    expect(registration.body).toMatchObject({
       success: true,
       data: { message: "Registration successful. Please verify your email." },
+      meta: { requestId: expect.any(String) },
     });
 
     const user = await prisma.user.findUniqueOrThrow({ where: { email: "person@example.test" } });
@@ -73,9 +74,10 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
       .post("/api/v1/auth/verify-email")
       .send({ token: sentEmail.token });
     expect(verification.status).toBe(200);
-    expect(verification.body).toEqual({
+    expect(verification.body).toMatchObject({
       success: true,
       data: { message: "Email verified successfully" },
+      meta: { requestId: expect.any(String) },
     });
 
     const verifiedUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
@@ -111,6 +113,10 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
       .post("/api/v1/auth/resend-verification")
       .send({ email: "unknown@example.test" });
     expect(unknownAccount.status).toBe(200);
-    expect(unknownAccount.body).toEqual(resend.body);
+    expect(unknownAccount.body).toMatchObject({
+      success: true,
+      message: resend.body.message,
+      data: resend.body.data,
+    });
   });
 });

@@ -16,19 +16,17 @@ export function createUserController(service: UserService): {
   };
   return {
     updateProfile: asyncHandler(async (request, response) =>
-      sendSuccess(
-        response,
-        await service.updateProfile(userId(request), updateProfileSchema.parse(request.body)),
-      ),
+      sendSuccess(response, {
+        user: await service.updateProfile(userId(request), updateProfileSchema.parse(request.body)),
+      }),
     ),
     updatePreferences: asyncHandler(async (request, response) =>
-      sendSuccess(
-        response,
-        await service.updatePreferences(
+      sendSuccess(response, {
+        user: await service.updatePreferences(
           userId(request),
           updatePreferencesSchema.parse(request.body),
         ),
-      ),
+      }),
     ),
   };
 }

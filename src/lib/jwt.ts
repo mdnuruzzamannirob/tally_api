@@ -1,7 +1,9 @@
 import type { SignOptions } from "jsonwebtoken";
-import { JsonWebTokenError, TokenExpiredError, sign, verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 import { env } from "../config/env.js";
+
+const { JsonWebTokenError, TokenExpiredError, sign, verify } = jwt;
 
 export interface AccessTokenPayload {
   sub: string;

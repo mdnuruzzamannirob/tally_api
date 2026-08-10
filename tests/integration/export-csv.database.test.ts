@@ -77,6 +77,6 @@ describe.skipIf(!runDatabaseTests)("CSV export", () => {
     expect(response.text).toContain('"\'=formula-like"');
     expect(response.text).toContain('"\'+referral"');
     expect(response.text).toContain('"Developer, ""Platform"""');
-    expect(response.text).toContain('[\\"urgent, high\\"]');
+    expect(response.text).toContain('[""urgent, high""]');
   });
 });

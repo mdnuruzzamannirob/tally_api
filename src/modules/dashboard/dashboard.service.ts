@@ -46,8 +46,15 @@ export class DashboardService {
     for (const group of result.statusGroups) {
       statusCounts[group.status] = (group._count as { _all: number })._all;
     }
-    const { statusGroups: _statusGroups, ...summary } = result;
+    const {
+      statusGroups: _statusGroups,
+      overdueCount,
+      todayCount,
+      overdue,
+      today,
+      ...summary
+    } = result;
     void _statusGroups;
-    return { ...summary, statusCounts };
+    return { ...summary, followUps: { overdueCount, todayCount, overdue, today }, statusCounts };
   }
 }

@@ -137,10 +137,15 @@ describe.skipIf(!runDatabaseTests)("Google OAuth", () => {
 
   it("binds a link transaction to the authenticated user instead of the provider email", async () => {
     const linkedUser = await prisma.user.create({
-      data: { email: "linked@example.test", passwordHash: "hash", emailVerified: true },
+      data: {
+        email: "linked@example.test",
+        passwordHash: "hash",
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
     });
     const matchingEmailUser = await prisma.user.create({
-      data: { email: client.profile.email, emailVerified: true },
+      data: { email: client.profile.email, emailVerified: true, emailVerifiedAt: new Date() },
     });
     const accessToken = createAccessToken({ sub: linkedUser.id, emailVerified: true });
 

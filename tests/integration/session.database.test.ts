@@ -132,7 +132,11 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
       .set(originHeaders)
       .set("Cookie", `${REFRESH_COOKIE_NAME}=${refreshToken}`);
     expect(logout.status).toBe(200);
-    expect(logout.body).toEqual({ success: true, data: { message: "Logged out" } });
+    expect(logout.body).toMatchObject({
+      success: true,
+      data: { message: "Logged out" },
+      meta: { requestId: expect.any(String) },
+    });
     expect(logout.headers["set-cookie"]?.[0]).toContain(`${REFRESH_COOKIE_NAME}=;`);
     await expect(
       prisma.refreshToken.count({ where: { userId: user.id, revokedAt: null } }),
