@@ -28,7 +28,7 @@ export function createApiRouter(dependencies: ResolvedDependencies): Router {
   router.use("/auth", createConnectedAccountsRouter(dependencies.authService, dependencies.googleOAuthService, dependencies.githubOAuthService));
   router.use("/auth", createGoogleOAuthRouter(dependencies.googleOAuthService));
   router.use("/auth", createGitHubOAuthRouter(dependencies.githubOAuthService));
-  router.use("/users", createUsersRouter(dependencies.authService));
+  router.use("/users", createUsersRouter(dependencies.userService));
   router.use("/applications", createApplicationsRouter(dependencies.applicationService));
   router.use("/applications", createApplicationTagRouter(dependencies.tagService));
   router.use("/applications", createApplicationNotesRouter(dependencies.noteService));

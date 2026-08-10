@@ -21,6 +21,8 @@ import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { AuthService } from "./modules/auth/auth.service.js";
 import { AuthRepository } from "./modules/auth/auth.repository.js";
+import { UserRepository } from "./modules/users/user.repository.js";
+import { UserService } from "./modules/users/user.service.js";
 import { ApplicationService } from "./modules/applications/application.service.js";
 import { TagService } from "./modules/tags/tag.service.js";
 import { NoteService } from "./modules/notes/note.service.js";
@@ -38,6 +40,7 @@ import { createApiRouter } from "./routes/index.js";
 export interface AppDependencies {
   checkDatabase?: () => Promise<void>;
   authService?: AuthService;
+  userService?: UserService;
   googleOAuthService?: GoogleOAuthService;
   githubOAuthService?: GitHubOAuthService;
   applicationService?: ApplicationService;
@@ -57,6 +60,7 @@ const defaultDatabaseCheck = async (): Promise<void> => {
 export function createApp({
   checkDatabase = defaultDatabaseCheck,
   authService,
+  userService,
   googleOAuthService,
   githubOAuthService,
   applicationService,
@@ -69,8 +73,10 @@ export function createApp({
 }: AppDependencies = {}): Express {
   const app = express();
   const authRepository = new AuthRepository(prisma);
+  const userRepository = new UserRepository(prisma);
   const oauthRepository = new OAuthRepository(prisma);
   const resolvedAuthService = authService ?? new AuthService(authRepository, createEmailService());
+  const resolvedUserService = userService ?? new UserService(userRepository);
   const resolvedGoogleOAuthService =
     googleOAuthService ?? new GoogleOAuthService(oauthRepository, new GoogleOAuthHttpClient());
   const resolvedGitHubOAuthService =
@@ -109,6 +115,7 @@ export function createApp({
     createApiRouter({
       checkDatabase,
       authService: resolvedAuthService,
+      userService: resolvedUserService,
       googleOAuthService: resolvedGoogleOAuthService,
       githubOAuthService: resolvedGitHubOAuthService,
       applicationService: resolvedApplicationService,
