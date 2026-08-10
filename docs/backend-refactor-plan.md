@@ -196,7 +196,7 @@ Status must be updated only after the relevant gate passes.
 | 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.7 implementation complete; DB/release gates pending |
 | 2     | Applications and tags                        | In progress — 2.1–2.6 implementation complete; DB gate pending          |
 | 3     | Notes and interviews                         | In progress — 3.1–3.3 implementation complete; DB gate pending          |
-| 4     | Dashboard, health, export, and import        | In progress — 4.1–4.3 implementation complete; DB gate pending          |
+| 4     | Dashboard, health, export, and import        | In progress — 4.1–4.5 implementation complete; DB gate pending          |
 | 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
 | 6     | Release hardening and sign-off               | Pending                                                                 |
 
@@ -828,6 +828,8 @@ against the documented disposable database before marking Phase 4 complete.
 
 ### 4.4 Health boundary
 
+Status: Implementation complete — verified 2026-08-10; database gate pending.
+
 - Keep the database probe dependency injectable.
 - Add a thin health controller/service if needed by the final structure; keep
   health.routes.ts limited to route and handler composition.
@@ -837,7 +839,21 @@ against the documented disposable database before marking Phase 4 complete.
 Gate: app/health tests pass in a normal environment and no database client is
 constructed by a route/controller.
 
+Recorded 4.4 completion:
+
+- Added `src/routes/health.service.ts` for injectable database probe handling
+  and 503 domain error mapping.
+- Added `src/routes/health.controller.ts`; health response formatting remains
+  outside the route module.
+- `health.routes.ts` now only maps the endpoint to the controller, preserving
+  the 200/503 envelopes, request IDs, security headers, and redacted failure
+  behavior.
+- `createApp` composes `HealthService` from the injectable `checkDatabase`
+  dependency, preserving existing test and runtime wiring.
+
 ### 4.5 Read/transfer cleanup
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Update app.ts composition and all feature test factories.
 - Remove direct Prisma imports from dashboard/export/import services and routes.
@@ -846,6 +862,28 @@ constructed by a route/controller.
 
 Phase 4 gate: full contract/build gate, all read/transfer integration tests,
 and boundary audit.
+
+Recorded 4.5 completion:
+
+- Dashboard, export, and import service/controller/route layers contain no
+  Prisma client or direct persistence calls.
+- `app.ts` composes all Phase 4 repositories before their services; integration
+  factories use repository injection with no legacy Prisma constructors.
+- Raw export downloads and OAuth redirects remain the only intentional
+  response-envelope exceptions.
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `pnpm build` — passed;
+- `pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- health/read-transfer boundary audit — passed;
+- `git diff --check` — passed.
+
+The database integration gate remains pending because this workspace has no safe
+disposable `TEST_DATABASE_URL`. Run the complete Phase 4 integration gate
+against the documented disposable database before marking Phase 4 complete.
 
 ---
 
