@@ -6,6 +6,7 @@ import { createApp } from "../../src/app.js";
 import { createAccessToken } from "../../src/lib/jwt.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
+import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { GoogleOAuthService } from "../../src/oauth/google-oauth.service.js";
 import type { GoogleOAuthClient, GoogleProfile } from "../../src/oauth/google.oauth.js";
@@ -56,7 +57,7 @@ describe.skipIf(!runDatabaseTests)("Google OAuth", () => {
 
   beforeAll(() => {
     prisma = createTestPrismaClient();
-    const authService = new AuthService(prisma, new TestEmailService());
+    const authService = new AuthService(new AuthRepository(prisma), new TestEmailService());
     app = createApp({
       checkDatabase: async () => undefined,
       authService,

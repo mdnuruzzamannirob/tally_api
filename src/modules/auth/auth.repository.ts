@@ -5,7 +5,7 @@ import type { PrismaClient } from "../../generated/prisma/client.js";
  * than the application-wide Prisma client so feature data access has one home.
  */
 export class AuthRepository {
-  constructor(readonly client: PrismaClient) {}
+  constructor(private readonly client: PrismaClient) {}
 
   findUserByEmail(email: string) {
     return this.client.user.findUnique({ where: { email }, include: { oauthAccounts: true } });

@@ -190,21 +190,21 @@ Status must be updated only after the relevant gate passes.
 
 ## 7. Phase status overview
 
-| Phase | Scope                                        | Status at plan creation                                           |
-| ----- | -------------------------------------------- | ----------------------------------------------------------------- |
-| 0     | Shared foundation and contract preservation  | Complete                                                          |
-| 1     | Identity, users, connected accounts, OAuth   | In progress — auth repository partial; user/OAuth cleanup pending |
-| 2     | Applications and tags                        | Pending                                                           |
-| 3     | Notes and interviews                         | Pending                                                           |
-| 4     | Dashboard, health, export, and import        | Pending                                                           |
-| 5     | Composition, tests, and boundary enforcement | Pending                                                           |
-| 6     | Release hardening and sign-off               | Pending                                                           |
+| Phase | Scope                                        | Status at plan creation                                        |
+| ----- | -------------------------------------------- | -------------------------------------------------------------- |
+| 0     | Shared foundation and contract preservation  | Complete                                                       |
+| 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.3 implementation complete; DB gate pending |
+| 2     | Applications and tags                        | Pending                                                        |
+| 3     | Notes and interviews                         | Pending                                                        |
+| 4     | Dashboard, health, export, and import        | Pending                                                        |
+| 5     | Composition, tests, and boundary enforcement | Pending                                                        |
+| 6     | Release hardening and sign-off               | Pending                                                        |
 
 ---
 
 ## 8. Phase 0 — Shared foundation
 
-Status: Complete — verified 2026-08-10.
+Status: Implementation complete — verified 2026-08-10; DB gate pending.
 
 Completed implementation:
 
@@ -245,6 +245,8 @@ identity persistence is behind repositories.
 
 ### 1.1 Lock the identity baseline
 
+Status: Implementation complete — verified 2026-08-10; DB gate pending.
+
 - Capture registration, verification, login, refresh, logout, password,
   preferences, connected-account, Google, and GitHub integration tests.
 - Record current response snapshots for success, conflict, unauthorized,
@@ -255,6 +257,8 @@ identity persistence is behind repositories.
 Gate: baseline tests run in a normal environment; pnpm typecheck passes.
 
 ### 1.2 Finish auth repository ownership
+
+Status: Implementation complete — verified 2026-08-10; DB gate pending.
 
 - Keep registration/verification, login/session rotation, logout, and password
   lifecycle queries in src/modules/auth/auth.repository.ts.
@@ -270,6 +274,8 @@ atomic success and failed conditional updates.
 
 ### 1.3 Remove the AuthService compatibility boundary
 
+Status: Complete — verified 2026-08-10.
+
 - Change the constructor to accept only AuthRepository.
 - Delete the PrismaClient import, AuthRepository or PrismaClient union, and
   prisma getter from auth.service.ts.
@@ -280,6 +286,39 @@ atomic success and failed conditional updates.
 
 Gate: no Prisma import/call remains in AuthService; auth and password
 integration tests pass unchanged at the HTTP contract level.
+
+Recorded 1.1–1.3 completion gate:
+
+- `AuthService` now accepts only `AuthRepository` and no longer imports
+  `PrismaClient`, exposes a Prisma getter, or performs direct Prisma queries.
+- `AuthRepository` owns registration/verification, login/session rotation,
+  logout, reset/change/set-password persistence and transactions.
+- Profile/preferences duplicate methods were removed from `AuthService`; the
+  connected-account read now uses the repository boundary.
+- All auth-consuming integration test factories inject `AuthRepository` rather
+  than passing `PrismaClient` to `AuthService`.
+- `pnpm lint` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `pnpm build` — passed;
+- `pnpm format` — passed;
+- `DATABASE_URL=... pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- Auth boundary audit — passed: Prisma access remains in
+  `auth.repository.ts` only within the auth module.
+
+The database integration suite was not completed in this environment because
+`TEST_DATABASE_URL` was initially absent and the existing local container's
+published PostgreSQL credentials/port were inconsistent. Run the documented
+gate with a disposable database before merging:
+
+```sh
+DATABASE_URL=postgresql://tally:tally@localhost:5432/tally_test \
+TEST_DATABASE_URL=postgresql://tally:tally@localhost:5432/tally_test \
+pnpm prisma:deploy
+TEST_DATABASE_URL=postgresql://tally:tally@localhost:5432/tally_test \
+pnpm test:integration
+```
 
 ### 1.4 Complete the users module
 

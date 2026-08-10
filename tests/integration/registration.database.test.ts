@@ -2,6 +2,7 @@ import type { EmailService } from "../../src/email/email.service.js";
 import type { Express } from "express";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { createApp } from "../../src/app.js";
+import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { hashToken } from "../../src/lib/crypto.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
@@ -29,7 +30,7 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
 
   beforeAll(async () => {
     prisma = createTestPrismaClient();
-    const authService = new AuthService(prisma, emailService);
+    const authService = new AuthService(new AuthRepository(prisma), emailService);
     app = createApp({ checkDatabase: async () => undefined, authService });
     await clearTestDatabase(prisma);
   });

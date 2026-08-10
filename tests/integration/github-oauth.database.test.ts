@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
+import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { GitHubOAuthService } from "../../src/oauth/github-oauth.service.js";
 import type { GitHubOAuthClient, GitHubProfile } from "../../src/oauth/github.oauth.js";
@@ -54,7 +55,7 @@ describe.skipIf(!runDatabaseTests)("GitHub OAuth", () => {
     prisma = createTestPrismaClient();
     app = createApp({
       checkDatabase: async () => undefined,
-      authService: new AuthService(prisma, new TestEmailService()),
+      authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
       githubOAuthService: new GitHubOAuthService(prisma, client),
     });
   });

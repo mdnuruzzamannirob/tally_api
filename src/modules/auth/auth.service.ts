@@ -1,18 +1,11 @@
 import { getRefreshTokenExpiresAt } from "../../config/cookie.js";
 import type { EmailService } from "../../email/email.service.js";
-import type { PrismaClient } from "../../generated/prisma/client.js";
 import { ApiError } from "../../lib/api-error.js";
 import { generateOpaqueToken, hashToken } from "../../lib/crypto.js";
 import { createAccessToken } from "../../lib/jwt.js";
 import { hashPassword, verifyPassword } from "../../lib/password.js";
-import { AuthRepository } from "./auth.repository.js";
-import type {
-  ChangePasswordInput,
-  LoginInput,
-  RegisterInput,
-  UpdatePreferencesInput,
-  UpdateProfileInput,
-} from "./auth.validators.js";
+import type { AuthRepository } from "./auth.repository.js";
+import type { ChangePasswordInput, LoginInput, RegisterInput } from "./auth.validators.js";
 
 const VERIFICATION_TOKEN_LIFETIME_MS = 24 * 60 * 60 * 1_000;
 const PASSWORD_RESET_TOKEN_LIFETIME_MS = 30 * 60 * 1_000;
@@ -64,18 +57,9 @@ function toPublicUser(user: {
 
 export class AuthService {
   constructor(
-    repository: AuthRepository | PrismaClient,
+    private readonly repository: AuthRepository,
     private readonly emailService: EmailService,
-  ) {
-    this.repository =
-      repository instanceof AuthRepository ? repository : new AuthRepository(repository);
-  }
-
-  private readonly repository: AuthRepository;
-
-  private get prisma() {
-    return this.repository.client;
-  }
+  ) {}
 
   async register(input: RegisterInput): Promise<void> {
     const existingUser = await this.repository.findUserByEmail(input.email);
@@ -160,36 +144,6 @@ export class AuthService {
   async getCurrentUser(userId: string): Promise<PublicUser> {
     const user = await this.repository.findUserWithConnectedAccounts(userId);
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-    return toPublicUser(user);
-  }
-
-  async updateProfile(userId: string, input: UpdateProfileInput): Promise<PublicUser> {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { name: input.name ?? null },
-      include: { oauthAccounts: true },
-    });
-    return toPublicUser(user);
-  }
-
-  async updatePreferences(userId: string, input: UpdatePreferencesInput): Promise<PublicUser> {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(input.theme ? { theme: input.theme.toUpperCase() as "LIGHT" | "DARK" | "SYSTEM" } : {}),
-        ...(input.defaultLandingPage
-          ? {
-              defaultLandingPage: input.defaultLandingPage.toUpperCase() as
-                "DASHBOARD" | "APPLICATIONS",
-            }
-          : {}),
-        ...(input.timeZone ? { timeZone: input.timeZone } : {}),
-        ...(input.notificationsEnabled !== undefined
-          ? { notificationsEnabled: input.notificationsEnabled }
-          : {}),
-      },
-      include: { oauthAccounts: true },
-    });
     return toPublicUser(user);
   }
 
@@ -314,10 +268,7 @@ export class AuthService {
     providers: Array<{ provider: "google" | "github"; connected: boolean; email: string | null }>;
     hasPassword: boolean;
   }> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { oauthAccounts: true },
-    });
+    const user = await this.repository.findUserWithConnectedAccounts(userId);
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
     return {
       providers: (["GOOGLE", "GITHUB"] as const).map((provider) => {

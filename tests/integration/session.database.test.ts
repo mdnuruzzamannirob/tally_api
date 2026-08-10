@@ -7,6 +7,7 @@ import { REFRESH_COOKIE_NAME } from "../../src/config/cookie.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import { createApp } from "../../src/app.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
+import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
@@ -38,7 +39,7 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
     prisma = createTestPrismaClient();
     app = createApp({
       checkDatabase: async () => undefined,
-      authService: new AuthService(prisma, new TestEmailService()),
+      authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
     });
   });
 

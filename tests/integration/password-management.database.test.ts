@@ -9,6 +9,7 @@ import { hashToken } from "../../src/lib/crypto.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import { createApp } from "../../src/app.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
+import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
@@ -34,7 +35,7 @@ describe.skipIf(!runDatabaseTests)("password recovery and management", () => {
 
   beforeAll(() => {
     prisma = createTestPrismaClient();
-    authService = new AuthService(prisma, emailService);
+    authService = new AuthService(new AuthRepository(prisma), emailService);
     app = createApp({ checkDatabase: async () => undefined, authService });
   });
 
