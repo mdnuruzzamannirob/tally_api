@@ -24,6 +24,11 @@ import { createTagsRouter } from "./modules/tags/tag.routes.js";
 import { TagService } from "./modules/tags/tag.service.js";
 import { createApplicationNotesRouter, createNotesRouter } from "./modules/notes/note.routes.js";
 import { NoteService } from "./modules/notes/note.service.js";
+import {
+  createApplicationInterviewsRouter,
+  createInterviewsRouter,
+} from "./modules/interviews/interview.routes.js";
+import { InterviewService } from "./modules/interviews/interview.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
@@ -40,6 +45,7 @@ export interface AppDependencies {
   applicationService?: ApplicationService;
   tagService?: TagService;
   noteService?: NoteService;
+  interviewService?: InterviewService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -55,6 +61,7 @@ export function createApp({
   applicationService,
   tagService,
   noteService,
+  interviewService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
@@ -65,6 +72,7 @@ export function createApp({
   const resolvedApplicationService = applicationService ?? new ApplicationService(prisma);
   const resolvedTagService = tagService ?? new TagService(prisma);
   const resolvedNoteService = noteService ?? new NoteService(prisma);
+  const resolvedInterviewService = interviewService ?? new InterviewService(prisma);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -103,8 +111,10 @@ export function createApp({
   app.use("/api/v1/applications", createApplicationsRouter(resolvedApplicationService));
   app.use("/api/v1/applications", createApplicationTagRouter(resolvedTagService));
   app.use("/api/v1/applications", createApplicationNotesRouter(resolvedNoteService));
+  app.use("/api/v1/applications", createApplicationInterviewsRouter(resolvedInterviewService));
   app.use("/api/v1/tags", createTagsRouter(resolvedTagService));
   app.use("/api/v1", createNotesRouter(resolvedNoteService));
+  app.use("/api/v1", createInterviewsRouter(resolvedInterviewService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
