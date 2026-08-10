@@ -2,9 +2,9 @@ import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 
 import { env } from "../config/env.js";
+import { ApiError } from "../lib/api-error.js";
+import type { ErrorResponse } from "../lib/api-response.js";
 import { logger } from "../lib/logger.js";
-import { ApiError } from "../utils/api-error.js";
-import type { ErrorResponse } from "../utils/api-response.js";
 
 type HttpError = Error & { status?: number; statusCode?: number; type?: string };
 

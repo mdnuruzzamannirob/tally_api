@@ -24,7 +24,7 @@ routes, database behavior, authentication flow, or export/OAuth exceptions.
   `data` is the direct payload: objects for single resources and arrays for
   collections, never an `items` wrapper; pagination belongs in `meta`.
 
-## Phase 0 — Shared foundation
+## Phase 0 — Shared foundation — Complete (2026-08-10)
 
 - Establish `lib/api-error.ts`, `lib/async-handler.ts`, `lib/pagination.ts`,
   `lib/jwt.ts`, `lib/crypto.ts`, `lib/prisma.ts`, and `lib/logger.ts`.
@@ -38,6 +38,13 @@ routes, database behavior, authentication flow, or export/OAuth exceptions.
 **Done when:** Prisma validates without a migration, OpenAPI validates, every
 JSON success has a message, errors have `meta.requestId`, and paginated
 responses expose `meta`.
+
+**Completed:** The shared `lib` implementations now own API errors, async
+handling, pagination, JWT, token crypto, and response envelopes; legacy paths
+remain as compatibility re-exports until their feature phases migrate imports.
+The multi-file Prisma schema validates without a migration. The OpenAPI 3.1
+release artifact is validated in CI and is served at `/api/v1/openapi.json`
+with Swagger UI at `/api/v1/docs`; app tests cover both endpoints.
 
 ## Phase 1 — Auth, users, email, OAuth
 

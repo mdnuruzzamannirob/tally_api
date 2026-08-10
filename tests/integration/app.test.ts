@@ -39,6 +39,23 @@ describe("API application", () => {
     expect(response.body).toMatchObject({ success: false, error: { code: "NOT_FOUND" } });
   });
 
+  it("serves the versioned OpenAPI contract and Swagger UI", async () => {
+    const app = createApp({ checkDatabase: async () => undefined });
+
+    const contractResponse = await request(app).get("/api/v1/openapi.json");
+    expect(contractResponse.status).toBe(200);
+    expect(contractResponse.body).toMatchObject({
+      openapi: "3.1.0",
+      info: { title: "Tally API" },
+      paths: expect.any(Object),
+    });
+
+    const docsResponse = await request(app).get("/api/v1/docs/");
+    expect(docsResponse.status).toBe(200);
+    expect(docsResponse.type).toContain("text/html");
+    expect(docsResponse.text).toContain("Tally API Documentation");
+  });
+
   it("returns a structured error for malformed JSON", async () => {
     const app = createApp({ checkDatabase: async () => undefined });
     const response = await request(app)

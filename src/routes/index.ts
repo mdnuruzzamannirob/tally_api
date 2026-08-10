@@ -15,12 +15,14 @@ import { createUsersRouter } from "../modules/users/users.routes.js";
 import { createGitHubOAuthRouter } from "../oauth/github-oauth.routes.js";
 import { createGoogleOAuthRouter } from "../oauth/google-oauth.routes.js";
 import { createHealthRouter } from "./health.routes.js";
+import { createOpenApiRouter } from "./openapi.routes.js";
 
 type ResolvedDependencies = Required<AppDependencies>;
 
 /** Mounts every feature router below the API version prefix. */
 export function createApiRouter(dependencies: ResolvedDependencies): Router {
   const router = Router();
+  router.use(createOpenApiRouter());
   router.use(createHealthRouter(dependencies.checkDatabase));
   router.use("/auth", createAuthRouter(dependencies.authService));
   router.use("/auth", createConnectedAccountsRouter(dependencies.authService, dependencies.googleOAuthService, dependencies.githubOAuthService));
