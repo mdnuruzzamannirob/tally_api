@@ -7,14 +7,19 @@ import { pinoHttp } from "pino-http";
 import type { Express } from "express";
 
 import { env } from "./config/env.js";
+import { createEmailService } from "./email/email.service.js";
 import { logger } from "./lib/logger.js";
+import { prisma } from "./lib/prisma.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
+import { createAuthRouter } from "./modules/auth/auth.routes.js";
+import { AuthService } from "./modules/auth/auth.service.js";
 import { createHealthRouter } from "./routes/health.routes.js";
 
 export interface AppDependencies {
   checkDatabase?: () => Promise<void>;
+  authService?: AuthService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -22,8 +27,12 @@ const defaultDatabaseCheck = async (): Promise<void> => {
   await prisma.$queryRaw`SELECT 1`;
 };
 
-export function createApp({ checkDatabase = defaultDatabaseCheck }: AppDependencies = {}): Express {
+export function createApp({
+  checkDatabase = defaultDatabaseCheck,
+  authService,
+}: AppDependencies = {}): Express {
   const app = express();
+  const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -47,6 +56,7 @@ export function createApp({ checkDatabase = defaultDatabaseCheck }: AppDependenc
   app.use(compression());
 
   app.use("/api/v1", createHealthRouter(checkDatabase));
+  app.use("/api/v1/auth", createAuthRouter(resolvedAuthService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
