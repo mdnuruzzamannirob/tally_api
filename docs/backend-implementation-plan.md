@@ -38,6 +38,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 23 — Dashboard
 - Completed: Phase 24 — JSON Export
 - Completed: Phase 25 — CSV Export
+- Completed: Phase 26 — JSON Import
 
 ## Delivery Rules
 

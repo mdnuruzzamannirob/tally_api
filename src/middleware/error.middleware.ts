@@ -34,6 +34,10 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, request, re
     statusCode = 400;
     code = "BAD_REQUEST";
     message = "Malformed JSON request body.";
+  } else if ((error as HttpError).type === "entity.too.large") {
+    statusCode = 413;
+    code = "PAYLOAD_TOO_LARGE";
+    message = "Request body exceeds the maximum allowed size.";
   }
 
   const errorName = error instanceof Error ? error.name : "UnknownError";

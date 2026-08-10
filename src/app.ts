@@ -33,6 +33,8 @@ import { createDashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { DashboardService } from "./modules/dashboard/dashboard.service.js";
 import { createExportRouter } from "./modules/export-import/export.routes.js";
 import { ExportService } from "./modules/export-import/export.service.js";
+import { createImportRouter } from "./modules/export-import/import.routes.js";
+import { ImportService } from "./modules/export-import/import.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
@@ -52,6 +54,7 @@ export interface AppDependencies {
   interviewService?: InterviewService;
   dashboardService?: DashboardService;
   exportService?: ExportService;
+  importService?: ImportService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -70,6 +73,7 @@ export function createApp({
   interviewService,
   dashboardService,
   exportService,
+  importService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
@@ -83,6 +87,7 @@ export function createApp({
   const resolvedInterviewService = interviewService ?? new InterviewService(prisma);
   const resolvedDashboardService = dashboardService ?? new DashboardService(prisma);
   const resolvedExportService = exportService ?? new ExportService(prisma);
+  const resolvedImportService = importService ?? new ImportService(prisma);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -127,6 +132,7 @@ export function createApp({
   app.use("/api/v1", createInterviewsRouter(resolvedInterviewService));
   app.use("/api/v1/dashboard", createDashboardRouter(resolvedDashboardService));
   app.use("/api/v1/export", createExportRouter(resolvedExportService));
+  app.use("/api/v1/import", createImportRouter(resolvedImportService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
