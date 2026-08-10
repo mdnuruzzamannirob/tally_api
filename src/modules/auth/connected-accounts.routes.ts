@@ -1,8 +1,8 @@
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth.middleware.js";
-import type { GitHubOAuthService } from "../../oauth/github-oauth.service.js";
-import type { GoogleOAuthService } from "../../oauth/google-oauth.service.js";
+import type { GitHubOAuthService } from "./oauth/github-oauth.service.js";
+import type { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { createConnectedAccountsController } from "./connected-accounts.controller.js";
 import type { AuthService } from "./auth.service.js";
 

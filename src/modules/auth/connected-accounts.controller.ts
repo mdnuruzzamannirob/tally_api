@@ -3,10 +3,10 @@ import type { RequestHandler } from "express";
 import { ApiError } from "../../lib/api-error.js";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { sendSuccess } from "../../lib/api-response.js";
-import { getGitHubCallbackUri } from "../../oauth/github-oauth.routes.js";
-import type { GitHubOAuthService } from "../../oauth/github-oauth.service.js";
-import { getGoogleCallbackUri } from "../../oauth/google-oauth.routes.js";
-import type { GoogleOAuthService } from "../../oauth/google-oauth.service.js";
+import { getGitHubCallbackUri } from "./oauth/github-oauth.routes.js";
+import type { GitHubOAuthService } from "./oauth/github-oauth.service.js";
+import { getGoogleCallbackUri } from "./oauth/google-oauth.routes.js";
+import type { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import type { AuthService } from "./auth.service.js";
 
 type Provider = "GOOGLE" | "GITHUB";

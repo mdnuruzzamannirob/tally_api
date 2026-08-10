@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import { Router } from "express";
 
-import { setRefreshCookie } from "../config/cookie.js";
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
-import type { GitHubOAuthService } from "./github-oauth.service.js";
+import { setRefreshCookie } from "../../../config/cookie.js";
+import { env } from "../../../config/env.js";
+import { logger } from "../../../lib/logger.js";
+import type { GoogleOAuthService } from "./google-oauth.service.js";
 
-export function getGitHubCallbackUri(_request: Request): string {
+export function getGoogleCallbackUri(_request: Request): string {
   void _request;
-  return new URL("/api/v1/auth/github/callback", env.API_BASE_URL).toString();
+  return new URL("/api/v1/auth/google/callback", env.API_BASE_URL).toString();
 }
 
 function redirectToFrontend(
@@ -22,27 +22,27 @@ function redirectToFrontend(
   response.redirect(url.toString());
 }
 
-export function createGitHubOAuthRouter(service: GitHubOAuthService): Router {
+export function createGoogleOAuthRouter(service: GoogleOAuthService): Router {
   const router = Router();
-  router.get("/github", async (request, response) => {
+  router.get("/google", async (request, response) => {
     try {
-      response.redirect(await service.start(getGitHubCallbackUri(request)));
+      response.redirect(await service.start(getGoogleCallbackUri(request)));
     } catch {
-      logger.warn({ event: "github_oauth_start_failed" }, "GitHub OAuth start failed");
+      logger.warn({ event: "google_oauth_start_failed" }, "Google OAuth start failed");
       redirectToFrontend(response, "error");
     }
   });
-  router.get("/github/callback", async (request, response) => {
+  router.get("/google/callback", async (request, response) => {
     const code = typeof request.query.code === "string" ? request.query.code : undefined;
     const state = typeof request.query.state === "string" ? request.query.state : undefined;
     if (!code || !state) return redirectToFrontend(response, "error");
     try {
-      const result = await service.complete(code, state, getGitHubCallbackUri(request));
+      const result = await service.complete(code, state, getGoogleCallbackUri(request));
       if (result.intent === "link") return redirectToFrontend(response, "success", "link");
       setRefreshCookie(response, result.refreshToken);
       return redirectToFrontend(response, "success");
     } catch {
-      logger.warn({ event: "github_oauth_callback_failed" }, "GitHub OAuth callback failed");
+      logger.warn({ event: "google_oauth_callback_failed" }, "Google OAuth callback failed");
       return redirectToFrontend(response, "error");
     }
   });

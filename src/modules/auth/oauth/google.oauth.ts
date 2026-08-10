@@ -1,5 +1,5 @@
-import { env } from "../config/env.js";
-import { ApiError } from "../lib/api-error.js";
+import { env } from "../../../config/env.js";
+import { ApiError } from "../../../lib/api-error.js";
 
 export interface GoogleProfile {
   providerAccountId: string;

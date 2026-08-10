@@ -3,11 +3,11 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
-const identityRoots = ["src/modules/auth", "src/modules/users", "src/oauth"];
+const identityRoots = ["src/modules/auth", "src/modules/users"];
 const repositoryFiles = new Set([
   "src/modules/auth/auth.repository.ts",
   "src/modules/users/user.repository.ts",
-  "src/oauth/oauth.repository.ts",
+  "src/modules/auth/oauth/oauth.repository.ts",
 ]);
 
 const forbiddenForApplicationLayer = [

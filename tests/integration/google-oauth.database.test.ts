@@ -8,9 +8,12 @@ import type { EmailService } from "../../src/email/email.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
-import { GoogleOAuthService } from "../../src/oauth/google-oauth.service.js";
-import type { GoogleOAuthClient, GoogleProfile } from "../../src/oauth/google.oauth.js";
-import { OAuthRepository } from "../../src/oauth/oauth.repository.js";
+import { GoogleOAuthService } from "../../src/modules/auth/oauth/google-oauth.service.js";
+import type {
+  GoogleOAuthClient,
+  GoogleProfile,
+} from "../../src/modules/auth/oauth/google.oauth.js";
+import { OAuthRepository } from "../../src/modules/auth/oauth/oauth.repository.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
 const runDatabaseTests = Boolean(process.env.TEST_DATABASE_URL);
