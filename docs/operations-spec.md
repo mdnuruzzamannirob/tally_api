@@ -876,6 +876,14 @@ EMAIL_API_KEY
 EMAIL_FROM
 ```
 
+Provider-specific configuration:
+
+- Mailgun also requires `EMAIL_MAILGUN_DOMAIN`.
+- SMTP requires `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER`,
+  `EMAIL_SMTP_PASSWORD`, and optionally `EMAIL_SMTP_SECURE`.
+- `EMAIL_API_BASE_URL` may override the default provider API endpoint for a
+  compatible proxy or regional endpoint.
+
 Rules:
 
 - Development may use console email provider.

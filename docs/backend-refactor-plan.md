@@ -1164,3 +1164,61 @@ Recorded 6.3 sign-off:
 - [ ] Production release-owner checklist and full preview frontend critical-flow
       E2E pass (requires deployed API/frontend, real OAuth/email providers,
       managed database, monitoring, backups, and rollback access).
+
+## 16. Post-audit critical-gap remediation
+
+Status: Complete — verified 2026-08-10.
+
+The requirements audit identified and resolved the backend-critical gaps:
+
+- Replaced the 13-operation placeholder OpenAPI artifact with a generated
+  49-operation contract covering every feature route; `openapi:validate` now
+  validates both Swagger structure and runtime route parity.
+- Implemented Resend, SendGrid, Mailgun, and SMTP email adapters. Provider
+  credentials and provider-specific settings are validated at startup;
+  console delivery remains development-only and delivery logs are redacted.
+- Added SMTP settings to `.env.example` and operations documentation, plus a
+  frontend password-reset URL builder alongside the verification URL builder.
+- Added the documented global 300-request/15-minute API rate limit while
+  preserving stricter auth, resend, and password-reset limits.
+- Added environment tests for valid and invalid SMTP configuration.
+
+Validation recorded:
+
+- `pnpm openapi:validate` — passed with route parity;
+- `pnpm test:unit` — passed: 9 test files, 29 tests;
+- `pnpm test:integration` — passed: 17 test files, 41 tests;
+- `pnpm lint`, `pnpm format`, `pnpm typecheck`, `pnpm build` — passed;
+- `git diff --check` — passed.
+
+## 17. Post-audit high-gap remediation
+
+Status: Backend implementation complete — verified 2026-08-10.
+
+- CI now regenerates and validates OpenAPI route parity, runs formatting,
+  builds the runtime Docker image, starts the built API, and executes release
+  smoke checks.
+- OpenAPI response data now has operation-level schemas for authentication,
+  users, applications, tags, notes, interviews, dashboard, and import/export
+  flows; generation is deterministic and CI detects drift.
+- Frontend release-surface E2E coverage was expanded from one login test to six
+  Playwright tests covering login controls plus register, forgot-password,
+  reset-password, and verify-email routes.
+- Backend integration tests remain the authoritative coverage for the critical
+  authenticated flow: registration/verification, login, refresh/logout,
+  password management, OAuth, application CRUD, notes, interviews, tags,
+  dashboard, export, and import.
+
+Validation recorded:
+
+- OpenAPI generation is deterministic;
+- OpenAPI structure and route parity — passed: 49 operations;
+- API lint, format, typecheck, build, unit, and integration gates — passed;
+- frontend lint, typecheck, unit, build, and E2E — passed: 6 Playwright tests;
+- Updated runtime Docker image build — passed locally; CI also builds the image
+  and runs live release smoke against the built API process.
+
+The remaining full preview E2E and production-owner checks require a deployed
+frontend/API pair, real OAuth/email credentials, managed database, monitoring,
+backups, and rollback access; they are not safely reproducible in this local
+backend workspace.

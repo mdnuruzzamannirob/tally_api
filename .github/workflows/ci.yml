@@ -47,6 +47,10 @@ jobs:
         run: pnpm prisma:generate
       - name: Apply migrations
         run: pnpm prisma:deploy
+      - name: Regenerate and verify OpenAPI artifact
+        run: |
+          pnpm openapi:generate
+          git diff --exit-code -- contracts/openapi.json
       - name: Validate OpenAPI contract
         run: pnpm openapi:validate
       - name: Audit identity boundary
@@ -57,7 +61,26 @@ jobs:
         run: pnpm lint
       - name: Typecheck
         run: pnpm typecheck
+      - name: Format check
+        run: pnpm format
       - name: Test
         run: pnpm test:all
       - name: Build
         run: pnpm build
+      - name: Build runtime Docker image
+        run: >-
+          docker build --target runtime
+          --build-arg PRISMA_GENERATE_DATABASE_URL="$DATABASE_URL"
+          --tag tally-api:ci .
+      - name: Release smoke test
+        run: |
+          pnpm start > /tmp/tally-api.log 2>&1 &
+          API_PID=$!
+          trap 'kill "$API_PID"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4000/api/v1/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          API_BASE_URL=http://127.0.0.1:4000 WEB_APP_URL=http://localhost:3000 pnpm test:smoke

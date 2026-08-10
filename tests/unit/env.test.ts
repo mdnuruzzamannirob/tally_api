@@ -63,4 +63,28 @@ describe("environment configuration", () => {
       parseEnvironment({ ...developmentEnvironment, DATABASE_URL: "mysql://localhost/tally" }),
     ).toThrow(/PostgreSQL connection URL/);
   });
+
+  it("requires SMTP connection settings when SMTP is selected", () => {
+    expect(() =>
+      parseEnvironment({
+        ...productionEnvironment,
+        EMAIL_PROVIDER: "smtp",
+        EMAIL_API_KEY: undefined,
+      }),
+    ).toThrow(/EMAIL_SMTP_HOST|EMAIL_SMTP_PORT|EMAIL_SMTP_USER|EMAIL_SMTP_PASSWORD/);
+  });
+
+  it("accepts complete SMTP configuration", () => {
+    expect(
+      parseEnvironment({
+        ...productionEnvironment,
+        EMAIL_PROVIDER: "smtp",
+        EMAIL_API_KEY: undefined,
+        EMAIL_SMTP_HOST: "smtp.example.test",
+        EMAIL_SMTP_PORT: "587",
+        EMAIL_SMTP_USER: "mailer",
+        EMAIL_SMTP_PASSWORD: "secret",
+      }),
+    ).toMatchObject({ EMAIL_PROVIDER: "smtp", EMAIL_SMTP_PORT: 587 });
+  });
 });

@@ -17,6 +17,7 @@ import { createEmailService } from "./email/email.service.js";
 import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
+import { globalApiRateLimit } from "./middleware/global-rate-limit.middleware.js";
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { AuthService } from "./modules/auth/auth.service.js";
@@ -131,6 +132,7 @@ export function createApp({
 
   app.use(
     API_PREFIX,
+    globalApiRateLimit,
     createApiRouter({
       healthService: resolvedHealthService,
       authService: resolvedAuthService,

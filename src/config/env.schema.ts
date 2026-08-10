@@ -43,6 +43,13 @@ const envSchema = z
     EMAIL_PROVIDER: z.enum(emailProviders).default("console"),
     EMAIL_API_KEY: optionalString,
     EMAIL_FROM: z.string().email(),
+    EMAIL_API_BASE_URL: z.string().url().optional(),
+    EMAIL_MAILGUN_DOMAIN: optionalString,
+    EMAIL_SMTP_HOST: optionalString,
+    EMAIL_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).optional(),
+    EMAIL_SMTP_USER: optionalString,
+    EMAIL_SMTP_PASSWORD: optionalString,
+    EMAIL_SMTP_SECURE: booleanSchema.default(true),
     GOOGLE_CLIENT_ID: optionalString,
     GOOGLE_CLIENT_SECRET: optionalString,
     GITHUB_CLIENT_ID: optionalString,
@@ -67,12 +74,35 @@ const envSchema = z
         path: ["EMAIL_PROVIDER"],
         message: "Console email is not allowed in production.",
       });
-    } else if (!value.EMAIL_API_KEY) {
+    } else if (value.EMAIL_PROVIDER !== "smtp" && !value.EMAIL_API_KEY) {
       context.addIssue({
         code: "custom",
         path: ["EMAIL_API_KEY"],
         message: "Required for the selected production email provider.",
       });
+    }
+    if (value.EMAIL_PROVIDER === "mailgun" && !value.EMAIL_MAILGUN_DOMAIN) {
+      context.addIssue({
+        code: "custom",
+        path: ["EMAIL_MAILGUN_DOMAIN"],
+        message: "Required for the Mailgun provider.",
+      });
+    }
+    if (value.EMAIL_PROVIDER === "smtp") {
+      for (const key of [
+        "EMAIL_SMTP_HOST",
+        "EMAIL_SMTP_PORT",
+        "EMAIL_SMTP_USER",
+        "EMAIL_SMTP_PASSWORD",
+      ] as const) {
+        if (value[key] === undefined) {
+          context.addIssue({
+            code: "custom",
+            path: [key],
+            message: "Required for the SMTP provider.",
+          });
+        }
+      }
     }
     for (const key of [
       "GOOGLE_CLIENT_ID",

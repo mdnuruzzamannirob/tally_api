@@ -2258,6 +2258,12 @@ Providers can implement:
 - Mailgun
 - SMTP
 
+The current API provides concrete adapters for Resend, SendGrid, Mailgun, and
+SMTP through `src/email/email.service.ts`. Provider credentials are validated
+at startup; console delivery is development-only. Email delivery failures are
+logged with provider and error type only, never recipient, token, URL, or
+message body.
+
 ---
 
 ## 26.2 Email Links

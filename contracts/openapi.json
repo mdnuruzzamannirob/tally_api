@@ -10,14 +10,91 @@
     "/health": {
       "get": {
         "operationId": "health",
-        "responses": { "200": { "$ref": "#/components/responses/Health" } }
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Register" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       }
     },
     "/auth/login": {
       "post": {
         "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Login" } } }
+        },
         "responses": {
-          "200": { "$ref": "#/components/responses/Success" },
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/AuthData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "security": [{ "refreshCookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
           "401": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -25,8 +102,22 @@
     "/auth/refresh": {
       "post": {
         "operationId": "refresh",
+        "security": [{ "refreshCookieAuth": [] }],
         "responses": {
-          "200": { "$ref": "#/components/responses/Success" },
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/AccessTokenData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
           "401": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -34,8 +125,375 @@
     "/auth/me": {
       "get": {
         "operationId": "getCurrentUser",
+        "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "$ref": "#/components/responses/Success" },
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/UserData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "operationId": "verifyEmail",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Token" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/resend-verification": {
+      "post": {
+        "operationId": "resendVerification",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "forgotPassword",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "resetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ResetPassword" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "patch": {
+        "operationId": "changePassword",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ChangePassword" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/set-password": {
+      "post": {
+        "operationId": "setPassword",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SetPassword" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/connected-accounts": {
+      "get": {
+        "operationId": "listConnectedAccounts",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/ConnectedAccountsData" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/connected-accounts/{provider}/link": {
+      "post": {
+        "operationId": "linkConnectedAccount",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "provider", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/AuthorizationUrlData" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/connected-accounts/{provider}": {
+      "delete": {
+        "operationId": "unlinkConnectedAccount",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "provider", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "operationId": "startGoogleOAuth",
+        "responses": {
+          "302": {
+            "description": "Redirect to the configured OAuth provider or frontend callback."
+          }
+        }
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "operationId": "completeGoogleOAuth",
+        "parameters": [
+          { "name": "code", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the configured OAuth provider or frontend callback."
+          }
+        }
+      }
+    },
+    "/auth/github": {
+      "get": {
+        "operationId": "startGitHubOAuth",
+        "responses": {
+          "302": {
+            "description": "Redirect to the configured OAuth provider or frontend callback."
+          }
+        }
+      }
+    },
+    "/auth/github/callback": {
+      "get": {
+        "operationId": "completeGitHubOAuth",
+        "parameters": [
+          { "name": "code", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the configured OAuth provider or frontend callback."
+          }
+        }
+      }
+    },
+    "/users/me/profile": {
+      "patch": {
+        "operationId": "updateProfile",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Profile" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/UserData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/users/me/preferences": {
+      "patch": {
+        "operationId": "updatePreferences",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Preferences" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/UserData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
           "401": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -43,81 +501,1045 @@
     "/applications": {
       "get": {
         "operationId": "listApplications",
-        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "pageSize", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "tag", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "remoteType",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "employmentType",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "source", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "appliedFrom",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "appliedTo", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "followUp", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "order", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": { "data": { "$ref": "#/components/schemas/ApplicationsData" } }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       },
       "post": {
         "operationId": "createApplication",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateApplication" } }
+          }
+        },
         "responses": {
-          "201": { "$ref": "#/components/responses/Success" },
-          "400": { "$ref": "#/components/responses/Error" }
+          "201": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
         }
       }
     },
     "/applications/{id}": {
       "get": {
         "operationId": "getApplication",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
         "responses": {
-          "200": { "$ref": "#/components/responses/Success" },
-          "404": { "$ref": "#/components/responses/Error" }
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
         }
       },
       "patch": {
         "operationId": "updateApplication",
-        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateApplication" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       },
       "delete": {
         "operationId": "deleteApplication",
-        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/archive": {
+      "post": {
+        "operationId": "archiveApplication",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/unarchive": {
+      "post": {
+        "operationId": "unarchiveApplication",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/status": {
+      "post": {
+        "operationId": "changeApplicationStatus",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ChangeStatus" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/history": {
+      "get": {
+        "operationId": "getApplicationHistory",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/HistoryData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       }
     },
     "/tags": {
       "get": {
         "operationId": "listTags",
-        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       },
       "post": {
         "operationId": "createTag",
-        "responses": { "201": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateTag" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/tags/{id}": {
+      "patch": {
+        "operationId": "updateTag",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateTag" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTag",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/tags": {
+      "post": {
+        "operationId": "addApplicationTags",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AddTags" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/tags/{tagId}": {
+      "delete": {
+        "operationId": "removeApplicationTag",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "tagId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/notes": {
+      "get": {
+        "operationId": "listApplicationNotes",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/NotesData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "post": {
+        "operationId": "createNote",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Note" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/NoteData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/notes/{id}": {
+      "patch": {
+        "operationId": "updateNote",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Note" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/NoteData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteNote",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       }
     },
     "/interviews": {
       "get": {
         "operationId": "listInterviews",
-        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "range", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "pageSize", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/InterviewsData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}/interviews": {
+      "get": {
+        "operationId": "listApplicationInterviews",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "range", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "pageSize", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/InterviewsData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "post": {
+        "operationId": "createInterview",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateInterview" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/InterviewData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/interviews/{id}": {
+      "patch": {
+        "operationId": "updateInterview",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateInterview" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/InterviewData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteInterview",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       }
     },
     "/dashboard": {
       "get": {
         "operationId": "getDashboard",
-        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/DashboardData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/export/json": {
+      "get": {
+        "operationId": "exportJson",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Downloadable export file.",
+            "content": {
+              "application/json": { "schema": { "type": "string", "format": "binary" } },
+              "text/csv": { "schema": { "type": "string", "format": "binary" } }
+            }
+          }
+        }
+      }
+    },
+    "/export/csv": {
+      "get": {
+        "operationId": "exportCsv",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Downloadable export file.",
+            "content": {
+              "application/json": { "schema": { "type": "string", "format": "binary" } },
+              "text/csv": { "schema": { "type": "string", "format": "binary" } }
+            }
+          }
+        }
+      }
+    },
+    "/import/json": {
+      "post": {
+        "operationId": "importJson",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ImportBackup" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
+      "refreshCookieAuth": { "type": "apiKey", "in": "cookie", "name": "tally_rt" }
+    },
     "schemas": {
+      "Register": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["email", "password"],
+        "additionalProperties": false
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["email", "password"],
+        "additionalProperties": false
+      },
+      "Email": {
+        "type": "object",
+        "properties": { "email": { "type": "string", "format": "email" } },
+        "required": ["email"],
+        "additionalProperties": false
+      },
+      "Token": {
+        "type": "object",
+        "properties": { "token": { "type": "string" } },
+        "required": ["token"],
+        "additionalProperties": false
+      },
+      "ResetPassword": {
+        "type": "object",
+        "properties": { "token": { "type": "string" }, "password": { "type": "string" } },
+        "required": ["token", "password"],
+        "additionalProperties": false
+      },
+      "ChangePassword": {
+        "type": "object",
+        "properties": {
+          "currentPassword": { "type": "string" },
+          "newPassword": { "type": "string" }
+        },
+        "required": ["currentPassword", "newPassword"],
+        "additionalProperties": false
+      },
+      "SetPassword": {
+        "type": "object",
+        "properties": { "newPassword": { "type": "string" } },
+        "required": ["newPassword"],
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "Preferences": {
+        "type": "object",
+        "properties": {
+          "theme": { "type": "string", "enum": ["light", "dark", "system"] },
+          "defaultLandingPage": { "type": "string", "enum": ["dashboard", "applications"] },
+          "timeZone": { "type": "string" },
+          "notificationsEnabled": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "CreateApplication": {
+        "type": "object",
+        "properties": {
+          "company": { "type": "string" },
+          "role": { "type": "string" },
+          "jobUrl": { "type": "string", "format": "uri" },
+          "location": { "type": "string" },
+          "remoteType": { "type": "string", "enum": ["ONSITE", "REMOTE", "HYBRID"] },
+          "employmentType": { "type": "string", "enum": ["FULL_TIME", "CONTRACT", "INTERNSHIP"] },
+          "source": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": [
+              "WISHLIST",
+              "APPLIED",
+              "SCREENING",
+              "INTERVIEW",
+              "OFFER",
+              "REJECTED",
+              "WITHDRAWN"
+            ]
+          },
+          "appliedAt": { "type": "string", "format": "date" },
+          "salaryMin": { "type": "number", "minimum": 0 },
+          "salaryMax": { "type": "number", "minimum": 0 },
+          "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+          "nextFollowUpAt": { "type": "string", "format": "date-time" },
+          "tagIds": { "type": "array", "items": { "type": "string" } },
+          "initialNote": { "type": "string" }
+        },
+        "required": ["company", "role"],
+        "additionalProperties": false
+      },
+      "UpdateApplication": {
+        "type": "object",
+        "properties": {
+          "company": { "type": "string" },
+          "role": { "type": "string" },
+          "jobUrl": { "type": ["string", "null"], "format": "uri" },
+          "location": { "type": ["string", "null"] },
+          "remoteType": {
+            "type": ["string", "null"],
+            "enum": ["ONSITE", "REMOTE", "HYBRID", null]
+          },
+          "employmentType": {
+            "type": ["string", "null"],
+            "enum": ["FULL_TIME", "CONTRACT", "INTERNSHIP", null]
+          },
+          "source": { "type": ["string", "null"] },
+          "appliedAt": { "type": ["string", "null"], "format": "date" },
+          "salaryMin": { "type": ["number", "null"], "minimum": 0 },
+          "salaryMax": { "type": ["number", "null"], "minimum": 0 },
+          "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+          "nextFollowUpAt": { "type": ["string", "null"], "format": "date-time" },
+          "tagIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      },
+      "ChangeStatus": {
+        "type": "object",
+        "properties": {
+          "toStatus": {
+            "type": "string",
+            "enum": [
+              "WISHLIST",
+              "APPLIED",
+              "SCREENING",
+              "INTERVIEW",
+              "OFFER",
+              "REJECTED",
+              "WITHDRAWN"
+            ]
+          },
+          "note": { "type": "string" }
+        },
+        "required": ["toStatus"],
+        "additionalProperties": false
+      },
+      "CreateTag": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "UpdateTag": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "color": { "type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$" }
+        },
+        "additionalProperties": false
+      },
+      "AddTags": {
+        "type": "object",
+        "properties": {
+          "tagIds": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        },
+        "required": ["tagIds"],
+        "additionalProperties": false
+      },
+      "Note": {
+        "type": "object",
+        "properties": { "content": { "type": "string" } },
+        "required": ["content"],
+        "additionalProperties": false
+      },
+      "CreateInterview": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["PHONE", "TECHNICAL", "HR", "SYSTEM_DESIGN", "ONSITE", "OTHER"]
+          },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "interviewerName": { "type": "string" },
+          "meetingLink": { "type": "string", "format": "uri" },
+          "location": { "type": "string" },
+          "notes": { "type": "string" },
+          "status": { "type": "string", "enum": ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"] }
+        },
+        "required": ["type", "scheduledAt"],
+        "additionalProperties": false
+      },
+      "UpdateInterview": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["PHONE", "TECHNICAL", "HR", "SYSTEM_DESIGN", "ONSITE", "OTHER"]
+          },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "interviewerName": { "type": ["string", "null"] },
+          "meetingLink": { "type": ["string", "null"], "format": "uri" },
+          "location": { "type": ["string", "null"] },
+          "notes": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"] }
+        },
+        "additionalProperties": false
+      },
+      "ImportBackup": {
+        "type": "object",
+        "required": ["version", "exportedAt", "profile", "tags", "applications"],
+        "properties": {
+          "version": { "const": 1 },
+          "exportedAt": { "type": "string", "format": "date-time" },
+          "profile": { "type": "object" },
+          "tags": { "type": "array" },
+          "applications": { "type": "array" }
+        },
+        "additionalProperties": false
+      },
       "SuccessEnvelope": {
         "type": "object",
-        "required": ["success", "message", "data"],
         "properties": {
           "success": { "const": true },
           "message": { "type": "string" },
-          "data": {},
+          "data": { "type": "object", "additionalProperties": true },
           "meta": { "$ref": "#/components/schemas/Meta" }
-        }
+        },
+        "required": ["success", "message", "data"],
+        "additionalProperties": false
       },
       "ErrorEnvelope": {
         "type": "object",
-        "required": ["success", "message", "error", "meta"],
         "properties": {
           "success": { "const": false },
           "message": { "type": "string" },
           "error": {
             "type": "object",
-            "required": ["code"],
-            "properties": { "code": { "type": "string" }, "details": { "type": "object" } }
+            "properties": { "code": { "type": "string" }, "details": { "type": "object" } },
+            "required": ["code"]
           },
           "meta": { "$ref": "#/components/schemas/Meta" }
-        }
+        },
+        "required": ["success", "message", "error", "meta"],
+        "additionalProperties": false
       },
       "Meta": {
         "type": "object",
@@ -127,22 +1549,126 @@
           "limit": { "type": "integer" },
           "total": { "type": "integer" },
           "totalPages": { "type": "integer" }
-        }
-      }
+        },
+        "additionalProperties": false
+      },
+      "MessageData": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "additionalProperties": true
+      },
+      "UserData": {
+        "type": "object",
+        "properties": {
+          "user": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "AuthData": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "user": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "AccessTokenData": {
+        "type": "object",
+        "properties": { "accessToken": { "type": "string" } },
+        "additionalProperties": true
+      },
+      "ConnectedAccountsData": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          },
+          "hasPassword": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      },
+      "AuthorizationUrlData": {
+        "type": "object",
+        "properties": { "authorizationUrl": { "type": "string", "format": "uri" } },
+        "additionalProperties": true
+      },
+      "ApplicationData": {
+        "type": "object",
+        "properties": {
+          "application": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "ApplicationsData": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          },
+          "pagination": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "HistoryData": {
+        "type": "object",
+        "properties": {
+          "history": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          }
+        },
+        "additionalProperties": true
+      },
+      "TagsData": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          }
+        },
+        "additionalProperties": true
+      },
+      "NotesData": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          }
+        },
+        "additionalProperties": true
+      },
+      "NoteData": {
+        "type": "object",
+        "properties": {
+          "note": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "InterviewsData": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          },
+          "pagination": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "InterviewData": {
+        "type": "object",
+        "properties": {
+          "interview": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "DashboardData": { "type": "object", "properties": {}, "additionalProperties": true }
     },
     "responses": {
-      "Success": {
-        "description": "Successful API response",
-        "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } }
-        }
-      },
-      "Health": {
-        "description": "Healthy service",
-        "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } }
-        }
-      },
       "Error": {
         "description": "API error",
         "content": {
