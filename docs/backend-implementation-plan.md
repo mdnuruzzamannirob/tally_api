@@ -29,6 +29,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 14 — Connected Accounts
 - Completed: Phase 15 — User Profile and Preferences
 - Completed: Phase 16 — Application Creation and Detail
+- Completed: Phase 17 — Application Update, Archive, and Delete
 
 ## Delivery Rules
 

@@ -79,3 +79,45 @@ export const createApplicationSchema = z
   });
 
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
+
+const nullable = <T extends z.ZodType>(schema: T) => schema.nullable().optional();
+
+export const updateApplicationSchema = z
+  .object({
+    company: z.string().trim().min(1).max(100).optional(),
+    role: z.string().trim().min(1).max(100).optional(),
+    jobUrl: nullable(absoluteHttpUrl),
+    location: nullable(z.string().trim().min(1).max(120)),
+    remoteType: nullable(remoteType),
+    employmentType: nullable(employmentType),
+    source: nullable(z.string().trim().min(1).max(100)),
+    appliedAt: nullable(calendarDate),
+    salaryMin: nullable(z.number().finite().nonnegative()),
+    salaryMax: nullable(z.number().finite().nonnegative()),
+    currency: nullable(z.string().regex(/^[A-Z]{3}$/, "Currency must be three uppercase letters.")),
+    nextFollowUpAt: nullable(timestamp),
+    tagIds: z.array(z.string().trim().min(1)).max(100).optional(),
+  })
+  .strict()
+  .refine(
+    (input) => Object.values(input).some((value) => value !== undefined),
+    "Provide at least one application field.",
+  )
+  .superRefine((input, context) => {
+    if (
+      typeof input.salaryMin === "number" &&
+      typeof input.salaryMax === "number" &&
+      input.salaryMax < input.salaryMin
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["salaryMax"],
+        message: "Salary maximum cannot be below salary minimum.",
+      });
+    }
+    if (input.tagIds && new Set(input.tagIds).size !== input.tagIds.length) {
+      context.addIssue({ code: "custom", path: ["tagIds"], message: "Tag IDs must be unique." });
+    }
+  });
+
+export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;

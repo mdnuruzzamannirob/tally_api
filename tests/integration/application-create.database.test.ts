@@ -125,4 +125,64 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(404);
   });
+
+  it("replaces tags transactionally, rejects generic status changes, and archives or deletes owned applications", async () => {
+    const user = await prisma.user.create({ data: { email: "lifecycle@example.test" } });
+    const firstTag = await prisma.tag.create({ data: { userId: user.id, name: "first" } });
+    const secondTag = await prisma.tag.create({ data: { userId: user.id, name: "second" } });
+    const application = await prisma.application.create({
+      data: { userId: user.id, company: "Tally", role: "Engineer" },
+    });
+    await prisma.applicationTag.create({
+      data: { applicationId: application.id, tagId: firstTag.id },
+    });
+    await prisma.note.create({ data: { applicationId: application.id, content: "A note" } });
+    await prisma.statusHistory.create({
+      data: { applicationId: application.id, fromStatus: "WISHLIST", toStatus: "APPLIED" },
+    });
+    const accessToken = createAccessToken({ sub: user.id, emailVerified: false });
+
+    const updated = await request(app)
+      .patch(`/api/v1/applications/${application.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ company: "Updated Tally", tagIds: [secondTag.id] });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.application.company).toBe("Updated Tally");
+    expect(
+      updated.body.data.application.tags.map((assignment: { tagId: string }) => assignment.tagId),
+    ).toEqual([secondTag.id]);
+
+    await request(app)
+      .patch(`/api/v1/applications/${application.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: "OFFER" })
+      .expect(400);
+
+    await request(app)
+      .post(`/api/v1/applications/${application.id}/archive`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    expect(
+      (await prisma.application.findUniqueOrThrow({ where: { id: application.id } })).archivedAt,
+    ).toBeInstanceOf(Date);
+    await request(app)
+      .post(`/api/v1/applications/${application.id}/unarchive`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    expect(
+      (await prisma.application.findUniqueOrThrow({ where: { id: application.id } })).archivedAt,
+    ).toBeNull();
+
+    await request(app)
+      .delete(`/api/v1/applications/${application.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    await expect(
+      prisma.application.findUnique({ where: { id: application.id } }),
+    ).resolves.toBeNull();
+    await expect(prisma.note.count({ where: { applicationId: application.id } })).resolves.toBe(0);
+    await expect(
+      prisma.statusHistory.count({ where: { applicationId: application.id } }),
+    ).resolves.toBe(0);
+  });
 });
