@@ -19,5 +19,17 @@ export function createExportRouter(exportService: ExportService): Router {
       return response.send(backup);
     }),
   );
+  router.get(
+    "/csv",
+    authenticate,
+    asyncHandler(async (request, response) => {
+      if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+      const csv = await exportService.exportCsv(request.auth.userId);
+      const date = new Date().toISOString().slice(0, 10);
+      response.type("text/csv");
+      response.attachment(`tally-applications-${date}.csv`);
+      return response.send(csv);
+    }),
+  );
   return router;
 }

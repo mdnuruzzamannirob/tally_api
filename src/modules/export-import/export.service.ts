@@ -1,6 +1,34 @@
 import type { PrismaClient } from "../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 
+const csvColumns = [
+  "company",
+  "role",
+  "status",
+  "jobUrl",
+  "location",
+  "remoteType",
+  "employmentType",
+  "source",
+  "appliedAt",
+  "nextFollowUpAt",
+  "salaryMin",
+  "salaryMax",
+  "currency",
+  "tags",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+function neutralizeCsvFormula(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
+function escapeCsv(value: string | null): string {
+  const normalized = value === null ? "" : neutralizeCsvFormula(value);
+  return `"${normalized.replaceAll('"', '""')}"`;
+}
+
 export class ExportService {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -110,5 +138,52 @@ export class ExportService {
         statusHistory: application.statusHistory,
       })),
     };
+  }
+
+  async exportCsv(userId: string): Promise<string> {
+    const applications = await this.prisma.application.findMany({
+      where: { userId },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: {
+        company: true,
+        role: true,
+        status: true,
+        jobUrl: true,
+        location: true,
+        remoteType: true,
+        employmentType: true,
+        source: true,
+        appliedAt: true,
+        nextFollowUpAt: true,
+        salaryMin: true,
+        salaryMax: true,
+        currency: true,
+        createdAt: true,
+        updatedAt: true,
+        tags: { orderBy: { tag: { name: "asc" } }, select: { tag: { select: { name: true } } } },
+      },
+    });
+    const rows = applications.map((application) => {
+      const values: Array<string | null> = [
+        application.company,
+        application.role,
+        application.status,
+        application.jobUrl,
+        application.location,
+        application.remoteType,
+        application.employmentType,
+        application.source,
+        application.appliedAt?.toISOString().slice(0, 10) ?? null,
+        application.nextFollowUpAt?.toISOString() ?? null,
+        application.salaryMin?.toString() ?? null,
+        application.salaryMax?.toString() ?? null,
+        application.currency,
+        JSON.stringify(application.tags.map(({ tag }) => neutralizeCsvFormula(tag.name))),
+        application.createdAt.toISOString(),
+        application.updatedAt.toISOString(),
+      ];
+      return values.map(escapeCsv).join(",");
+    });
+    return [csvColumns.join(","), ...rows].join("\r\n");
   }
 }
