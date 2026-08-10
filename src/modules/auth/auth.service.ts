@@ -157,10 +157,7 @@ export class AuthService {
   }
 
   async getCurrentUser(userId: string): Promise<PublicUser> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { oauthAccounts: true },
-    });
+    const user = await this.repository.findUserWithConnectedAccounts(userId);
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
     return toPublicUser(user);
   }
@@ -316,22 +313,10 @@ export class AuthService {
   }
 
   async unlinkProvider(userId: string, provider: "GOOGLE" | "GITHUB"): Promise<void> {
-    await this.prisma.$transaction(
-      async (transaction) => {
-        const user = await transaction.user.findUnique({
-          where: { id: userId },
-          include: { oauthAccounts: true },
-        });
-        if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-        const account = user.oauthAccounts.find((item) => item.provider === provider);
-        if (!account) throw new ApiError(404, "NOT_FOUND", "Connected provider was not found.");
-        if (user.oauthAccounts.length + Number(Boolean(user.passwordHash)) <= 1) {
-          throw new ApiError(409, "CONFLICT", "Cannot remove the last available login method");
-        }
-        await transaction.oauthAccount.delete({ where: { id: account.id } });
-      },
-      { isolationLevel: "Serializable" },
-    );
+    const result = await this.repository.unlinkConnectedAccount(userId, provider);
+    if (result.kind === "missing-user") throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+    if (result.kind === "missing-account") throw new ApiError(404, "NOT_FOUND", "Connected provider was not found.");
+    if (result.kind === "last-login-method") throw new ApiError(409, "CONFLICT", "Cannot remove the last available login method");
   }
 
   private async revokeUserSessions(userId: string): Promise<void> {
