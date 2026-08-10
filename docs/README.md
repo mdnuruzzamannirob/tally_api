@@ -9,6 +9,7 @@ These files are tracked with the standalone API repository.
 - `definition-of-done.md` — backend/database release checks
 - `backend-implementation-plan.md` — phased API delivery plan
 - `reconciliation-report.md` — prior cross-document consistency review
+- `release-verification.md` — release smoke test, deployment sign-off, and frontend E2E handoff
 
 When an API change affects the frontend contract, update the corresponding
 contract details in the separate `web` repository in the same delivery.

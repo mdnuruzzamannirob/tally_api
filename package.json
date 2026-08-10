@@ -21,6 +21,7 @@
     "test:unit": "vitest run tests/unit tests/integration/app.test.ts",
     "test:integration": "REQUIRE_TEST_DATABASE=true vitest run tests/integration",
     "test:all": "pnpm test:unit && pnpm test:integration",
+    "test:smoke": "tsx scripts/release-smoke.ts",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
