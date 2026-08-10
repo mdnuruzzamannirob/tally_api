@@ -24,6 +24,7 @@ import { AuthRepository } from "./modules/auth/auth.repository.js";
 import { UserRepository } from "./modules/users/user.repository.js";
 import { UserService } from "./modules/users/user.service.js";
 import { ApplicationService } from "./modules/applications/application.service.js";
+import { ApplicationRepository } from "./modules/applications/application.repository.js";
 import { TagService } from "./modules/tags/tag.service.js";
 import { NoteService } from "./modules/notes/note.service.js";
 import { InterviewService } from "./modules/interviews/interview.service.js";
@@ -75,13 +76,15 @@ export function createApp({
   const authRepository = new AuthRepository(prisma);
   const userRepository = new UserRepository(prisma);
   const oauthRepository = new OAuthRepository(prisma);
+  const applicationRepository = new ApplicationRepository(prisma);
   const resolvedAuthService = authService ?? new AuthService(authRepository, createEmailService());
   const resolvedUserService = userService ?? new UserService(userRepository);
   const resolvedGoogleOAuthService =
     googleOAuthService ?? new GoogleOAuthService(oauthRepository, new GoogleOAuthHttpClient());
   const resolvedGitHubOAuthService =
     githubOAuthService ?? new GitHubOAuthService(oauthRepository, new GitHubOAuthHttpClient());
-  const resolvedApplicationService = applicationService ?? new ApplicationService(prisma);
+  const resolvedApplicationService =
+    applicationService ?? new ApplicationService(applicationRepository);
   const resolvedTagService = tagService ?? new TagService(prisma);
   const resolvedNoteService = noteService ?? new NoteService(prisma);
   const resolvedInterviewService = interviewService ?? new InterviewService(prisma);

@@ -194,7 +194,7 @@ Status must be updated only after the relevant gate passes.
 | ----- | -------------------------------------------- | ----------------------------------------------------------------------- |
 | 0     | Shared foundation and contract preservation  | Complete                                                                |
 | 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.7 implementation complete; DB/release gates pending |
-| 2     | Applications and tags                        | Pending                                                                 |
+| 2     | Applications and tags                        | In progress — 2.1–2.4 implementation complete; DB gate pending          |
 | 3     | Notes and interviews                         | Pending                                                                 |
 | 4     | Dashboard, health, export, and import        | Pending                                                                 |
 | 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
@@ -478,6 +478,8 @@ atomic writes, filters, sorting, and status-history behavior remain unchanged.
 
 ### 2.1 Application repository foundation
 
+Status: Implementation complete — verified 2026-08-10; database gate pending.
+
 - Create src/modules/applications/application.repository.ts.
 - Move application reads and writes from ApplicationService into named
   repository methods.
@@ -489,7 +491,18 @@ atomic writes, filters, sorting, and status-history behavior remain unchanged.
 Gate: application create/detail tests and ownership tests pass; service has no
 Prisma import.
 
+Recorded 2.1 completion:
+
+- Added `src/modules/applications/application.repository.ts` and moved
+  application create/detail persistence behind it.
+- Repository owns user-scoped predicates, tag ownership checks, relation
+  projections, initial note/tag writes, and initial status-history writes.
+- `ApplicationService` now receives only `ApplicationRepository` and contains
+  application policy/errors rather than Prisma access.
+
 ### 2.2 Application create and detail
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Add controller handlers for create and detail.
 - Move request parsing and response mapping out of application.routes.ts.
@@ -500,7 +513,18 @@ Prisma import.
 Gate: create/detail integration tests pass, including initial note/tags,
 duplicate/invalid tag behavior, and cross-user 404 behavior.
 
+Recorded 2.2 completion:
+
+- Added `application.controller.ts`; create/detail input parsing and response
+  mapping now live outside the route module.
+- `application.routes.ts` now only maps authentication middleware and
+  controller handlers.
+- Existing create/detail HTTP envelopes, status codes, ownership behavior, and
+  nested initial writes are preserved.
+
 ### 2.3 Application list, search, filters, and pagination
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Move list query construction to the repository.
 - Preserve appliedFrom, appliedTo, includeArchived, search fields (company,
@@ -513,7 +537,18 @@ Gate: list/filter integration tests pass for all documented query names, empty
 results, note search, archived inclusion, pagination boundaries, and stable
 sorting.
 
+Recorded 2.3 completion:
+
+- Repository owns filter construction for archive/status/type/source/tag/date,
+  search across application/tag/note fields, follow-up day bounds, pagination,
+  totals, and deterministic ordering.
+- Pipeline status sorting preserves the documented rank and ID tie-breaker.
+- Time-zone lookup remains repository-backed while day-boundary calculation
+  remains service policy.
+
 ### 2.4 Application mutation and status history
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Move update, archive/unarchive, delete, status change, and history queries to
   the repository.
@@ -523,6 +558,31 @@ sorting.
 
 Gate: mutation/history tests pass for no-op status changes, status notes, archive
 visibility, delete cascades, and cross-user access.
+
+Recorded 2.4 completion:
+
+- Update tag replacement and application mutation writes are repository-owned
+  and transactional.
+- Status changes use an atomic conditional update followed by status-history
+  creation in the same transaction, preserving conflict handling.
+- History reads, archive/unarchive, and delete operations enforce user
+  ownership in the repository; service maps persistence outcomes to existing
+  domain errors.
+
+Recorded 2.1–2.4 validation:
+
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- application boundary audit — passed: no Prisma access remains in the
+  application service/controller/routes;
+- `git diff --check` — passed.
+
+The database integration gate remains pending because this workspace still has
+no safe disposable `TEST_DATABASE_URL`; do not run cleanup-based integration
+tests against an unrelated local database. Run the documented disposable
+database gate before marking Phase 2 complete.
 
 ### 2.5 Tags and application-tag assignments
 

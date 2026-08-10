@@ -7,6 +7,7 @@ import { createAccessToken } from "../../src/lib/jwt.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { ApplicationService } from "../../src/modules/applications/application.service.js";
+import { ApplicationRepository } from "../../src/modules/applications/application.repository.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { TagService } from "../../src/modules/tags/tag.service.js";
@@ -33,7 +34,7 @@ describe.skipIf(!runDatabaseTests)("tags", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
-      applicationService: new ApplicationService(prisma),
+      applicationService: new ApplicationService(new ApplicationRepository(prisma)),
       tagService: new TagService(prisma),
     });
   });
