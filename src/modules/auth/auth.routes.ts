@@ -2,6 +2,8 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 
 import { ApiError } from "../../utils/api-error.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
+import { requireRefreshRequestOrigin } from "../../middleware/refresh-origin.middleware.js";
 import type { AuthService } from "./auth.service.js";
 import { createAuthController } from "./auth.controller.js";
 
@@ -23,8 +25,12 @@ export function createAuthRouter(authService: AuthService): Router {
   const resendRateLimit = createAuthRateLimit(60 * 60 * 1_000, 5);
 
   router.post("/register", authRateLimit, controller.register);
+  router.post("/login", authRateLimit, controller.login);
   router.post("/verify-email", authRateLimit, controller.verifyEmail);
   router.post("/resend-verification", resendRateLimit, controller.resendVerification);
+  router.post("/refresh", authRateLimit, requireRefreshRequestOrigin, controller.refresh);
+  router.post("/logout", authRateLimit, requireRefreshRequestOrigin, controller.logout);
+  router.get("/me", authenticate, controller.me);
 
   return router;
 }

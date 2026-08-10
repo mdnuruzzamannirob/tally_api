@@ -20,6 +20,12 @@ export const resendVerificationSchema = z.object({
   email: emailSchema,
 });
 
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;

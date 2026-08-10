@@ -4,7 +4,7 @@ import { env } from "../config/env.js";
 
 export const REFRESH_COOKIE_NAME = "tally_rt";
 
-function durationToMilliseconds(duration: string): number {
+export function durationToMilliseconds(duration: string): number {
   const match = /^(\d+)([smhdw])$/.exec(duration);
   if (!match) throw new Error("Invalid duration.");
 
@@ -12,6 +12,10 @@ function durationToMilliseconds(duration: string): number {
   const unit = match[2];
   const multipliers = { s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000, w: 604_800_000 };
   return quantity * multipliers[unit as keyof typeof multipliers];
+}
+
+export function getRefreshTokenExpiresAt(): Date {
+  return new Date(Date.now() + durationToMilliseconds(env.REFRESH_TOKEN_EXPIRES_IN));
 }
 
 export function getRefreshCookieOptions(): CookieOptions {

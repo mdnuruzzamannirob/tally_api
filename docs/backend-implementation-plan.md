@@ -22,6 +22,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 7 — HTTP Foundation
 - Completed: Phase 8 — Shared Auth Primitives
 - Completed: Phase 9 — Registration and Email Verification
+- Completed: Phase 10 — Login, Refresh, and Logout
 
 ## Delivery Rules
 
