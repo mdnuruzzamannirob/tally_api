@@ -43,9 +43,11 @@ import { GitHubOAuthService } from "./oauth/github-oauth.service.js";
 import { GitHubOAuthHttpClient } from "./oauth/github.oauth.js";
 import { OAuthRepository } from "./oauth/oauth.repository.js";
 import { createApiRouter } from "./routes/index.js";
+import { HealthService } from "./routes/health.service.js";
 
 export interface AppDependencies {
   checkDatabase?: () => Promise<void>;
+  healthService?: HealthService;
   authService?: AuthService;
   userService?: UserService;
   googleOAuthService?: GoogleOAuthService;
@@ -66,6 +68,7 @@ const defaultDatabaseCheck = async (): Promise<void> => {
 
 export function createApp({
   checkDatabase = defaultDatabaseCheck,
+  healthService,
   authService,
   userService,
   googleOAuthService,
@@ -89,6 +92,7 @@ export function createApp({
   const dashboardRepository = new DashboardRepository(prisma);
   const exportRepository = new ExportRepository(prisma);
   const importRepository = new ImportRepository(prisma);
+  const resolvedHealthService = healthService ?? new HealthService(checkDatabase);
   const resolvedAuthService = authService ?? new AuthService(authRepository, createEmailService());
   const resolvedUserService = userService ?? new UserService(userRepository);
   const resolvedGoogleOAuthService =
@@ -128,7 +132,7 @@ export function createApp({
   app.use(
     API_PREFIX,
     createApiRouter({
-      checkDatabase,
+      healthService: resolvedHealthService,
       authService: resolvedAuthService,
       userService: resolvedUserService,
       googleOAuthService: resolvedGoogleOAuthService,

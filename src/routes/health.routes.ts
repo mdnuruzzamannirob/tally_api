@@ -1,32 +1,12 @@
 import { Router } from "express";
 
-import { ApiError } from "../lib/api-error.js";
-import { sendSuccess } from "../lib/api-response.js";
 import { asyncHandler } from "../lib/async-handler.js";
+import { HealthController } from "./health.controller.js";
+import type { HealthService } from "./health.service.js";
 
-export function createHealthRouter(checkDatabase: () => Promise<void>): Router {
+export function createHealthRouter(healthService: HealthService): Router {
+  const controller = new HealthController(healthService);
   const router = Router();
-
-  router.get(
-    "/health",
-    asyncHandler(async (_request, response) => {
-      try {
-        await checkDatabase();
-      } catch {
-        throw new ApiError(503, "SERVICE_UNAVAILABLE", "Service temporarily unavailable.");
-      }
-
-      return sendSuccess(
-        response,
-        {
-          status: "ok",
-          database: "connected",
-          timestamp: new Date().toISOString(),
-        },
-        { message: "Service is healthy." },
-      );
-    }),
-  );
-
+  router.get("/health", asyncHandler((request, response) => controller.status(request, response)));
   return router;
 }

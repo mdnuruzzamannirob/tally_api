@@ -18,6 +18,7 @@ import { createUsersRouter } from "../modules/users/users.routes.js";
 import { createGitHubOAuthRouter } from "../oauth/github-oauth.routes.js";
 import { createGoogleOAuthRouter } from "../oauth/google-oauth.routes.js";
 import { createHealthRouter } from "./health.routes.js";
+import type { HealthService } from "./health.service.js";
 import { createOpenApiRouter } from "./openapi.routes.js";
 
 type ResolvedDependencies = Required<AppDependencies>;
@@ -26,7 +27,7 @@ type ResolvedDependencies = Required<AppDependencies>;
 export function createApiRouter(dependencies: ResolvedDependencies): Router {
   const router = Router();
   router.use(createOpenApiRouter());
-  router.use(createHealthRouter(dependencies.checkDatabase));
+  router.use(createHealthRouter(dependencies.healthService));
   router.use("/auth", createAuthRouter(dependencies.authService));
   router.use(
     "/auth",
