@@ -5,7 +5,11 @@ import { ApiError } from "../../utils/api-error.js";
 import { asyncHandler } from "../../utils/async-handler.js";
 import { sendSuccess } from "../../utils/api-response.js";
 import type { ApplicationService } from "./application.service.js";
-import { createApplicationSchema, updateApplicationSchema } from "./application.validators.js";
+import {
+  createApplicationSchema,
+  listApplicationsQuerySchema,
+  updateApplicationSchema,
+} from "./application.validators.js";
 
 function userIdOrThrow(request: Express.Request): string {
   if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
@@ -14,6 +18,23 @@ function userIdOrThrow(request: Express.Request): string {
 
 export function createApplicationsRouter(applicationService: ApplicationService): Router {
   const router = Router();
+  router.get(
+    "/",
+    authenticate,
+    asyncHandler(async (request, response) => {
+      const query = listApplicationsQuerySchema.parse(request.query);
+      const result = await applicationService.list(userIdOrThrow(request), query);
+      return sendSuccess(response, {
+        items: result.items,
+        pagination: {
+          page: query.page,
+          pageSize: query.pageSize,
+          total: result.total,
+          totalPages: Math.ceil(result.total / query.pageSize),
+        },
+      });
+    }),
+  );
   router.post(
     "/",
     authenticate,

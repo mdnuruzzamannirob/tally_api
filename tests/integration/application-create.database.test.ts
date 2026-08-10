@@ -185,4 +185,80 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       prisma.statusHistory.count({ where: { applicationId: application.id } }),
     ).resolves.toBe(0);
   });
+
+  it("lists owned applications with filters, stable pagination, search, and pipeline status sorting", async () => {
+    const user = await prisma.user.create({
+      data: { email: "list@example.test", timeZone: "Asia/Dhaka" },
+    });
+    const tag = await prisma.tag.create({ data: { userId: user.id, name: "frontend" } });
+    const wishlist = await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: "Alpha",
+        role: "Engineer",
+        status: "WISHLIST",
+        source: "LinkedIn",
+      },
+    });
+    const applied = await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: "Beta",
+        role: "Designer",
+        status: "APPLIED",
+        appliedAt: new Date("2026-01-05T00:00:00.000Z"),
+      },
+    });
+    await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: "Gamma",
+        role: "Engineer",
+        status: "INTERVIEW",
+        archivedAt: new Date(),
+      },
+    });
+    await prisma.applicationTag.create({ data: { applicationId: applied.id, tagId: tag.id } });
+    await prisma.note.create({
+      data: { applicationId: wishlist.id, content: "Referral conversation" },
+    });
+    const accessToken = createAccessToken({ sub: user.id, emailVerified: false });
+
+    const defaultList = await request(app)
+      .get("/api/v1/applications")
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(defaultList.status).toBe(200);
+    expect(defaultList.body.data.pagination).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      total: 2,
+      totalPages: 1,
+    });
+
+    const tagSearch = await request(app)
+      .get(`/api/v1/applications?tag=${tag.id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(tagSearch.body.data.items.map((item: { id: string }) => item.id)).toEqual([applied.id]);
+
+    const noteSearch = await request(app)
+      .get("/api/v1/applications?search=referral")
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(noteSearch.body.data.items.map((item: { id: string }) => item.id)).toEqual([
+      wishlist.id,
+    ]);
+
+    const statusOrder = await request(app)
+      .get("/api/v1/applications?includeArchived=true&sort=status&order=desc&pageSize=2")
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(statusOrder.body.data.items.map((item: { status: string }) => item.status)).toEqual([
+      "INTERVIEW",
+      "APPLIED",
+    ]);
+    expect(statusOrder.body.data.pagination).toMatchObject({ total: 3, totalPages: 2 });
+
+    await request(app)
+      .get("/api/v1/applications?sort=unknown")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(400);
+  });
 });

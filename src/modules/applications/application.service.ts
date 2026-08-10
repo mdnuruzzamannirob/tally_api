@@ -1,8 +1,47 @@
-import type { PrismaClient } from "../../generated/prisma/client.js";
+import type { Prisma, PrismaClient } from "../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
-import type { CreateApplicationInput, UpdateApplicationInput } from "./application.validators.js";
+import type {
+  CreateApplicationInput,
+  ListApplicationsQuery,
+  UpdateApplicationInput,
+} from "./application.validators.js";
 
 const applicationInclude = { tags: { include: { tag: true } } } as const;
+const statusRank: Record<string, number> = {
+  WISHLIST: 0,
+  APPLIED: 1,
+  SCREENING: 2,
+  INTERVIEW: 3,
+  OFFER: 4,
+  REJECTED: 5,
+  WITHDRAWN: 6,
+};
+
+function dayBounds(timeZone: string): { start: Date; end: Date } {
+  const dateParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts();
+  const values = Object.fromEntries(
+    dateParts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, value]),
+  );
+  const localDate = `${values.year}-${values.month}-${values.day}`;
+  const noon = new Date(`${localDate}T12:00:00.000Z`);
+  const offsetName = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "longOffset",
+  })
+    .formatToParts(noon)
+    .find(({ type }) => type === "timeZoneName")?.value;
+  const offsetMatch = offsetName?.match(/^GMT([+-])(\d{2}):(\d{2})$/);
+  const offsetMinutes = offsetMatch
+    ? (Number(offsetMatch[2]) * 60 + Number(offsetMatch[3])) * (offsetMatch[1] === "+" ? 1 : -1)
+    : 0;
+  const start = new Date(Date.parse(`${localDate}T00:00:00.000Z`) - offsetMinutes * 60_000);
+  return { start, end: new Date(start.getTime() + 24 * 60 * 60_000) };
+}
 
 export class ApplicationService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -52,6 +91,94 @@ export class ApplicationService {
     });
     if (!application) throw new ApiError(404, "NOT_FOUND", "Application was not found.");
     return application;
+  }
+
+  async list(userId: string, query: ListApplicationsQuery) {
+    const where: Prisma.ApplicationWhereInput = {
+      userId,
+      ...(query.includeArchived ? {} : { archivedAt: null }),
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.remoteType ? { remoteType: query.remoteType } : {}),
+      ...(query.employmentType ? { employmentType: query.employmentType } : {}),
+      ...(query.source ? { source: { equals: query.source, mode: "insensitive" } } : {}),
+      ...(query.tag ? { tags: { some: { tagId: query.tag } } } : {}),
+      ...(query.appliedFrom || query.appliedTo
+        ? {
+            appliedAt: {
+              ...(query.appliedFrom ? { gte: new Date(`${query.appliedFrom}T00:00:00.000Z`) } : {}),
+              ...(query.appliedTo ? { lte: new Date(`${query.appliedTo}T00:00:00.000Z`) } : {}),
+            },
+          }
+        : {}),
+      ...(query.search
+        ? {
+            OR: [
+              { company: { contains: query.search, mode: "insensitive" } },
+              { role: { contains: query.search, mode: "insensitive" } },
+              { location: { contains: query.search, mode: "insensitive" } },
+              {
+                tags: { some: { tag: { name: { contains: query.search, mode: "insensitive" } } } },
+              },
+              { notes: { some: { content: { contains: query.search, mode: "insensitive" } } } },
+            ],
+          }
+        : {}),
+    };
+    if (query.followUp) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { timeZone: true },
+      });
+      const { start, end } = dayBounds(user?.timeZone ?? "UTC");
+      Object.assign(where, {
+        nextFollowUpAt:
+          query.followUp === "overdue"
+            ? { lt: start }
+            : query.followUp === "today"
+              ? { gte: start, lt: end }
+              : query.followUp === "upcoming"
+                ? { gte: end }
+                : null,
+      });
+    }
+
+    const skip = (query.page - 1) * query.pageSize;
+    if (query.sort === "status") {
+      const matching = await this.prisma.application.findMany({
+        where,
+        select: { id: true, status: true },
+      });
+      matching.sort((left, right) => {
+        const comparison = (statusRank[left.status] ?? 0) - (statusRank[right.status] ?? 0);
+        const ordered = query.order === "asc" ? comparison : -comparison;
+        return ordered || left.id.localeCompare(right.id);
+      });
+      const ids = matching.slice(skip, skip + query.pageSize).map(({ id }) => id);
+      const unsortedItems = await this.prisma.application.findMany({
+        where: { id: { in: ids } },
+        include: applicationInclude,
+      });
+      const itemById = new Map(unsortedItems.map((item) => [item.id, item]));
+      return {
+        items: ids.flatMap((id) => (itemById.has(id) ? [itemById.get(id)!] : [])),
+        total: matching.length,
+      };
+    }
+    const orderBy = [
+      { [query.sort]: query.order },
+      { id: "asc" },
+    ] as Prisma.ApplicationOrderByWithRelationInput[];
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.application.findMany({
+        where,
+        include: applicationInclude,
+        orderBy,
+        skip,
+        take: query.pageSize,
+      }),
+      this.prisma.application.count({ where }),
+    ]);
+    return { items, total };
   }
 
   async update(userId: string, id: string, input: UpdateApplicationInput) {

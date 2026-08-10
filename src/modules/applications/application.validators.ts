@@ -121,3 +121,44 @@ export const updateApplicationSchema = z
   });
 
 export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
+
+const positiveInteger = z.coerce.number().int().min(1);
+const optionalTrimmedText = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() || undefined : value),
+  z.string().trim().min(1).max(200).optional(),
+);
+
+export const listApplicationsQuerySchema = z
+  .object({
+    page: positiveInteger.default(1),
+    pageSize: positiveInteger.max(100).default(20),
+    search: optionalTrimmedText,
+    status: applicationStatus.optional(),
+    tag: optionalTrimmedText,
+    remoteType: remoteType.optional(),
+    employmentType: employmentType.optional(),
+    source: optionalTrimmedText,
+    appliedFrom: calendarDate.optional(),
+    appliedTo: calendarDate.optional(),
+    followUp: z.enum(["overdue", "today", "upcoming", "none"]).optional(),
+    includeArchived: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    sort: z
+      .enum(["updatedAt", "createdAt", "company", "role", "appliedAt", "nextFollowUpAt", "status"])
+      .default("updatedAt"),
+    order: z.enum(["asc", "desc"]).default("desc"),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if (input.appliedFrom && input.appliedTo && input.appliedFrom > input.appliedTo) {
+      context.addIssue({
+        code: "custom",
+        path: ["appliedTo"],
+        message: "appliedTo cannot be before appliedFrom.",
+      });
+    }
+  });
+
+export type ListApplicationsQuery = z.infer<typeof listApplicationsQuerySchema>;
