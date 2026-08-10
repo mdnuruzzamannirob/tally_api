@@ -1076,9 +1076,12 @@ contracts. A Node 20 runtime smoke also exposed and fixed the CommonJS-safe
 `jsonwebtoken` import in `src/lib/jwt.ts`.
 
 The PostgreSQL and API containers used for verification were disposable and
-removed after the gate. Phase 6.2 frontend E2E handoff remains pending.
+removed after the gate.
 
 ### 6.2 Smoke and release verification
+
+Status: Workspace verification complete — verified 2026-08-10. Deployment-owner
+checks remain environment-dependent.
 
 - Run pnpm test:smoke against the target API with environment values supplied
   only by the shell/secret manager.
@@ -1089,7 +1092,26 @@ removed after the gate. Phase 6.2 frontend E2E handoff remains pending.
 - Verify OAuth callbacks, verification email, password reset, refresh/logout
   CSRF behavior, export downloads, import replacement, and sign-out.
 
+Recorded 6.2 completion:
+
+- Backend release smoke passed against the rebuilt runtime image and disposable
+  database; health, database connectivity, response envelope, request ID,
+  CORS, CSP, and `nosniff` security-header checks passed.
+- Backend integration coverage passed for registration/email verification,
+  password management, refresh-token rotation/logout, Google/GitHub OAuth
+  repository flows, export JSON/CSV, import replacement, and sign-out.
+- Frontend release checks passed in `web/`: `pnpm lint`, `pnpm typecheck`,
+  `pnpm test`, `pnpm build`, and `pnpm test:e2e` (1 Playwright smoke test).
+- The release handoff runbook in `docs/release-verification.md` remains the
+  source of truth for preview/production-only checks: real OAuth callbacks,
+  transactional email delivery, HTTPS cookies, managed backups, monitoring,
+  and rollback ownership cannot be verified from this local workspace.
+
 ### 6.3 Sign-off criteria
+
+Status: Backend refactor sign-off complete — verified 2026-08-10. Production
+release-owner sign-off remains pending for the environment-dependent items in
+`docs/release-verification.md`.
 
 Mark the refactor complete only when:
 
@@ -1103,24 +1125,42 @@ Mark the refactor complete only when:
 - rollback remains application-release-safe and no destructive migration was
   introduced.
 
+Recorded 6.3 sign-off:
+
+- All backend phases and recorded micro-step gates are passing.
+- Repository and identity boundary audits pass; feature services/controllers/
+  routes contain no direct Prisma access.
+- Integration tests pass without compatibility constructors.
+- `contracts/openapi.json` was not changed by the refactor.
+- Docker runtime build, migration deployment, backend integration suite, and
+  release smoke all pass.
+- No destructive migration was introduced; rollback is application-release
+  safe and the deployment runbook documents forward-fix/restore handling.
+- The remaining production checklist is explicitly external: deployed HTTPS
+  environment, real provider callbacks/email, observability, backups, and
+  rollback execution must be recorded by the release owner.
+
 ---
 
 ## 15. Final completion checklist
 
-- [ ] Phase 0 foundation remains intact.
-- [ ] AuthService has no Prisma import, getter, or compatibility constructor.
-- [ ] User profile/preferences persistence is owned by the users module.
-- [ ] Connected-account persistence is behind an explicit repository boundary.
-- [ ] Google/GitHub services contain no Prisma access.
-- [ ] Applications and tags have repositories and controllers.
-- [ ] Notes and interviews have repositories and controllers.
-- [ ] Dashboard, export, import, and health have explicit read/transfer
+- [x] Phase 0 foundation remains intact.
+- [x] AuthService has no Prisma import, getter, or compatibility constructor.
+- [x] User profile/preferences persistence is owned by the users module.
+- [x] Connected-account persistence is behind an explicit repository boundary.
+- [x] Google/GitHub services contain no Prisma access.
+- [x] Applications and tags have repositories and controllers.
+- [x] Notes and interviews have repositories and controllers.
+- [x] Dashboard, export, import, and health have explicit read/transfer
       boundaries.
-- [ ] Routes contain only middleware and controller mappings.
-- [ ] Services contain policy/orchestration only.
-- [ ] Repositories contain Prisma queries and transactions only.
-- [ ] Test factories use dependency injection without compatibility fallbacks.
-- [ ] Repository-boundary CI audit passes.
-- [ ] Typecheck, lint, format, unit, integration, build, Prisma, and OpenAPI
+- [x] Routes contain only middleware and controller mappings.
+- [x] Services contain policy/orchestration only.
+- [x] Repositories contain Prisma queries and transactions only.
+- [x] Test factories use dependency injection without compatibility fallbacks.
+- [x] Repository-boundary CI audit passes.
+- [x] Typecheck, lint, format, unit, integration, build, Prisma, and OpenAPI
       gates pass.
-- [ ] Release smoke and frontend E2E handoff pass.
+- [x] Release smoke and the available frontend E2E handoff smoke pass.
+- [ ] Production release-owner checklist and full preview frontend critical-flow
+      E2E pass (requires deployed API/frontend, real OAuth/email providers,
+      managed database, monitoring, backups, and rollback access).
