@@ -11,6 +11,7 @@ import { ApplicationRepository } from "../../src/modules/applications/applicatio
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { TagService } from "../../src/modules/tags/tag.service.js";
+import { TagRepository } from "../../src/modules/tags/tag.repository.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
 const runDatabaseTests = Boolean(process.env.TEST_DATABASE_URL);
@@ -35,7 +36,7 @@ describe.skipIf(!runDatabaseTests)("tags", () => {
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
       applicationService: new ApplicationService(new ApplicationRepository(prisma)),
-      tagService: new TagService(prisma),
+      tagService: new TagService(new TagRepository(prisma)),
     });
   });
 

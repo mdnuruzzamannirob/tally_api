@@ -194,7 +194,7 @@ Status must be updated only after the relevant gate passes.
 | ----- | -------------------------------------------- | ----------------------------------------------------------------------- |
 | 0     | Shared foundation and contract preservation  | Complete                                                                |
 | 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.7 implementation complete; DB/release gates pending |
-| 2     | Applications and tags                        | In progress — 2.1–2.4 implementation complete; DB gate pending          |
+| 2     | Applications and tags                        | In progress — 2.1–2.6 implementation complete; DB gate pending          |
 | 3     | Notes and interviews                         | Pending                                                                 |
 | 4     | Dashboard, health, export, and import        | Pending                                                                 |
 | 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
@@ -586,6 +586,8 @@ database gate before marking Phase 2 complete.
 
 ### 2.5 Tags and application-tag assignments
 
+Status: Implementation complete — verified 2026-08-10; database gate pending.
+
 - Create tag.repository.ts and tag.controller.ts.
 - Move tag CRUD, assignment replacement, and single-tag removal queries to the
   repository.
@@ -596,7 +598,22 @@ database gate before marking Phase 2 complete.
 Gate: tag integration tests pass for CRUD, duplicate names, replacement,
 remove, invalid IDs, and cross-user ownership.
 
+Recorded 2.5 completion:
+
+- Added `src/modules/tags/tag.repository.ts` for tag CRUD and application-tag
+  persistence.
+- Tag and assignment ownership predicates, duplicate-safe assignment writes,
+  and assignment removal transactions are repository-owned.
+- Repository outcomes are mapped to the existing conflict, not-found, and
+  bad-request domain errors by `TagService`.
+- Added `src/modules/tags/tag.controller.ts`; tag CRUD and assignment HTTP
+  parsing/response mapping are no longer embedded in routes.
+- `tag.routes.ts` and `application-tag.routes.ts` now contain only middleware
+  and controller mappings.
+
 ### 2.6 Applications/tags cleanup
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Update app.ts dependency composition and all affected test factories.
 - Remove direct Prisma imports from application/tag services, controllers, and
@@ -605,6 +622,26 @@ remove, invalid IDs, and cross-user ownership.
 
 Phase 2 gate: full contract/build gate plus application/tag integration tests and
 the repository-boundary audit for both modules.
+
+Recorded 2.6 completion:
+
+- `app.ts` now composes `TagRepository` before `TagService`.
+- Tag integration test factories inject `TagRepository`; no legacy
+  `new TagService(prisma)` constructor remains.
+- No Prisma access remains in tag services, controllers, or routes; the
+  application and tag boundary audits pass.
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `pnpm build` — passed;
+- `pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- `git diff --check` — passed.
+
+The database integration gate remains pending because this workspace has no safe
+disposable `TEST_DATABASE_URL`. Run the full Phase 2 integration gate against
+the documented disposable database before marking Phase 2 complete.
 
 ---
 

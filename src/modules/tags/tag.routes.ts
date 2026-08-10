@@ -1,60 +1,32 @@
 import { Router } from "express";
 
-import { authenticate } from "../../middleware/auth.middleware.js";
-import { ApiError } from "../../lib/api-error.js";
 import { asyncHandler } from "../../lib/async-handler.js";
-import { sendSuccess } from "../../lib/api-response.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
+import { TagController } from "./tag.controller.js";
 import type { TagService } from "./tag.service.js";
-import { createTagSchema, updateTagSchema } from "./tag.validators.js";
-
-function userIdOrThrow(request: Express.Request): string {
-  if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-  return request.auth.userId;
-}
 
 export function createTagsRouter(tagService: TagService): Router {
+  const controller = new TagController(tagService);
   const router = Router();
   router.get(
     "/",
     authenticate,
-    asyncHandler(async (request, response) =>
-      sendSuccess(response, { tags: await tagService.list(userIdOrThrow(request)) }),
-    ),
+    asyncHandler((request, response) => controller.list(request, response)),
   );
   router.post(
     "/",
     authenticate,
-    asyncHandler(async (request, response) => {
-      const tag = await tagService.create(
-        userIdOrThrow(request),
-        createTagSchema.parse(request.body),
-      );
-      return sendSuccess(response, { tag }, 201);
-    }),
+    asyncHandler((request, response) => controller.create(request, response)),
   );
   router.patch(
     "/:id",
     authenticate,
-    asyncHandler(async (request, response) => {
-      if (typeof request.params.id !== "string" || !request.params.id)
-        throw new ApiError(400, "BAD_REQUEST", "Tag ID is required.");
-      const tag = await tagService.update(
-        userIdOrThrow(request),
-        request.params.id,
-        updateTagSchema.parse(request.body),
-      );
-      return sendSuccess(response, { tag });
-    }),
+    asyncHandler((request, response) => controller.update(request, response)),
   );
   router.delete(
     "/:id",
     authenticate,
-    asyncHandler(async (request, response) => {
-      if (typeof request.params.id !== "string" || !request.params.id)
-        throw new ApiError(400, "BAD_REQUEST", "Tag ID is required.");
-      await tagService.delete(userIdOrThrow(request), request.params.id);
-      return sendSuccess(response, { message: "Tag deleted" });
-    }),
+    asyncHandler((request, response) => controller.delete(request, response)),
   );
   return router;
 }
