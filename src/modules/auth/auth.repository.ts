@@ -40,7 +40,28 @@ export class AuthRepository {
     ]);
   }
 
-  createRefreshSession(input: { userId: string; tokenHash: string; expiresAt: Date; userAgent?: string; ip?: string }) {
+  createRefreshSession(input: { userId: string; tokenHash: string; expiresAt: Date; userAgent?: string | undefined; ip?: string | undefined }) {
     return this.client.refreshToken.create({ data: { userId: input.userId, tokenHash: input.tokenHash, expiresAt: input.expiresAt, userAgent: input.userAgent ?? null, ip: input.ip ?? null } });
+  }
+
+  findRefreshSession(tokenHash: string) {
+    return this.client.refreshToken.findUnique({ where: { tokenHash }, include: { user: true } });
+  }
+
+  rotateRefreshSession(input: { id: string; userId: string; nextTokenHash: string; expiresAt: Date; revokedAt: Date; userAgent?: string | undefined; ip?: string | undefined }) {
+    return this.client.$transaction(async (transaction) => {
+      const revoked = await transaction.refreshToken.updateMany({ where: { id: input.id, revokedAt: null }, data: { revokedAt: input.revokedAt, replacedByHash: input.nextTokenHash } });
+      if (revoked.count !== 1) return false;
+      await transaction.refreshToken.create({ data: { userId: input.userId, tokenHash: input.nextTokenHash, expiresAt: input.expiresAt, userAgent: input.userAgent ?? null, ip: input.ip ?? null } });
+      return true;
+    });
+  }
+
+  revokeRefreshSession(tokenHash: string, revokedAt: Date) {
+    return this.client.refreshToken.updateMany({ where: { tokenHash, revokedAt: null }, data: { revokedAt } });
+  }
+
+  revokeUserSessions(userId: string, revokedAt: Date) {
+    return this.client.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt } });
   }
 }

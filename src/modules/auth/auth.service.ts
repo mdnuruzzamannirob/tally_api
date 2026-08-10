@@ -133,10 +133,7 @@ export class AuthService {
     refreshToken: string;
     user: PublicUser;
   }> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: input.email },
-      include: { oauthAccounts: true },
-    });
+    const user = await this.repository.findUserByEmail(input.email);
     if (!user?.passwordHash || !(await verifyPassword(input.password, user.passwordHash))) {
       throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid email or password.");
     }
@@ -145,14 +142,11 @@ export class AuthService {
     }
 
     const refreshToken = generateOpaqueToken();
-    await this.prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: hashToken(refreshToken),
-        expiresAt: getRefreshTokenExpiresAt(),
-        userAgent: metadata.userAgent ?? null,
-        ip: metadata.ip ?? null,
-      },
+    await this.repository.createRefreshSession({
+      userId: user.id,
+      tokenHash: hashToken(refreshToken),
+      expiresAt: getRefreshTokenExpiresAt(),
+      ...metadata,
     });
 
     return {
@@ -208,10 +202,7 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const existing = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: hashToken(refreshToken) },
-      include: { user: true },
-    });
+    const existing = await this.repository.findRefreshSession(hashToken(refreshToken));
     if (!existing || existing.expiresAt <= new Date()) {
       throw new ApiError(401, "UNAUTHORIZED", "Refresh token is invalid or expired.");
     }
@@ -223,23 +214,13 @@ export class AuthService {
     const nextRefreshToken = generateOpaqueToken();
     const nextRefreshTokenHash = hashToken(nextRefreshToken);
     const revokedAt = new Date();
-    const rotated = await this.prisma.$transaction(async (transaction) => {
-      const result = await transaction.refreshToken.updateMany({
-        where: { id: existing.id, revokedAt: null },
-        data: { revokedAt, replacedByHash: nextRefreshTokenHash },
-      });
-      if (result.count !== 1) return false;
-
-      await transaction.refreshToken.create({
-        data: {
-          userId: existing.userId,
-          tokenHash: nextRefreshTokenHash,
-          expiresAt: getRefreshTokenExpiresAt(),
-          userAgent: metadata.userAgent ?? null,
-          ip: metadata.ip ?? null,
-        },
-      });
-      return true;
+    const rotated = await this.repository.rotateRefreshSession({
+      id: existing.id,
+      userId: existing.userId,
+      nextTokenHash: nextRefreshTokenHash,
+      expiresAt: getRefreshTokenExpiresAt(),
+      revokedAt,
+      ...metadata,
     });
     if (!rotated) {
       await this.revokeUserSessions(existing.userId);
@@ -257,10 +238,7 @@ export class AuthService {
 
   async logout(refreshToken: string | undefined): Promise<void> {
     if (!refreshToken) return;
-    await this.prisma.refreshToken.updateMany({
-      where: { tokenHash: hashToken(refreshToken), revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
+    await this.repository.revokeRefreshSession(hashToken(refreshToken), new Date());
   }
 
   async requestPasswordReset(email: string): Promise<void> {
@@ -397,9 +375,6 @@ export class AuthService {
   }
 
   private async revokeUserSessions(userId: string): Promise<void> {
-    await this.prisma.refreshToken.updateMany({
-      where: { userId, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
+    await this.repository.revokeUserSessions(userId, new Date());
   }
 }
