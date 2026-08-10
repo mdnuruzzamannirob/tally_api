@@ -1,9 +1,11 @@
-import { createAccessToken } from "../../lib/jwt.js";
-import type { EmailService } from "../../email/email.service.js";
-import { ApiError } from "../../lib/api-error.js";
-import { hashPassword, verifyPassword } from "../../lib/password.js";
 import { getRefreshTokenExpiresAt } from "../../config/cookie.js";
+import type { EmailService } from "../../email/email.service.js";
+import type { PrismaClient } from "../../generated/prisma/client.js";
+import { ApiError } from "../../lib/api-error.js";
 import { generateOpaqueToken, hashToken } from "../../lib/crypto.js";
+import { createAccessToken } from "../../lib/jwt.js";
+import { hashPassword, verifyPassword } from "../../lib/password.js";
+import { AuthRepository } from "./auth.repository.js";
 import type {
   ChangePasswordInput,
   LoginInput,
@@ -11,8 +13,6 @@ import type {
   UpdatePreferencesInput,
   UpdateProfileInput,
 } from "./auth.validators.js";
-import { AuthRepository } from "./auth.repository.js";
-import type { PrismaClient } from "../../generated/prisma/client.js";
 
 const VERIFICATION_TOKEN_LIFETIME_MS = 24 * 60 * 60 * 1_000;
 const PASSWORD_RESET_TOKEN_LIFETIME_MS = 30 * 60 * 1_000;
@@ -67,7 +67,8 @@ export class AuthService {
     repository: AuthRepository | PrismaClient,
     private readonly emailService: EmailService,
   ) {
-    this.repository = repository instanceof AuthRepository ? repository : new AuthRepository(repository);
+    this.repository =
+      repository instanceof AuthRepository ? repository : new AuthRepository(repository);
   }
 
   private readonly repository: AuthRepository;
@@ -243,7 +244,11 @@ export class AuthService {
     if (!user) return;
 
     const rawToken = generateOpaqueToken();
-    await this.repository.replacePasswordResetToken(user.id, hashToken(rawToken), new Date(Date.now() + PASSWORD_RESET_TOKEN_LIFETIME_MS));
+    await this.repository.replacePasswordResetToken(
+      user.id,
+      hashToken(rawToken),
+      new Date(Date.now() + PASSWORD_RESET_TOKEN_LIFETIME_MS),
+    );
     await this.emailService.sendPasswordResetEmail({ email: user.email, token: rawToken });
   }
 
@@ -258,8 +263,18 @@ export class AuthService {
     }
 
     const passwordHash = await hashPassword(password);
-    const consumed = await this.repository.consumePasswordResetAndUpdatePassword(resetToken.id, resetToken.userId, passwordHash, new Date());
-    if (!consumed) throw new ApiError(400, "INVALID_OR_EXPIRED_TOKEN", "Password reset token is invalid or expired.");
+    const consumed = await this.repository.consumePasswordResetAndUpdatePassword(
+      resetToken.id,
+      resetToken.userId,
+      passwordHash,
+      new Date(),
+    );
+    if (!consumed)
+      throw new ApiError(
+        400,
+        "INVALID_OR_EXPIRED_TOKEN",
+        "Password reset token is invalid or expired.",
+      );
   }
 
   async changePassword(
@@ -278,7 +293,12 @@ export class AuthService {
 
     const passwordHash = await hashPassword(input.newPassword);
     const currentTokenHash = currentRefreshToken ? hashToken(currentRefreshToken) : undefined;
-    await this.repository.updatePasswordAndRevokeOtherSessions(userId, passwordHash, currentTokenHash, new Date());
+    await this.repository.updatePasswordAndRevokeOtherSessions(
+      userId,
+      passwordHash,
+      currentTokenHash,
+      new Date(),
+    );
   }
 
   async setPassword(userId: string, password: string): Promise<void> {
@@ -314,9 +334,12 @@ export class AuthService {
 
   async unlinkProvider(userId: string, provider: "GOOGLE" | "GITHUB"): Promise<void> {
     const result = await this.repository.unlinkConnectedAccount(userId, provider);
-    if (result.kind === "missing-user") throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-    if (result.kind === "missing-account") throw new ApiError(404, "NOT_FOUND", "Connected provider was not found.");
-    if (result.kind === "last-login-method") throw new ApiError(409, "CONFLICT", "Cannot remove the last available login method");
+    if (result.kind === "missing-user")
+      throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+    if (result.kind === "missing-account")
+      throw new ApiError(404, "NOT_FOUND", "Connected provider was not found.");
+    if (result.kind === "last-login-method")
+      throw new ApiError(409, "CONFLICT", "Cannot remove the last available login method");
   }
 
   private async revokeUserSessions(userId: string): Promise<void> {

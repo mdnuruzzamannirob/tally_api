@@ -43,17 +43,17 @@ The database must support authentication, OAuth, email verification, password re
 
 ## 2. Database Choice
 
-| Concern              | Decision                                                                       |
-| -------------------- | ------------------------------------------------------------------------------ |
-| Database engine      | PostgreSQL                                                                     |
-| ORM                  | Prisma 7+ with PostgreSQL driver adapter                                       |
-| Primary key strategy | `cuid` string IDs                                                              |
-| Timestamp type       | `timestamp with time zone` via Prisma `DateTime @db.Timestamptz(3)`            |
-| Calendar date type   | PostgreSQL `date` via Prisma `DateTime @db.Date`                               |
-| Money/salary type    | Decimal                                                                        |
-| Migration tool       | Prisma Migrate                                                                 |
-| Local database       | Dockerized PostgreSQL                                                          |
-| Production database  | Neon PostgreSQL; Supabase or Render PostgreSQL are equivalent substitutes       |
+| Concern              | Decision                                                                  |
+| -------------------- | ------------------------------------------------------------------------- |
+| Database engine      | PostgreSQL                                                                |
+| ORM                  | Prisma 7+ with PostgreSQL driver adapter                                  |
+| Primary key strategy | `cuid` string IDs                                                         |
+| Timestamp type       | `timestamp with time zone` via Prisma `DateTime @db.Timestamptz(3)`       |
+| Calendar date type   | PostgreSQL `date` via Prisma `DateTime @db.Date`                          |
+| Money/salary type    | Decimal                                                                   |
+| Migration tool       | Prisma Migrate                                                            |
+| Local database       | Dockerized PostgreSQL                                                     |
+| Production database  | Neon PostgreSQL; Supabase or Render PostgreSQL are equivalent substitutes |
 
 PostgreSQL is selected because the data is relational, user-scoped, and requires strong integrity constraints.
 

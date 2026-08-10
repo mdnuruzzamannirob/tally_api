@@ -204,18 +204,37 @@ Status must be updated only after the relevant gate passes.
 
 ## 8. Phase 0 — Shared foundation
 
-Status: Complete.
+Status: Complete — verified 2026-08-10.
 
-Already established:
+Completed implementation:
 
 - one home for API errors, async handling, pagination, response envelopes,
   JWT, opaque-token hashing, and password hashing;
 - refresh-cookie behavior under config/cookie.ts;
 - split Prisma schema and OpenAPI artifact/serving;
 - removal of the old shared-helper paths.
+- corrected the refresh-cookie clear-options implementation so `maxAge` is not
+  sent when clearing the cookie;
+- corrected type-only imports in the users boundary;
+- normalized formatting across the shared foundation and affected HTTP files;
+- confirmed no Prisma schema or migration change is part of this phase.
 
-Reopen this phase only if a later migration exposes a genuine shared-boundary
-defect. Do not use it as a place to put feature-specific persistence.
+Recorded completion gate:
+
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm build` — passed;
+- `DATABASE_URL=... pnpm prisma:validate` — passed; all schemas valid;
+- `pnpm openapi:validate` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `git diff --check` — passed.
+
+The first validation attempt was affected by the restricted sandbox's inability
+to bind Supertest/tsx IPC endpoints; the same gates passed in normal host
+execution. Reopen this phase only if a later migration exposes a genuine
+shared-boundary defect. Do not use it as a place to put feature-specific
+persistence.
 
 ---
 

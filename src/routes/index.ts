@@ -7,7 +7,10 @@ import { createConnectedAccountsRouter } from "../modules/auth/connected-account
 import { createDashboardRouter } from "../modules/dashboard/dashboard.routes.js";
 import { createExportRouter } from "../modules/export-import/export.routes.js";
 import { createImportRouter } from "../modules/export-import/import.routes.js";
-import { createApplicationInterviewsRouter, createInterviewsRouter } from "../modules/interviews/interview.routes.js";
+import {
+  createApplicationInterviewsRouter,
+  createInterviewsRouter,
+} from "../modules/interviews/interview.routes.js";
 import { createApplicationNotesRouter, createNotesRouter } from "../modules/notes/note.routes.js";
 import { createApplicationTagRouter } from "../modules/tags/application-tag.routes.js";
 import { createTagsRouter } from "../modules/tags/tag.routes.js";
@@ -25,7 +28,14 @@ export function createApiRouter(dependencies: ResolvedDependencies): Router {
   router.use(createOpenApiRouter());
   router.use(createHealthRouter(dependencies.checkDatabase));
   router.use("/auth", createAuthRouter(dependencies.authService));
-  router.use("/auth", createConnectedAccountsRouter(dependencies.authService, dependencies.googleOAuthService, dependencies.githubOAuthService));
+  router.use(
+    "/auth",
+    createConnectedAccountsRouter(
+      dependencies.authService,
+      dependencies.googleOAuthService,
+      dependencies.githubOAuthService,
+    ),
+  );
   router.use("/auth", createGoogleOAuthRouter(dependencies.googleOAuthService));
   router.use("/auth", createGitHubOAuthRouter(dependencies.githubOAuthService));
   router.use("/users", createUsersRouter(dependencies.userService));

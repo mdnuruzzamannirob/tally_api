@@ -15,10 +15,20 @@ export class AuthRepository {
     return this.client.user.findUnique({ where: { id: userId }, include: { oauthAccounts: true } });
   }
 
-  createUserWithVerification(input: { name: string | null; email: string; passwordHash: string; tokenHash: string; expiresAt: Date }) {
+  createUserWithVerification(input: {
+    name: string | null;
+    email: string;
+    passwordHash: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }) {
     return this.client.$transaction(async (transaction) => {
-      const user = await transaction.user.create({ data: { name: input.name, email: input.email, passwordHash: input.passwordHash } });
-      await transaction.emailVerificationToken.create({ data: { userId: user.id, tokenHash: input.tokenHash, expiresAt: input.expiresAt } });
+      const user = await transaction.user.create({
+        data: { name: input.name, email: input.email, passwordHash: input.passwordHash },
+      });
+      await transaction.emailVerificationToken.create({
+        data: { userId: user.id, tokenHash: input.tokenHash, expiresAt: input.expiresAt },
+      });
     });
   }
 
@@ -28,7 +38,10 @@ export class AuthRepository {
 
   verifyUserAndClearVerificationTokens(userId: string, verifiedAt: Date) {
     return this.client.$transaction([
-      this.client.user.update({ where: { id: userId }, data: { emailVerified: true, emailVerifiedAt: verifiedAt } }),
+      this.client.user.update({
+        where: { id: userId },
+        data: { emailVerified: true, emailVerifiedAt: verifiedAt },
+      }),
       this.client.emailVerificationToken.deleteMany({ where: { userId } }),
     ]);
   }
@@ -40,29 +53,68 @@ export class AuthRepository {
     ]);
   }
 
-  createRefreshSession(input: { userId: string; tokenHash: string; expiresAt: Date; userAgent?: string | undefined; ip?: string | undefined }) {
-    return this.client.refreshToken.create({ data: { userId: input.userId, tokenHash: input.tokenHash, expiresAt: input.expiresAt, userAgent: input.userAgent ?? null, ip: input.ip ?? null } });
+  createRefreshSession(input: {
+    userId: string;
+    tokenHash: string;
+    expiresAt: Date;
+    userAgent?: string | undefined;
+    ip?: string | undefined;
+  }) {
+    return this.client.refreshToken.create({
+      data: {
+        userId: input.userId,
+        tokenHash: input.tokenHash,
+        expiresAt: input.expiresAt,
+        userAgent: input.userAgent ?? null,
+        ip: input.ip ?? null,
+      },
+    });
   }
 
   findRefreshSession(tokenHash: string) {
     return this.client.refreshToken.findUnique({ where: { tokenHash }, include: { user: true } });
   }
 
-  rotateRefreshSession(input: { id: string; userId: string; nextTokenHash: string; expiresAt: Date; revokedAt: Date; userAgent?: string | undefined; ip?: string | undefined }) {
+  rotateRefreshSession(input: {
+    id: string;
+    userId: string;
+    nextTokenHash: string;
+    expiresAt: Date;
+    revokedAt: Date;
+    userAgent?: string | undefined;
+    ip?: string | undefined;
+  }) {
     return this.client.$transaction(async (transaction) => {
-      const revoked = await transaction.refreshToken.updateMany({ where: { id: input.id, revokedAt: null }, data: { revokedAt: input.revokedAt, replacedByHash: input.nextTokenHash } });
+      const revoked = await transaction.refreshToken.updateMany({
+        where: { id: input.id, revokedAt: null },
+        data: { revokedAt: input.revokedAt, replacedByHash: input.nextTokenHash },
+      });
       if (revoked.count !== 1) return false;
-      await transaction.refreshToken.create({ data: { userId: input.userId, tokenHash: input.nextTokenHash, expiresAt: input.expiresAt, userAgent: input.userAgent ?? null, ip: input.ip ?? null } });
+      await transaction.refreshToken.create({
+        data: {
+          userId: input.userId,
+          tokenHash: input.nextTokenHash,
+          expiresAt: input.expiresAt,
+          userAgent: input.userAgent ?? null,
+          ip: input.ip ?? null,
+        },
+      });
       return true;
     });
   }
 
   revokeRefreshSession(tokenHash: string, revokedAt: Date) {
-    return this.client.refreshToken.updateMany({ where: { tokenHash, revokedAt: null }, data: { revokedAt } });
+    return this.client.refreshToken.updateMany({
+      where: { tokenHash, revokedAt: null },
+      data: { revokedAt },
+    });
   }
 
   revokeUserSessions(userId: string, revokedAt: Date) {
-    return this.client.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt } });
+    return this.client.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt },
+    });
   }
 
   replacePasswordResetToken(userId: string, tokenHash: string, expiresAt: Date) {
@@ -76,20 +128,43 @@ export class AuthRepository {
     return this.client.passwordResetToken.findUnique({ where: { tokenHash } });
   }
 
-  consumePasswordResetAndUpdatePassword(tokenId: string, userId: string, passwordHash: string, usedAt: Date) {
+  consumePasswordResetAndUpdatePassword(
+    tokenId: string,
+    userId: string,
+    passwordHash: string,
+    usedAt: Date,
+  ) {
     return this.client.$transaction(async (transaction) => {
-      const consumed = await transaction.passwordResetToken.updateMany({ where: { id: tokenId, usedAt: null }, data: { usedAt } });
+      const consumed = await transaction.passwordResetToken.updateMany({
+        where: { id: tokenId, usedAt: null },
+        data: { usedAt },
+      });
       if (consumed.count !== 1) return false;
       await transaction.user.update({ where: { id: userId }, data: { passwordHash } });
-      await transaction.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: usedAt } });
+      await transaction.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: usedAt },
+      });
       return true;
     });
   }
 
-  updatePasswordAndRevokeOtherSessions(userId: string, passwordHash: string, currentTokenHash: string | undefined, revokedAt: Date) {
+  updatePasswordAndRevokeOtherSessions(
+    userId: string,
+    passwordHash: string,
+    currentTokenHash: string | undefined,
+    revokedAt: Date,
+  ) {
     return this.client.$transaction([
       this.client.user.update({ where: { id: userId }, data: { passwordHash } }),
-      this.client.refreshToken.updateMany({ where: { userId, revokedAt: null, ...(currentTokenHash ? { tokenHash: { not: currentTokenHash } } : {}) }, data: { revokedAt } }),
+      this.client.refreshToken.updateMany({
+        where: {
+          userId,
+          revokedAt: null,
+          ...(currentTokenHash ? { tokenHash: { not: currentTokenHash } } : {}),
+        },
+        data: { revokedAt },
+      }),
     ]);
   }
 
@@ -102,14 +177,21 @@ export class AuthRepository {
   }
 
   unlinkConnectedAccount(userId: string, provider: "GOOGLE" | "GITHUB") {
-    return this.client.$transaction(async (transaction) => {
-      const user = await transaction.user.findUnique({ where: { id: userId }, include: { oauthAccounts: true } });
-      if (!user) return { kind: "missing-user" as const };
-      const account = user.oauthAccounts.find((item) => item.provider === provider);
-      if (!account) return { kind: "missing-account" as const };
-      if (user.oauthAccounts.length + Number(Boolean(user.passwordHash)) <= 1) return { kind: "last-login-method" as const };
-      await transaction.oauthAccount.delete({ where: { id: account.id } });
-      return { kind: "unlinked" as const };
-    }, { isolationLevel: "Serializable" });
+    return this.client.$transaction(
+      async (transaction) => {
+        const user = await transaction.user.findUnique({
+          where: { id: userId },
+          include: { oauthAccounts: true },
+        });
+        if (!user) return { kind: "missing-user" as const };
+        const account = user.oauthAccounts.find((item) => item.provider === provider);
+        if (!account) return { kind: "missing-account" as const };
+        if (user.oauthAccounts.length + Number(Boolean(user.passwordHash)) <= 1)
+          return { kind: "last-login-method" as const };
+        await transaction.oauthAccount.delete({ where: { id: account.id } });
+        return { kind: "unlinked" as const };
+      },
+      { isolationLevel: "Serializable" },
+    );
   }
 }

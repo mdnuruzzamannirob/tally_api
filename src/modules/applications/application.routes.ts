@@ -1,13 +1,13 @@
 import { Router } from "express";
 
-import { authenticate } from "../../middleware/auth.middleware.js";
 import { ApiError } from "../../lib/api-error.js";
-import { asyncHandler } from "../../lib/async-handler.js";
 import { sendSuccess } from "../../lib/api-response.js";
+import { asyncHandler } from "../../lib/async-handler.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
 import type { ApplicationService } from "./application.service.js";
 import {
-  createApplicationSchema,
   changeApplicationStatusSchema,
+  createApplicationSchema,
   listApplicationsQuerySchema,
   updateApplicationSchema,
 } from "./application.validators.js";
@@ -31,13 +31,17 @@ export function createApplicationsRouter(applicationService: ApplicationService)
         total: result.total,
         totalPages: Math.ceil(result.total / query.pageSize),
       };
-      return sendSuccess(response, {
-        items: result.items,
-        pagination: { ...meta, pageSize: query.pageSize },
-      }, {
-        message: "Applications retrieved successfully.",
-        meta,
-      });
+      return sendSuccess(
+        response,
+        {
+          items: result.items,
+          pagination: { ...meta, pageSize: query.pageSize },
+        },
+        {
+          message: "Applications retrieved successfully.",
+          meta,
+        },
+      );
     }),
   );
   router.post(

@@ -1485,10 +1485,10 @@ Frontend and backend must be deployed separately.
 
 Recommended deployment model:
 
-| Layer    | Suggested Provider                                       |
-| -------- | -------------------------------------------------------- |
-| Frontend | Vercel                                                   |
-| Backend  | Render                                                   |
+| Layer    | Suggested Provider                                         |
+| -------- | ---------------------------------------------------------- |
+| Frontend | Vercel                                                     |
+| Backend  | Render                                                     |
 | Database | Neon PostgreSQL (Supabase or Render PostgreSQL equivalent) |
 
 ---

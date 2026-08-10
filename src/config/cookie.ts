@@ -16,7 +16,13 @@ export function getRefreshTokenExpiresAt(): Date {
 }
 
 export function getRefreshCookieOptions(): CookieOptions {
-  return { httpOnly: true, secure: env.COOKIE_SECURE, sameSite: env.COOKIE_SAME_SITE, path: "/api/v1/auth", maxAge: durationToMilliseconds(env.REFRESH_TOKEN_EXPIRES_IN) };
+  return {
+    httpOnly: true,
+    secure: env.COOKIE_SECURE,
+    sameSite: env.COOKIE_SAME_SITE,
+    path: "/api/v1/auth",
+    maxAge: durationToMilliseconds(env.REFRESH_TOKEN_EXPIRES_IN),
+  };
 }
 
 export function setRefreshCookie(response: Response, token: string): Response {
@@ -24,6 +30,7 @@ export function setRefreshCookie(response: Response, token: string): Response {
 }
 
 export function clearRefreshCookie(response: Response): Response {
-  const { maxAge: _maxAge, ...options } = getRefreshCookieOptions();
+  const options = { ...getRefreshCookieOptions() };
+  delete options.maxAge;
   return response.clearCookie(REFRESH_COOKIE_NAME, options);
 }

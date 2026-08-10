@@ -1,11 +1,7 @@
 import type { RequestHandler } from "express";
 
-import {
-  AccessTokenExpiredError,
-  InvalidAccessTokenError,
-  verifyAccessToken,
-} from "../lib/jwt.js";
 import { ApiError } from "../lib/api-error.js";
+import { AccessTokenExpiredError, InvalidAccessTokenError, verifyAccessToken } from "../lib/jwt.js";
 
 export const authenticate: RequestHandler = (request, _response, next) => {
   const authorization = request.header("Authorization");

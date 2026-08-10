@@ -1,9 +1,9 @@
 import { getRefreshTokenExpiresAt } from "../config/cookie.js";
-import { generateOpaqueToken, hashToken } from "../lib/crypto.js";
+import type { PrismaClient } from "../generated/prisma/client.js";
 import { ApiError } from "../lib/api-error.js";
+import { generateOpaqueToken, hashToken } from "../lib/crypto.js";
 import type { GitHubOAuthClient, GitHubProfile } from "./github.oauth.js";
 import { OAuthRepository } from "./oauth.repository.js";
-import type { PrismaClient } from "../generated/prisma/client.js";
 
 const STATE_LIFETIME_MS = 10 * 60 * 1_000;
 
@@ -12,7 +12,8 @@ export class GitHubOAuthService {
     repository: OAuthRepository | PrismaClient,
     private readonly client: GitHubOAuthClient,
   ) {
-    this.repository = repository instanceof OAuthRepository ? repository : new OAuthRepository(repository);
+    this.repository =
+      repository instanceof OAuthRepository ? repository : new OAuthRepository(repository);
   }
 
   private readonly repository: OAuthRepository;

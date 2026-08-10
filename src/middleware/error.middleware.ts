@@ -47,9 +47,7 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, request, re
   else logger.warn(logPayload, "Request failed");
 
   const safeMessage =
-    statusCode >= 500 && env.NODE_ENV === "production"
-      ? "An unexpected error occurred."
-      : message;
+    statusCode >= 500 && env.NODE_ENV === "production" ? "An unexpected error occurred." : message;
   const body: ErrorResponse = {
     success: false,
     message: safeMessage,

@@ -1,9 +1,9 @@
 import { Router, type Request } from "express";
 
-import { authenticate } from "../../middleware/auth.middleware.js";
 import { ApiError } from "../../lib/api-error.js";
-import { asyncHandler } from "../../lib/async-handler.js";
 import { sendSuccess } from "../../lib/api-response.js";
+import { asyncHandler } from "../../lib/async-handler.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
 import type { InterviewService } from "./interview.service.js";
 import {
   createInterviewSchema,
@@ -44,15 +44,19 @@ export function createApplicationInterviewsRouter(interviewService: InterviewSer
         applicationIdOrThrow(request),
       );
       const meta = pagination(result, query);
-      return sendSuccess(response, { items: result.items, pagination: meta }, {
-        message: "Interviews retrieved successfully.",
-        meta: {
-          page: meta.page,
-          limit: meta.pageSize,
-          total: meta.total,
-          totalPages: meta.totalPages,
+      return sendSuccess(
+        response,
+        { items: result.items, pagination: meta },
+        {
+          message: "Interviews retrieved successfully.",
+          meta: {
+            page: meta.page,
+            limit: meta.pageSize,
+            total: meta.total,
+            totalPages: meta.totalPages,
+          },
         },
-      });
+      );
     }),
   );
   router.post(
@@ -79,15 +83,19 @@ export function createInterviewsRouter(interviewService: InterviewService): Rout
       const query = interviewListQuerySchema.parse(request.query);
       const result = await interviewService.list(userIdOrThrow(request), query);
       const meta = pagination(result, query);
-      return sendSuccess(response, { items: result.items, pagination: meta }, {
-        message: "Application interviews retrieved successfully.",
-        meta: {
-          page: meta.page,
-          limit: meta.pageSize,
-          total: meta.total,
-          totalPages: meta.totalPages,
+      return sendSuccess(
+        response,
+        { items: result.items, pagination: meta },
+        {
+          message: "Application interviews retrieved successfully.",
+          meta: {
+            page: meta.page,
+            limit: meta.pageSize,
+            total: meta.total,
+            totalPages: meta.totalPages,
+          },
         },
-      });
+      );
     }),
   );
   router.patch(

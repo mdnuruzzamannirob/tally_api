@@ -1,22 +1,18 @@
 import type { RequestHandler } from "express";
 
+import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from "../../config/cookie.js";
+import { ApiError } from "../../lib/api-error.js";
 import { sendSuccess } from "../../lib/api-response.js";
 import { asyncHandler } from "../../lib/async-handler.js";
-import {
-  clearRefreshCookie,
-  REFRESH_COOKIE_NAME,
-  setRefreshCookie,
-} from "../../config/cookie.js";
-import { ApiError } from "../../lib/api-error.js";
 import type { AuthService } from "./auth.service.js";
 import {
-  loginSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
   changePasswordSchema,
-  setPasswordSchema,
+  forgotPasswordSchema,
+  loginSchema,
   registerSchema,
   resendVerificationSchema,
+  resetPasswordSchema,
+  setPasswordSchema,
   verifyEmailSchema,
 } from "./auth.validators.js";
 

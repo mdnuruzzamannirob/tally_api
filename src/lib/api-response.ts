@@ -28,7 +28,11 @@ export interface SendSuccessOptions {
   meta?: Omit<ResponseMeta, "requestId">;
 }
 
-export function sendSuccess<T>(response: Response, data: T, options: SendSuccessOptions | number = {}): Response {
+export function sendSuccess<T>(
+  response: Response,
+  data: T,
+  options: SendSuccessOptions | number = {},
+): Response {
   const resolvedOptions = typeof options === "number" ? { statusCode: options } : options;
   const requestId = response.req.requestId;
   const meta = { ...(requestId ? { requestId } : {}), ...(resolvedOptions.meta ?? {}) };
