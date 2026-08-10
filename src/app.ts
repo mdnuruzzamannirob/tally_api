@@ -114,7 +114,11 @@ export function createApp({
   app.use(
     pinoHttp({
       logger,
-      customProps: (request) => ({ requestId: request.requestId }),
+      customProps: (request) => ({
+        requestId: request.requestId,
+        requestMethod: request.method,
+        requestPath: request.path,
+      }),
     }),
   );
   app.use(helmet());

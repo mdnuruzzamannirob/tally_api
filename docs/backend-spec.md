@@ -2135,6 +2135,10 @@ Log:
 - Request ID
 - Error messages
 
+Startup, request, and shutdown events must use the structured logger. Request
+logs include method, pathname, status, duration, and request ID; query strings
+and sensitive headers/body fields remain redacted.
+
 Do not log:
 
 - Passwords
@@ -2497,6 +2501,7 @@ The backend must:
 - Handle unexpected errors centrally
 - Gracefully shutdown on SIGTERM/SIGINT
 - Disconnect Prisma on shutdown
+- Force shutdown after a bounded timeout if active connections do not drain
 - Use request IDs for traceability
 
 ---

@@ -957,6 +957,8 @@ Minimum production monitoring:
 - HTTP check against backend health endpoint.
 - Check interval: 5 minutes.
 - Alert if health check fails repeatedly.
+- Confirm startup, shutdown, and unhandled-error events are visible in the
+  structured log stream.
 
 Optional:
 

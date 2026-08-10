@@ -1222,3 +1222,18 @@ The remaining full preview E2E and production-owner checks require a deployed
 frontend/API pair, real OAuth/email credentials, managed database, monitoring,
 backups, and rollback access; they are not safely reproducible in this local
 backend workspace.
+
+## 18. Post-audit medium-gap remediation
+
+Status: Code-level remediation complete — verified 2026-08-10.
+
+- Startup and environment-validation events now use pino structured logs.
+- Request logs expose method, pathname, status, response time, and request ID
+  without reintroducing query strings, cookies, tokens, or request bodies.
+- SIGINT/SIGTERM shutdown drains the HTTP server and disconnects Prisma, with a
+  ten-second bounded timeout and forced connection close on a stuck shutdown.
+- Uncaught exceptions and unhandled promise rejections are logged safely and
+  initiate the same non-zero graceful shutdown path.
+
+Monitoring, backup/restore, and rollback execution remain deployment-owner
+responsibilities and are tracked in `docs/release-verification.md`.
