@@ -1,6 +1,6 @@
-import type { UpdatePreferencesInput, UpdateProfileInput } from "../auth/auth.validators.js";
 import type { UserRepository } from "./user.repository.js";
 import type { PublicUser } from "./user.types.js";
+import type { UpdatePreferencesInput, UpdateProfileInput } from "./user.validators.js";
 
 function toPublicUser(user: {
   id: string;

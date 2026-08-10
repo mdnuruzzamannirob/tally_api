@@ -9,6 +9,7 @@ import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { GitHubOAuthService } from "../../src/oauth/github-oauth.service.js";
 import type { GitHubOAuthClient, GitHubProfile } from "../../src/oauth/github.oauth.js";
+import { OAuthRepository } from "../../src/oauth/oauth.repository.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
 const runDatabaseTests = Boolean(process.env.TEST_DATABASE_URL);
@@ -56,7 +57,7 @@ describe.skipIf(!runDatabaseTests)("GitHub OAuth", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
-      githubOAuthService: new GitHubOAuthService(prisma, client),
+      githubOAuthService: new GitHubOAuthService(new OAuthRepository(prisma), client),
     });
   });
   beforeEach(async () => {

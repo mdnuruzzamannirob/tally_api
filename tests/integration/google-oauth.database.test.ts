@@ -10,6 +10,7 @@ import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { GoogleOAuthService } from "../../src/oauth/google-oauth.service.js";
 import type { GoogleOAuthClient, GoogleProfile } from "../../src/oauth/google.oauth.js";
+import { OAuthRepository } from "../../src/oauth/oauth.repository.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
 const runDatabaseTests = Boolean(process.env.TEST_DATABASE_URL);
@@ -61,7 +62,7 @@ describe.skipIf(!runDatabaseTests)("Google OAuth", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService,
-      googleOAuthService: new GoogleOAuthService(prisma, client),
+      googleOAuthService: new GoogleOAuthService(new OAuthRepository(prisma), client),
     });
   });
 

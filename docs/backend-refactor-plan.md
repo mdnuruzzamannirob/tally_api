@@ -193,7 +193,7 @@ Status must be updated only after the relevant gate passes.
 | Phase | Scope                                        | Status at plan creation                                        |
 | ----- | -------------------------------------------- | -------------------------------------------------------------- |
 | 0     | Shared foundation and contract preservation  | Complete                                                       |
-| 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.3 implementation complete; DB gate pending |
+| 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.6 implementation complete; DB gate pending |
 | 2     | Applications and tags                        | Pending                                                        |
 | 3     | Notes and interviews                         | Pending                                                        |
 | 4     | Dashboard, health, export, and import        | Pending                                                        |
@@ -322,6 +322,8 @@ pnpm test:integration
 
 ### 1.4 Complete the users module
 
+Status: Implementation complete — verified 2026-08-10; DB gate pending.
+
 - Make user.repository.ts return the public-user projection required by
   /auth/me and user update responses.
 - Keep profile, preferences, IANA time-zone, and optional notification
@@ -335,7 +337,20 @@ pnpm test:integration
 Gate: user-preferences integration tests pass; AuthService has no profile or
 preferences persistence method; response snapshots are unchanged.
 
+Recorded 1.4 completion:
+
+- Profile/preferences validators and types now live in
+  `src/modules/users/user.validators.ts`.
+- `UserRepository` owns profile/preferences persistence and keeps its Prisma
+  client private.
+- `UserService` owns public-user mapping and `UserController` owns HTTP input,
+  authentication extraction, and response handling.
+- `users.routes.ts` now only composes authentication middleware and controller
+  handlers.
+
 ### 1.5 Complete connected-account persistence
+
+Status: Implementation complete — verified 2026-08-10; DB gate pending.
 
 - Add repository methods for connected-account projection, provider lookup, and
   serializable unlink protection.
@@ -348,7 +363,20 @@ preferences persistence method; response snapshots are unchanged.
 Gate: connected-account tests cover listing, duplicate provider, invalid
 provider, missing account, unlink success, and last-login-method conflict.
 
+Recorded 1.5 completion:
+
+- Connected-account listing/unlink persistence remains behind
+  `AuthRepository` with explicit missing-user, missing-account, and
+  last-login-method outcomes.
+- Connected-account HTTP orchestration now lives in
+  `connected-accounts.controller.ts`.
+- `connected-accounts.routes.ts` contains only middleware and controller
+  mappings; provider parsing and link-start orchestration are no longer inline
+  route logic.
+
 ### 1.6 Implement the OAuth repository
+
+Status: Implementation complete — verified 2026-08-10; DB gate pending.
 
 - Replace OAuthRepository's exposed Prisma client with provider-neutral methods
   for:
@@ -368,6 +396,18 @@ provider, missing account, unlink success, and last-login-method conflict.
 Gate: Google/GitHub tests pass for login, callback failure, state reuse, expired
 state, duplicate identity, authenticated linking, unverified provider email,
 and refresh-cookie issuance.
+
+Recorded 1.6 completion:
+
+- `OAuthRepository` now owns provider-neutral state creation, atomic one-time
+  state consumption, provider account linking, OAuth user resolution/creation,
+  and refresh-session creation.
+- Google/GitHub services retain provider HTTP exchange, verified-email policy,
+  redirect-result orchestration, and domain error mapping only.
+- Prisma imports, Prisma getters, compatibility constructors, and direct
+  transaction/model calls were removed from both OAuth services.
+- Existing OAuth test factories inject `OAuthRepository` instead of passing a
+  Prisma client directly.
 
 ### 1.7 Identity composition and cleanup
 
