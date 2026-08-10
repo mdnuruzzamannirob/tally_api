@@ -49,6 +49,8 @@ jobs:
         run: pnpm prisma:deploy
       - name: Validate OpenAPI contract
         run: pnpm openapi:validate
+      - name: Audit identity boundary
+        run: pnpm audit:identity
       - name: Lint
         run: pnpm lint
       - name: Typecheck

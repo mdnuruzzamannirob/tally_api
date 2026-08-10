@@ -190,15 +190,15 @@ Status must be updated only after the relevant gate passes.
 
 ## 7. Phase status overview
 
-| Phase | Scope                                        | Status at plan creation                                        |
-| ----- | -------------------------------------------- | -------------------------------------------------------------- |
-| 0     | Shared foundation and contract preservation  | Complete                                                       |
-| 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.6 implementation complete; DB gate pending |
-| 2     | Applications and tags                        | Pending                                                        |
-| 3     | Notes and interviews                         | Pending                                                        |
-| 4     | Dashboard, health, export, and import        | Pending                                                        |
-| 5     | Composition, tests, and boundary enforcement | Pending                                                        |
-| 6     | Release hardening and sign-off               | Pending                                                        |
+| Phase | Scope                                        | Status at plan creation                                                 |
+| ----- | -------------------------------------------- | ----------------------------------------------------------------------- |
+| 0     | Shared foundation and contract preservation  | Complete                                                                |
+| 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.7 implementation complete; DB/release gates pending |
+| 2     | Applications and tags                        | Pending                                                                 |
+| 3     | Notes and interviews                         | Pending                                                                 |
+| 4     | Dashboard, health, export, and import        | Pending                                                                 |
+| 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
+| 6     | Release hardening and sign-off               | Pending                                                                 |
 
 ---
 
@@ -411,6 +411,9 @@ Recorded 1.6 completion:
 
 ### 1.7 Identity composition and cleanup
 
+Status: Implementation complete — verified 2026-08-10; database and release
+environment gates pending.
+
 - Update app.ts to construct identity repositories, then services, without
   compatibility fallbacks.
 - Update OAuth and auth test factories to inject repositories.
@@ -420,12 +423,39 @@ Recorded 1.6 completion:
 Identity completion audit:
 
 ```sh
-rg -n "PrismaClient|\\.prisma|\\.client|PrismaClient \\\\|" \
-  src/modules/auth src/modules/users src/oauth --glob '*.ts'
+pnpm audit:identity
 ```
 
-Allowed results are repository files and the Prisma infrastructure itself; no
-service/controller/route may expose a Prisma client.
+The audit checks all identity source files and rejects Prisma imports/access,
+repository-client exposure, and legacy Prisma-backed auth/OAuth constructors in
+application layers. Repository files remain the only identity files allowed to
+own Prisma persistence. The audit is also part of CI.
+
+Recorded 1.7 completion:
+
+- `app.ts` composes `AuthRepository`, `UserRepository`, and `OAuthRepository`
+  before constructing identity services; no compatibility fallback remains.
+- Auth and OAuth integration factories inject repositories; provider HTTP
+  clients remain mockable and provider services have no database dependency.
+- Legacy `src/auth` and `src/utils` paths are absent, and no identity service,
+  controller, or route imports or exposes Prisma.
+- Added `scripts/audit-identity-boundary.ts` and the `pnpm audit:identity`
+  package script; CI runs the audit before the quality checks.
+- `pnpm audit:identity` — passed: 21 identity source files checked;
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `pnpm build` — passed;
+- `DATABASE_URL=... pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- `git diff --check` — passed.
+
+The required database/release gates remain pending because this workspace does
+not currently provide a safe disposable `TEST_DATABASE_URL`, and the local
+PostgreSQL containers have a port/credential collision. Do not point the
+destructive integration cleanup tests at an unrelated database. Run the full
+gate in CI or with the documented disposable database:
 
 Phase 1 gate:
 
@@ -434,8 +464,9 @@ pnpm lint
 pnpm typecheck
 pnpm test:all
 pnpm build
-pnpm prisma:validate
+DATABASE_URL=... pnpm prisma:validate
 pnpm openapi:validate
+pnpm test:smoke
 ```
 
 ---
