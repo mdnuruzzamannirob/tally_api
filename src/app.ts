@@ -19,6 +19,9 @@ import { AuthService } from "./modules/auth/auth.service.js";
 import { createUsersRouter } from "./modules/users/users.routes.js";
 import { createApplicationsRouter } from "./modules/applications/application.routes.js";
 import { ApplicationService } from "./modules/applications/application.service.js";
+import { createApplicationTagRouter } from "./modules/tags/application-tag.routes.js";
+import { createTagsRouter } from "./modules/tags/tag.routes.js";
+import { TagService } from "./modules/tags/tag.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
@@ -33,6 +36,7 @@ export interface AppDependencies {
   googleOAuthService?: GoogleOAuthService;
   githubOAuthService?: GitHubOAuthService;
   applicationService?: ApplicationService;
+  tagService?: TagService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -46,6 +50,7 @@ export function createApp({
   googleOAuthService,
   githubOAuthService,
   applicationService,
+  tagService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
@@ -54,6 +59,7 @@ export function createApp({
   const resolvedGitHubOAuthService =
     githubOAuthService ?? new GitHubOAuthService(prisma, new GitHubOAuthHttpClient());
   const resolvedApplicationService = applicationService ?? new ApplicationService(prisma);
+  const resolvedTagService = tagService ?? new TagService(prisma);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -90,6 +96,8 @@ export function createApp({
   app.use("/api/v1/auth", createGitHubOAuthRouter(resolvedGitHubOAuthService));
   app.use("/api/v1/users", createUsersRouter(resolvedAuthService));
   app.use("/api/v1/applications", createApplicationsRouter(resolvedApplicationService));
+  app.use("/api/v1/applications", createApplicationTagRouter(resolvedTagService));
+  app.use("/api/v1/tags", createTagsRouter(resolvedTagService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
