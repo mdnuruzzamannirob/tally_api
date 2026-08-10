@@ -1,5 +1,5 @@
-import type { PrismaClient } from "../../generated/prisma/client.js";
 import { ApiError } from "../../lib/api-error.js";
+import type { ExportRepository } from "./export.repository.js";
 
 const csvColumns = [
   "company",
@@ -23,75 +23,16 @@ const csvColumns = [
 function neutralizeCsvFormula(value: string): string {
   return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
 }
-
 function escapeCsv(value: string | null): string {
   const normalized = value === null ? "" : neutralizeCsvFormula(value);
   return `"${normalized.replaceAll('"', '""')}"`;
 }
 
 export class ExportService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly repository: ExportRepository) {}
 
   async exportJson(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        name: true,
-        theme: true,
-        defaultLandingPage: true,
-        timeZone: true,
-        notificationsEnabled: true,
-        tags: {
-          orderBy: [{ name: "asc" }, { id: "asc" }],
-          select: { id: true, name: true, color: true },
-        },
-        applications: {
-          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-          select: {
-            id: true,
-            company: true,
-            role: true,
-            jobUrl: true,
-            location: true,
-            remoteType: true,
-            employmentType: true,
-            source: true,
-            status: true,
-            appliedAt: true,
-            salaryMin: true,
-            salaryMax: true,
-            currency: true,
-            nextFollowUpAt: true,
-            archivedAt: true,
-            createdAt: true,
-            updatedAt: true,
-            tags: { orderBy: { tagId: "asc" }, select: { tagId: true } },
-            notes: {
-              orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-              select: { content: true, createdAt: true, updatedAt: true },
-            },
-            interviews: {
-              orderBy: [{ scheduledAt: "asc" }, { id: "asc" }],
-              select: {
-                type: true,
-                scheduledAt: true,
-                interviewerName: true,
-                meetingLink: true,
-                location: true,
-                notes: true,
-                status: true,
-                createdAt: true,
-                updatedAt: true,
-              },
-            },
-            statusHistory: {
-              orderBy: [{ changedAt: "asc" }, { id: "asc" }],
-              select: { fromStatus: true, toStatus: true, note: true, changedAt: true },
-            },
-          },
-        },
-      },
-    });
+    const user = await this.repository.getUserExportData(userId);
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
     const tagRefs = new Map(user.tags.map((tag, index) => [tag.id, `tag-${index + 1}`]));
     return {
@@ -141,30 +82,9 @@ export class ExportService {
   }
 
   async exportCsv(userId: string): Promise<string> {
-    const applications = await this.prisma.application.findMany({
-      where: { userId },
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      select: {
-        company: true,
-        role: true,
-        status: true,
-        jobUrl: true,
-        location: true,
-        remoteType: true,
-        employmentType: true,
-        source: true,
-        appliedAt: true,
-        nextFollowUpAt: true,
-        salaryMin: true,
-        salaryMax: true,
-        currency: true,
-        createdAt: true,
-        updatedAt: true,
-        tags: { orderBy: { tag: { name: "asc" } }, select: { tag: { select: { name: true } } } },
-      },
-    });
-    const rows = applications.map((application) => {
-      const values: Array<string | null> = [
+    const applications = await this.repository.listCsvApplications(userId);
+    const rows = applications.map((application) =>
+      [
         application.company,
         application.role,
         application.status,
@@ -181,9 +101,10 @@ export class ExportService {
         JSON.stringify(application.tags.map(({ tag }) => neutralizeCsvFormula(tag.name))),
         application.createdAt.toISOString(),
         application.updatedAt.toISOString(),
-      ];
-      return values.map(escapeCsv).join(",");
-    });
+      ]
+        .map(escapeCsv)
+        .join(","),
+    );
     return [csvColumns.join(","), ...rows].join("\r\n");
   }
 }

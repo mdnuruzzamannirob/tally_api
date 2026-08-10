@@ -196,7 +196,7 @@ Status must be updated only after the relevant gate passes.
 | 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.7 implementation complete; DB/release gates pending |
 | 2     | Applications and tags                        | In progress — 2.1–2.6 implementation complete; DB gate pending          |
 | 3     | Notes and interviews                         | In progress — 3.1–3.3 implementation complete; DB gate pending          |
-| 4     | Dashboard, health, export, and import        | Pending                                                                 |
+| 4     | Dashboard, health, export, and import        | In progress — 4.1–4.3 implementation complete; DB gate pending          |
 | 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
 | 6     | Release hardening and sign-off               | Pending                                                                 |
 
@@ -742,6 +742,8 @@ repository boundaries without changing raw response exceptions.
 
 ### 4.1 Dashboard repository and controller
 
+Status: Implementation complete — verified 2026-08-10; database gate pending.
+
 - Create dashboard.repository.ts and dashboard.controller.ts.
 - Move aggregate counts, status grouping, follow-up lists, upcoming interviews,
   and recent applications into repository read methods.
@@ -753,7 +755,18 @@ repository boundaries without changing raw response exceptions.
 Gate: dashboard integration tests pass for time zones, today/overdue
 boundaries, archived records, status counts, and list limits.
 
+Recorded 4.1 completion:
+
+- Added `dashboard.repository.ts` for aggregate counts, status groups,
+  follow-up lists, upcoming interviews, and recent applications.
+- Added `dashboard.controller.ts`; dashboard routes now only compose auth and
+  the controller handler.
+- Time-zone day-boundary calculation remains in `DashboardService`; archived
+  exclusion, status metrics, limits, and deterministic ordering are preserved.
+
 ### 4.2 Export repository and controller
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Add export read methods for the canonical portable JSON projection and CSV
   projection.
@@ -764,7 +777,18 @@ boundaries, archived records, status counts, and list limits.
 Gate: JSON and CSV byte/semantic snapshots, ordering, null handling,
 formula-injection protection, and user isolation pass.
 
+Recorded 4.2 completion:
+
+- Added `export.repository.ts` for portable JSON and CSV read projections.
+- Kept reference mapping, JSON/CSV serialization, formula neutralization, raw
+  response behavior, content types, and attachment filenames in the service/
+  controller boundary.
+- Export routes remain composition-only and do not wrap downloads in the
+  normal success envelope.
+
 ### 4.3 Import repository and controller
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Add an import repository that owns the complete replacement transaction.
 - Keep schema validation, version checks, reference validation, and domain
@@ -775,6 +799,32 @@ formula-injection protection, and user isolation pass.
 
 Gate: import integration tests pass for valid replacement, all child data,
 invalid references, duplicate references, and transaction rollback.
+
+Recorded 4.3 completion:
+
+- Added `import.repository.ts`; complete user-owned replacement, generated ID
+  mapping, and child record writes remain inside one transaction.
+- Added `import.controller.ts`; request parsing and success response mapping
+  are outside the route module.
+- Import validation remains in `import.validators.ts`; identity fields such as
+  email, password, OAuth accounts, and refresh tokens are not imported.
+
+Recorded 4.1–4.3 validation:
+
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `pnpm build` — passed;
+- `pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- dashboard/export/import boundary audit — passed: no Prisma access remains in
+  services, controllers, or routes;
+- `git diff --check` — passed.
+
+The database integration gate remains pending because this workspace has no safe
+disposable `TEST_DATABASE_URL`. Run the full read/transfer integration gate
+against the documented disposable database before marking Phase 4 complete.
 
 ### 4.4 Health boundary
 

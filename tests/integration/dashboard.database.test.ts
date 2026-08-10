@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { createAccessToken } from "../../src/lib/jwt.js";
 import { DashboardService } from "../../src/modules/dashboard/dashboard.service.js";
+import { DashboardRepository } from "../../src/modules/dashboard/dashboard.repository.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
@@ -32,7 +33,7 @@ describe.skipIf(!runDatabaseTests)("dashboard", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
-      dashboardService: new DashboardService(prisma),
+      dashboardService: new DashboardService(new DashboardRepository(prisma)),
     });
   });
 

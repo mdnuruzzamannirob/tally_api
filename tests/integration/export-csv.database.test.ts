@@ -6,6 +6,7 @@ import { createApp } from "../../src/app.js";
 import { createAccessToken } from "../../src/lib/jwt.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import { ExportService } from "../../src/modules/export-import/export.service.js";
+import { ExportRepository } from "../../src/modules/export-import/export.repository.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
@@ -32,7 +33,7 @@ describe.skipIf(!runDatabaseTests)("CSV export", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
-      exportService: new ExportService(prisma),
+      exportService: new ExportService(new ExportRepository(prisma)),
     });
   });
 

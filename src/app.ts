@@ -32,8 +32,11 @@ import { NoteRepository } from "./modules/notes/note.repository.js";
 import { InterviewService } from "./modules/interviews/interview.service.js";
 import { InterviewRepository } from "./modules/interviews/interview.repository.js";
 import { DashboardService } from "./modules/dashboard/dashboard.service.js";
+import { DashboardRepository } from "./modules/dashboard/dashboard.repository.js";
 import { ExportService } from "./modules/export-import/export.service.js";
+import { ExportRepository } from "./modules/export-import/export.repository.js";
 import { ImportService } from "./modules/export-import/import.service.js";
+import { ImportRepository } from "./modules/export-import/import.repository.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
 import { GitHubOAuthService } from "./oauth/github-oauth.service.js";
@@ -83,6 +86,9 @@ export function createApp({
   const tagRepository = new TagRepository(prisma);
   const noteRepository = new NoteRepository(prisma);
   const interviewRepository = new InterviewRepository(prisma);
+  const dashboardRepository = new DashboardRepository(prisma);
+  const exportRepository = new ExportRepository(prisma);
+  const importRepository = new ImportRepository(prisma);
   const resolvedAuthService = authService ?? new AuthService(authRepository, createEmailService());
   const resolvedUserService = userService ?? new UserService(userRepository);
   const resolvedGoogleOAuthService =
@@ -94,9 +100,9 @@ export function createApp({
   const resolvedTagService = tagService ?? new TagService(tagRepository);
   const resolvedNoteService = noteService ?? new NoteService(noteRepository);
   const resolvedInterviewService = interviewService ?? new InterviewService(interviewRepository);
-  const resolvedDashboardService = dashboardService ?? new DashboardService(prisma);
-  const resolvedExportService = exportService ?? new ExportService(prisma);
-  const resolvedImportService = importService ?? new ImportService(prisma);
+  const resolvedDashboardService = dashboardService ?? new DashboardService(dashboardRepository);
+  const resolvedExportService = exportService ?? new ExportService(exportRepository);
+  const resolvedImportService = importService ?? new ImportService(importRepository);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);

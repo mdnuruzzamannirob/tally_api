@@ -1,35 +1,22 @@
 import { Router } from "express";
 
-import { authenticate } from "../../middleware/auth.middleware.js";
-import { ApiError } from "../../lib/api-error.js";
 import { asyncHandler } from "../../lib/async-handler.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
+import { ExportController } from "./export.controller.js";
 import type { ExportService } from "./export.service.js";
 
 export function createExportRouter(exportService: ExportService): Router {
+  const controller = new ExportController(exportService);
   const router = Router();
   router.get(
     "/json",
     authenticate,
-    asyncHandler(async (request, response) => {
-      if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-      const backup = await exportService.exportJson(request.auth.userId);
-      const date = new Date().toISOString().slice(0, 10);
-      response.type("application/json");
-      response.attachment(`tally-backup-${date}.json`);
-      return response.send(backup);
-    }),
+    asyncHandler((request, response) => controller.json(request, response)),
   );
   router.get(
     "/csv",
     authenticate,
-    asyncHandler(async (request, response) => {
-      if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-      const csv = await exportService.exportCsv(request.auth.userId);
-      const date = new Date().toISOString().slice(0, 10);
-      response.type("text/csv");
-      response.attachment(`tally-applications-${date}.csv`);
-      return response.send(csv);
-    }),
+    asyncHandler((request, response) => controller.csv(request, response)),
   );
   return router;
 }

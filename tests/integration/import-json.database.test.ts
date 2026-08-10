@@ -6,6 +6,7 @@ import { createApp } from "../../src/app.js";
 import { createAccessToken } from "../../src/lib/jwt.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import { ImportService } from "../../src/modules/export-import/import.service.js";
+import { ImportRepository } from "../../src/modules/export-import/import.repository.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
@@ -91,7 +92,7 @@ describe.skipIf(!runDatabaseTests)("JSON import", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
-      importService: new ImportService(prisma),
+      importService: new ImportService(new ImportRepository(prisma)),
     });
   });
 
