@@ -12,11 +12,13 @@ export class GitHubOAuthService {
     private readonly client: GitHubOAuthClient,
   ) {}
 
-  async start(redirectUri: string): Promise<string> {
+  async start(redirectUri: string, linkUserId?: string): Promise<string> {
     const state = generateOpaqueToken();
     await this.prisma.oAuthState.create({
       data: {
         provider: "GITHUB",
+        intent: linkUserId ? "LINK" : "LOGIN",
+        userId: linkUserId ?? null,
         stateHash: hashToken(state),
         expiresAt: new Date(Date.now() + STATE_LIFETIME_MS),
       },
@@ -24,11 +26,21 @@ export class GitHubOAuthService {
     return this.client.getAuthorizationUrl(state, redirectUri);
   }
 
-  async complete(code: string, state: string, redirectUri: string): Promise<string> {
-    await this.consumeState(state);
+  async complete(
+    code: string,
+    state: string,
+    redirectUri: string,
+  ): Promise<{ intent: "login"; refreshToken: string } | { intent: "link" }> {
+    const oauthState = await this.consumeState(state);
     const profile = await this.client.exchangeCode(code, redirectUri);
     if (!profile.emailVerified)
       throw new ApiError(403, "FORBIDDEN", "GitHub account email is not verified.");
+    if (oauthState.intent === "LINK") {
+      if (!oauthState.userId)
+        throw new ApiError(400, "BAD_REQUEST", "OAuth link state is invalid.");
+      await this.linkToUser(oauthState.userId, profile);
+      return { intent: "link" };
+    }
     const user = await this.resolveUser(profile);
     const refreshToken = generateOpaqueToken();
     await this.prisma.refreshToken.create({
@@ -38,10 +50,10 @@ export class GitHubOAuthService {
         expiresAt: getRefreshTokenExpiresAt(),
       },
     });
-    return refreshToken;
+    return { intent: "login", refreshToken };
   }
 
-  private async consumeState(state: string): Promise<void> {
+  private async consumeState(state: string) {
     const record = await this.prisma.oAuthState.findUnique({
       where: { stateHash: hashToken(state) },
     });
@@ -52,6 +64,37 @@ export class GitHubOAuthService {
     if ((await this.prisma.oAuthState.deleteMany({ where: { id: record.id } })).count !== 1) {
       throw new ApiError(400, "BAD_REQUEST", "OAuth state is invalid or expired.");
     }
+    return record;
+  }
+
+  private async linkToUser(userId: string, profile: GitHubProfile): Promise<void> {
+    await this.prisma.$transaction(async (transaction) => {
+      const user = await transaction.user.findUnique({ where: { id: userId } });
+      if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+      const account = await transaction.oauthAccount.findUnique({
+        where: {
+          provider_providerAccountId: {
+            provider: "GITHUB",
+            providerAccountId: profile.providerAccountId,
+          },
+        },
+      });
+      if (account?.userId === userId) return;
+      if (account) throw new ApiError(409, "CONFLICT", "This GitHub account is already connected.");
+      const providerForUser = await transaction.oauthAccount.findUnique({
+        where: { userId_provider: { userId, provider: "GITHUB" } },
+      });
+      if (providerForUser)
+        throw new ApiError(409, "CONFLICT", "A GitHub account is already connected.");
+      await transaction.oauthAccount.create({
+        data: {
+          userId,
+          provider: "GITHUB",
+          providerAccountId: profile.providerAccountId,
+          email: profile.email,
+        },
+      });
+    });
   }
 
   private async resolveUser(profile: GitHubProfile): Promise<{ id: string }> {

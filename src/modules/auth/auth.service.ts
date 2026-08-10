@@ -324,6 +324,47 @@ export class AuthService {
     });
   }
 
+  async getConnectedAccounts(userId: string): Promise<{
+    providers: Array<{ provider: "google" | "github"; connected: boolean; email: string | null }>;
+    hasPassword: boolean;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { oauthAccounts: true },
+    });
+    if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+    return {
+      providers: (["GOOGLE", "GITHUB"] as const).map((provider) => {
+        const account = user.oauthAccounts.find((item) => item.provider === provider);
+        return {
+          provider: provider.toLowerCase() as "google" | "github",
+          connected: Boolean(account),
+          email: account?.email ?? null,
+        };
+      }),
+      hasPassword: Boolean(user.passwordHash),
+    };
+  }
+
+  async unlinkProvider(userId: string, provider: "GOOGLE" | "GITHUB"): Promise<void> {
+    await this.prisma.$transaction(
+      async (transaction) => {
+        const user = await transaction.user.findUnique({
+          where: { id: userId },
+          include: { oauthAccounts: true },
+        });
+        if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+        const account = user.oauthAccounts.find((item) => item.provider === provider);
+        if (!account) throw new ApiError(404, "NOT_FOUND", "Connected provider was not found.");
+        if (user.oauthAccounts.length + Number(Boolean(user.passwordHash)) <= 1) {
+          throw new ApiError(409, "CONFLICT", "Cannot remove the last available login method");
+        }
+        await transaction.oauthAccount.delete({ where: { id: account.id } });
+      },
+      { isolationLevel: "Serializable" },
+    );
+  }
+
   private async revokeUserSessions(userId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },

@@ -14,6 +14,7 @@ import { errorMiddleware } from "./middleware/error.middleware.js";
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
+import { createConnectedAccountsRouter } from "./modules/auth/connected-accounts.routes.js";
 import { AuthService } from "./modules/auth/auth.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
@@ -71,6 +72,14 @@ export function createApp({
 
   app.use("/api/v1", createHealthRouter(checkDatabase));
   app.use("/api/v1/auth", createAuthRouter(resolvedAuthService));
+  app.use(
+    "/api/v1/auth",
+    createConnectedAccountsRouter(
+      resolvedAuthService,
+      resolvedGoogleOAuthService,
+      resolvedGitHubOAuthService,
+    ),
+  );
   app.use("/api/v1/auth", createGoogleOAuthRouter(resolvedGoogleOAuthService));
   app.use("/api/v1/auth", createGitHubOAuthRouter(resolvedGitHubOAuthService));
   app.use(notFoundMiddleware);
