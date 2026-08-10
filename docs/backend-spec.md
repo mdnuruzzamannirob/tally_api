@@ -122,22 +122,17 @@ api/
 │   │   ├── validation.middleware.ts
 │   │   ├── error.middleware.ts
 │   │   ├── not-found.middleware.ts
-│   │   ├── rate-limit.middleware.ts
+│   │   ├── global-rate-limit.middleware.ts
 │   │   ├── request-id.middleware.ts
 │   │   ├── request-logger.middleware.ts
-│   │   └── origin-check.middleware.ts
+│   │   └── refresh-origin.middleware.ts
 │   ├── email/
 │   │   ├── email.service.ts
 │   │   ├── email.provider.ts
-│   │   └── templates/
-│   │       ├── verification.email.ts
-│   │       └── password-reset.email.ts
-│   ├── oauth/
-│   │   ├── oauth.types.ts
-│   │   ├── google.oauth.ts
-│   │   └── github.oauth.ts
+│   │   └── templates/                 # optional; currently unused
 │   ├── modules/
 │   │   ├── auth/
+│   │   │   └── oauth/
 │   │   ├── users/
 │   │   ├── applications/
 │   │   ├── tags/
@@ -147,15 +142,10 @@ api/
 │   │   ├── export-import/
 │   │   └── health/
 │   ├── routes/
-│   │   └── index.ts
+│   │   ├── index.ts
+│   │   └── openapi.routes.ts
 │   ├── types/
-│   │   ├── express.d.ts
-│   │   └── common.types.ts
-│   ├── utils/
-│   │   ├── date.ts
-│   │   ├── timezone.ts
-│   │   ├── normalize.ts
-│   │   └── csv.ts
+│   │   └── express.d.ts
 │   └── generated/
 │       └── prisma/
 ├── prisma/

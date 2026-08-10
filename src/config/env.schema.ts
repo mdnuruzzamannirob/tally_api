@@ -43,7 +43,10 @@ const envSchema = z
     EMAIL_PROVIDER: z.enum(emailProviders).default("console"),
     EMAIL_API_KEY: optionalString,
     EMAIL_FROM: z.string().email(),
-    EMAIL_API_BASE_URL: z.string().url().optional(),
+    EMAIL_API_BASE_URL: z.preprocess(
+      (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+      z.string().url().optional(),
+    ),
     EMAIL_MAILGUN_DOMAIN: optionalString,
     EMAIL_SMTP_HOST: optionalString,
     EMAIL_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).optional(),
