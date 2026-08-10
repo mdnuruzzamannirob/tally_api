@@ -17,6 +17,8 @@ import { createAuthRouter } from "./modules/auth/auth.routes.js";
 import { createConnectedAccountsRouter } from "./modules/auth/connected-accounts.routes.js";
 import { AuthService } from "./modules/auth/auth.service.js";
 import { createUsersRouter } from "./modules/users/users.routes.js";
+import { createApplicationsRouter } from "./modules/applications/application.routes.js";
+import { ApplicationService } from "./modules/applications/application.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
@@ -30,6 +32,7 @@ export interface AppDependencies {
   authService?: AuthService;
   googleOAuthService?: GoogleOAuthService;
   githubOAuthService?: GitHubOAuthService;
+  applicationService?: ApplicationService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -42,6 +45,7 @@ export function createApp({
   authService,
   googleOAuthService,
   githubOAuthService,
+  applicationService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
@@ -49,6 +53,7 @@ export function createApp({
     googleOAuthService ?? new GoogleOAuthService(prisma, new GoogleOAuthHttpClient());
   const resolvedGitHubOAuthService =
     githubOAuthService ?? new GitHubOAuthService(prisma, new GitHubOAuthHttpClient());
+  const resolvedApplicationService = applicationService ?? new ApplicationService(prisma);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -84,6 +89,7 @@ export function createApp({
   app.use("/api/v1/auth", createGoogleOAuthRouter(resolvedGoogleOAuthService));
   app.use("/api/v1/auth", createGitHubOAuthRouter(resolvedGitHubOAuthService));
   app.use("/api/v1/users", createUsersRouter(resolvedAuthService));
+  app.use("/api/v1/applications", createApplicationsRouter(resolvedApplicationService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
