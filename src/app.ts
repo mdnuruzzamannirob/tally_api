@@ -18,12 +18,16 @@ import { AuthService } from "./modules/auth/auth.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
+import { createGitHubOAuthRouter } from "./oauth/github-oauth.routes.js";
+import { GitHubOAuthService } from "./oauth/github-oauth.service.js";
+import { GitHubOAuthHttpClient } from "./oauth/github.oauth.js";
 import { createHealthRouter } from "./routes/health.routes.js";
 
 export interface AppDependencies {
   checkDatabase?: () => Promise<void>;
   authService?: AuthService;
   googleOAuthService?: GoogleOAuthService;
+  githubOAuthService?: GitHubOAuthService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -35,11 +39,14 @@ export function createApp({
   checkDatabase = defaultDatabaseCheck,
   authService,
   googleOAuthService,
+  githubOAuthService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
   const resolvedGoogleOAuthService =
     googleOAuthService ?? new GoogleOAuthService(prisma, new GoogleOAuthHttpClient());
+  const resolvedGitHubOAuthService =
+    githubOAuthService ?? new GitHubOAuthService(prisma, new GitHubOAuthHttpClient());
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -65,6 +72,7 @@ export function createApp({
   app.use("/api/v1", createHealthRouter(checkDatabase));
   app.use("/api/v1/auth", createAuthRouter(resolvedAuthService));
   app.use("/api/v1/auth", createGoogleOAuthRouter(resolvedGoogleOAuthService));
+  app.use("/api/v1/auth", createGitHubOAuthRouter(resolvedGitHubOAuthService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
