@@ -242,27 +242,16 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.repository.findUserByEmail(email);
     if (!user) return;
 
     const rawToken = generateOpaqueToken();
-    await this.prisma.$transaction([
-      this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
-      this.prisma.passwordResetToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: hashToken(rawToken),
-          expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_LIFETIME_MS),
-        },
-      }),
-    ]);
+    await this.repository.replacePasswordResetToken(user.id, hashToken(rawToken), new Date(Date.now() + PASSWORD_RESET_TOKEN_LIFETIME_MS));
     await this.emailService.sendPasswordResetEmail({ email: user.email, token: rawToken });
   }
 
   async resetPassword(rawToken: string, password: string): Promise<void> {
-    const resetToken = await this.prisma.passwordResetToken.findUnique({
-      where: { tokenHash: hashToken(rawToken) },
-    });
+    const resetToken = await this.repository.findPasswordResetToken(hashToken(rawToken));
     if (!resetToken || resetToken.usedAt || resetToken.expiresAt <= new Date()) {
       throw new ApiError(
         400,
@@ -272,24 +261,8 @@ export class AuthService {
     }
 
     const passwordHash = await hashPassword(password);
-    await this.prisma.$transaction(async (transaction) => {
-      const markedUsed = await transaction.passwordResetToken.updateMany({
-        where: { id: resetToken.id, usedAt: null },
-        data: { usedAt: new Date() },
-      });
-      if (markedUsed.count !== 1) {
-        throw new ApiError(
-          400,
-          "INVALID_OR_EXPIRED_TOKEN",
-          "Password reset token is invalid or expired.",
-        );
-      }
-      await transaction.user.update({ where: { id: resetToken.userId }, data: { passwordHash } });
-      await transaction.refreshToken.updateMany({
-        where: { userId: resetToken.userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-    });
+    const consumed = await this.repository.consumePasswordResetAndUpdatePassword(resetToken.id, resetToken.userId, passwordHash, new Date());
+    if (!consumed) throw new ApiError(400, "INVALID_OR_EXPIRED_TOKEN", "Password reset token is invalid or expired.");
   }
 
   async changePassword(
@@ -297,7 +270,7 @@ export class AuthService {
     input: ChangePasswordInput,
     currentRefreshToken: string | undefined,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.repository.findUserById(userId);
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
     if (!user.passwordHash) {
       throw new ApiError(409, "CONFLICT", "Use the set-password flow for this account.");
@@ -308,29 +281,16 @@ export class AuthService {
 
     const passwordHash = await hashPassword(input.newPassword);
     const currentTokenHash = currentRefreshToken ? hashToken(currentRefreshToken) : undefined;
-    await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
-      this.prisma.refreshToken.updateMany({
-        where: {
-          userId,
-          revokedAt: null,
-          ...(currentTokenHash ? { tokenHash: { not: currentTokenHash } } : {}),
-        },
-        data: { revokedAt: new Date() },
-      }),
-    ]);
+    await this.repository.updatePasswordAndRevokeOtherSessions(userId, passwordHash, currentTokenHash, new Date());
   }
 
   async setPassword(userId: string, password: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.repository.findUserById(userId);
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
     if (user.passwordHash) {
       throw new ApiError(409, "CONFLICT", "Use the change-password flow for this account.");
     }
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash: await hashPassword(password) },
-    });
+    await this.repository.setPassword(userId, await hashPassword(password));
   }
 
   async getConnectedAccounts(userId: string): Promise<{
