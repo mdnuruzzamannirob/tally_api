@@ -108,6 +108,17 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model OAuthState {
+  id        String        @id @default(cuid())
+  provider  OauthProvider
+  stateHash String        @unique @map("state_hash")
+  expiresAt DateTime      @db.Timestamptz(3) @map("expires_at")
+  createdAt DateTime      @default(now()) @db.Timestamptz(3) @map("created_at")
+
+  @@index([expiresAt])
+  @@map("oauth_states")
+}
+
 enum ApplicationStatus {
   WISHLIST
   APPLIED

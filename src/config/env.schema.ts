@@ -35,6 +35,7 @@ const envSchema = z
     PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
     DATABASE_URL: databaseUrlSchema,
     TEST_DATABASE_URL: databaseUrlSchema.optional(),
+    API_BASE_URL: z.string().url(),
     WEB_APP_URL: z.string().url(),
     ACCESS_TOKEN_SECRET: z.string().min(1),
     ACCESS_TOKEN_EXPIRES_IN: durationSchema.default("15m"),

@@ -4,6 +4,7 @@ import { parseEnvironment } from "../../src/config/env.schema.js";
 
 const developmentEnvironment = {
   DATABASE_URL: "postgresql://tally:tally@localhost:5433/tally",
+  API_BASE_URL: "http://localhost:4000",
   WEB_APP_URL: "http://localhost:3000",
   ACCESS_TOKEN_SECRET: "a-local-development-secret",
   EMAIL_FROM: "no-reply@tally.local",
