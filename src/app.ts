@@ -22,6 +22,8 @@ import { ApplicationService } from "./modules/applications/application.service.j
 import { createApplicationTagRouter } from "./modules/tags/application-tag.routes.js";
 import { createTagsRouter } from "./modules/tags/tag.routes.js";
 import { TagService } from "./modules/tags/tag.service.js";
+import { createApplicationNotesRouter, createNotesRouter } from "./modules/notes/note.routes.js";
+import { NoteService } from "./modules/notes/note.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
@@ -37,6 +39,7 @@ export interface AppDependencies {
   githubOAuthService?: GitHubOAuthService;
   applicationService?: ApplicationService;
   tagService?: TagService;
+  noteService?: NoteService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -51,6 +54,7 @@ export function createApp({
   githubOAuthService,
   applicationService,
   tagService,
+  noteService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
@@ -60,6 +64,7 @@ export function createApp({
     githubOAuthService ?? new GitHubOAuthService(prisma, new GitHubOAuthHttpClient());
   const resolvedApplicationService = applicationService ?? new ApplicationService(prisma);
   const resolvedTagService = tagService ?? new TagService(prisma);
+  const resolvedNoteService = noteService ?? new NoteService(prisma);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -97,7 +102,9 @@ export function createApp({
   app.use("/api/v1/users", createUsersRouter(resolvedAuthService));
   app.use("/api/v1/applications", createApplicationsRouter(resolvedApplicationService));
   app.use("/api/v1/applications", createApplicationTagRouter(resolvedTagService));
+  app.use("/api/v1/applications", createApplicationNotesRouter(resolvedNoteService));
   app.use("/api/v1/tags", createTagsRouter(resolvedTagService));
+  app.use("/api/v1", createNotesRouter(resolvedNoteService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
