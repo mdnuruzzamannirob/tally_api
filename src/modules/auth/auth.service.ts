@@ -5,7 +5,13 @@ import { ApiError } from "../../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../../auth/password.js";
 import { getRefreshTokenExpiresAt } from "../../auth/refresh-cookie.js";
 import { generateOpaqueToken, hashToken } from "../../auth/tokens.js";
-import type { ChangePasswordInput, LoginInput, RegisterInput } from "./auth.validators.js";
+import type {
+  ChangePasswordInput,
+  LoginInput,
+  RegisterInput,
+  UpdatePreferencesInput,
+  UpdateProfileInput,
+} from "./auth.validators.js";
 
 const VERIFICATION_TOKEN_LIFETIME_MS = 24 * 60 * 60 * 1_000;
 const PASSWORD_RESET_TOKEN_LIFETIME_MS = 30 * 60 * 1_000;
@@ -167,6 +173,36 @@ export class AuthService {
       include: { oauthAccounts: true },
     });
     if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+    return toPublicUser(user);
+  }
+
+  async updateProfile(userId: string, input: UpdateProfileInput): Promise<PublicUser> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name: input.name ?? null },
+      include: { oauthAccounts: true },
+    });
+    return toPublicUser(user);
+  }
+
+  async updatePreferences(userId: string, input: UpdatePreferencesInput): Promise<PublicUser> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(input.theme ? { theme: input.theme.toUpperCase() as "LIGHT" | "DARK" | "SYSTEM" } : {}),
+        ...(input.defaultLandingPage
+          ? {
+              defaultLandingPage: input.defaultLandingPage.toUpperCase() as
+                "DASHBOARD" | "APPLICATIONS",
+            }
+          : {}),
+        ...(input.timeZone ? { timeZone: input.timeZone } : {}),
+        ...(input.notificationsEnabled !== undefined
+          ? { notificationsEnabled: input.notificationsEnabled }
+          : {}),
+      },
+      include: { oauthAccounts: true },
+    });
     return toPublicUser(user);
   }
 

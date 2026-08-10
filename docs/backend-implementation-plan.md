@@ -27,6 +27,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 12 — Google OAuth Login
 - Completed: Phase 13 — GitHub OAuth Login
 - Completed: Phase 14 — Connected Accounts
+- Completed: Phase 15 — User Profile and Preferences
 
 ## Delivery Rules
 
