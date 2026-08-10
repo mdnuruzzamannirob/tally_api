@@ -13,5 +13,5 @@
     "resolveJsonModule": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "tests", "eslint.config.js", "vitest.config.ts", "prisma.config.ts"]
+  "include": ["src", "scripts", "tests", "eslint.config.js", "vitest.config.ts", "prisma.config.ts"]
 }
