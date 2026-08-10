@@ -122,6 +122,15 @@ export const updateApplicationSchema = z
 
 export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
 
+export const changeApplicationStatusSchema = z
+  .object({
+    toStatus: applicationStatus,
+    note: z.string().trim().min(1).max(5000).optional(),
+  })
+  .strict();
+
+export type ChangeApplicationStatusInput = z.infer<typeof changeApplicationStatusSchema>;
+
 const positiveInteger = z.coerce.number().int().min(1);
 const optionalTrimmedText = z.preprocess(
   (value) => (typeof value === "string" ? value.trim() || undefined : value),

@@ -261,4 +261,52 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(400);
   });
+
+  it("changes status atomically, rejects no-op changes, and returns owned history", async () => {
+    const user = await prisma.user.create({ data: { email: "history@example.test" } });
+    const otherUser = await prisma.user.create({ data: { email: "history-other@example.test" } });
+    const application = await prisma.application.create({
+      data: { userId: user.id, company: "Tally", role: "Engineer", status: "APPLIED" },
+    });
+    const otherApplication = await prisma.application.create({
+      data: { userId: otherUser.id, company: "Private", role: "Engineer" },
+    });
+    const accessToken = createAccessToken({ sub: user.id, emailVerified: false });
+
+    const changed = await request(app)
+      .post(`/api/v1/applications/${application.id}/status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ toStatus: "INTERVIEW", note: "  Technical interview confirmed.  " });
+    expect(changed.status).toBe(200);
+    expect(changed.body.data.application).toMatchObject({
+      id: application.id,
+      status: "INTERVIEW",
+    });
+    await expect(
+      prisma.statusHistory.findFirstOrThrow({ where: { applicationId: application.id } }),
+    ).resolves.toMatchObject({
+      fromStatus: "APPLIED",
+      toStatus: "INTERVIEW",
+      note: "Technical interview confirmed.",
+    });
+
+    await request(app)
+      .post(`/api/v1/applications/${application.id}/status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ toStatus: "INTERVIEW" })
+      .expect(409);
+    await expect(
+      prisma.statusHistory.count({ where: { applicationId: application.id } }),
+    ).resolves.toBe(1);
+
+    const history = await request(app)
+      .get(`/api/v1/applications/${application.id}/history`)
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(history.status).toBe(200);
+    expect(history.body.data.history).toHaveLength(1);
+    await request(app)
+      .get(`/api/v1/applications/${otherApplication.id}/history`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(404);
+  });
 });

@@ -31,6 +31,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 16 — Application Creation and Detail
 - Completed: Phase 17 — Application Update, Archive, and Delete
 - Completed: Phase 18 — Application List, Search, and Filters
+- Completed: Phase 19 — Status Changes and History
 
 ## Delivery Rules
 

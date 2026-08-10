@@ -7,6 +7,7 @@ import { sendSuccess } from "../../utils/api-response.js";
 import type { ApplicationService } from "./application.service.js";
 import {
   createApplicationSchema,
+  changeApplicationStatusSchema,
   listApplicationsQuerySchema,
   updateApplicationSchema,
 } from "./application.validators.js";
@@ -71,6 +72,33 @@ export function createApplicationsRouter(applicationService: ApplicationService)
         updateApplicationSchema.parse(request.body),
       );
       return sendSuccess(response, { application });
+    }),
+  );
+  router.post(
+    "/:id/status",
+    authenticate,
+    asyncHandler(async (request, response) => {
+      if (typeof request.params.id !== "string" || !request.params.id) {
+        throw new ApiError(400, "BAD_REQUEST", "Application ID is required.");
+      }
+      const application = await applicationService.changeStatus(
+        userIdOrThrow(request),
+        request.params.id,
+        changeApplicationStatusSchema.parse(request.body),
+      );
+      return sendSuccess(response, { application });
+    }),
+  );
+  router.get(
+    "/:id/history",
+    authenticate,
+    asyncHandler(async (request, response) => {
+      if (typeof request.params.id !== "string" || !request.params.id) {
+        throw new ApiError(400, "BAD_REQUEST", "Application ID is required.");
+      }
+      return sendSuccess(response, {
+        history: await applicationService.getHistory(userIdOrThrow(request), request.params.id),
+      });
     }),
   );
   router.post(

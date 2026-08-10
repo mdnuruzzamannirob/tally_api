@@ -3,6 +3,7 @@ import { ApiError } from "../../utils/api-error.js";
 import type {
   CreateApplicationInput,
   ListApplicationsQuery,
+  ChangeApplicationStatusInput,
   UpdateApplicationInput,
 } from "./application.validators.js";
 
@@ -238,6 +239,47 @@ export class ApplicationService {
         },
         include: applicationInclude,
       });
+    });
+  }
+
+  async changeStatus(userId: string, id: string, input: ChangeApplicationStatusInput) {
+    return this.prisma.$transaction(async (transaction) => {
+      const application = await transaction.application.findFirst({
+        where: { id, userId },
+        select: { id: true, status: true },
+      });
+      if (!application) throw new ApiError(404, "NOT_FOUND", "Application was not found.");
+      if (application.status === input.toStatus) {
+        throw new ApiError(409, "CONFLICT", "Application already has this status.");
+      }
+      const changed = await transaction.application.updateMany({
+        where: { id, userId, status: application.status },
+        data: { status: input.toStatus },
+      });
+      if (changed.count !== 1) {
+        throw new ApiError(409, "CONFLICT", "Application status changed; retry the request.");
+      }
+      await transaction.statusHistory.create({
+        data: {
+          applicationId: id,
+          fromStatus: application.status,
+          toStatus: input.toStatus,
+          ...(input.note ? { note: input.note } : {}),
+        },
+      });
+      return { id, status: input.toStatus };
+    });
+  }
+
+  async getHistory(userId: string, id: string) {
+    const application = await this.prisma.application.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!application) throw new ApiError(404, "NOT_FOUND", "Application was not found.");
+    return this.prisma.statusHistory.findMany({
+      where: { applicationId: id },
+      orderBy: [{ changedAt: "desc" }, { id: "desc" }],
     });
   }
 
