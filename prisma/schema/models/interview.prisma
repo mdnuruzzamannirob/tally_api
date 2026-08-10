@@ -1,0 +1,19 @@
+model Interview {
+  id              String          @id @default(cuid())
+  applicationId   String          @map("application_id")
+  type            InterviewType
+  scheduledAt     DateTime        @db.Timestamptz(3) @map("scheduled_at")
+  interviewerName String?         @map("interviewer_name")
+  meetingLink     String?         @map("meeting_link")
+  location        String?
+  notes           String?
+  status          InterviewStatus @default(SCHEDULED)
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3) @map("created_at")
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3) @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([applicationId, scheduledAt])
+  @@map("interviews")
+}

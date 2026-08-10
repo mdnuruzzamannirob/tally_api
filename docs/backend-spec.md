@@ -59,6 +59,7 @@ The backend will be a separate Express TypeScript REST API and will serve the Ne
 | Testing             | Vitest + Supertest                              |
 | Process manager     | Node.js                                         |
 | Dev runner          | tsx or ts-node-dev                              |
+| API contract        | OpenAPI 3.1 artifact + Swagger UI               |
 
 ---
 
@@ -151,19 +152,30 @@ api/
 │   │   ├── express.d.ts
 │   │   └── common.types.ts
 │   ├── utils/
+│   │   ├── date.ts
+│   │   ├── timezone.ts
+│   │   ├── normalize.ts
+│   │   └── csv.ts
 │   └── generated/
 │       └── prisma/
 ├── prisma/
-│   ├── schema.prisma
+│   ├── schema/
+│   │   ├── base.prisma
+│   │   ├── enums/
+│   │   └── models/
 │   ├── migrations/
 │   └── seed.ts
+├── contracts/
+│   └── openapi.json              # versioned public API contract artifact
 ├── tests/
 │   ├── unit/
 │   ├── integration/
 │   ├── helpers/
 │   └── setup.ts
 ├── .env.example
+├── docker-compose.yml
 ├── Dockerfile
+├── eslint.config.js
 ├── package.json
 ├── prisma.config.ts
 └── tsconfig.json
@@ -184,8 +196,13 @@ modules/applications/
 ├── application.service.ts
 ├── application.repository.ts
 ├── application.validators.ts
-└── application.types.ts
+├── application.types.ts
+└── application.constants.ts
 ```
+
+Use this full pattern for every applicable feature. Small read-only modules may
+omit files they do not need, but must still keep their constants, types, and
+HTTP responsibilities inside the feature boundary.
 
 ---
 
@@ -269,16 +286,47 @@ All API routes must be prefixed with:
 
 ---
 
-## 9.2 Response Envelope
+## 9.2 OpenAPI and Swagger
+
+The API contract is an OpenAPI 3.1 document at `contracts/openapi.json`. It is
+the release artifact shared between the independent repositories; it is not a
+workspace package or an import of API source types.
+
+- `GET /api/v1/openapi.json` serves the exact released artifact.
+- `GET /api/v1/docs` serves Swagger UI using that same document.
+- Every versioned endpoint, request schema, success/error envelope, security
+  scheme, raw export exception, and OAuth redirect exception is represented in
+  the document.
+- API CI validates the document and runs contract tests against the running
+  API. Web CI pins the released artifact and validates its endpoint types
+  before deployment.
+
+Swagger UI is documentation only; authentication and authorization are always
+enforced by the API routes themselves.
+
+## 9.3 Response Envelope
 
 All successful responses:
 
 ```json
 {
   "success": true,
-  "data": {}
+  "message": "Applications retrieved successfully.",
+  "data": {},
+  "meta": {
+    "requestId": "request_id",
+    "page": 1,
+    "limit": 20,
+    "total": 42,
+    "totalPages": 3
+  }
 }
 ```
+
+`data` is the direct endpoint payload. A single-resource endpoint returns an
+object; a collection endpoint returns an array directly (for example,
+`"data": []`). Do not wrap collections in an `items` field. Pagination and
+collection metadata belong only in the optional top-level `meta` object.
 
 Exceptions:
 
@@ -291,24 +339,31 @@ All error responses:
 ```json
 {
   "success": false,
+  "message": "Validation failed",
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Validation failed",
-    "requestId": "request_id",
     "details": {
       "field": ["Error message"]
     }
+  },
+  "meta": {
+    "requestId": "request_id"
   }
 }
 ```
 
 `details` is optional. Validation errors use a field-to-messages object; other
-error types omit it unless they have a documented structured shape. Error
-responses include the non-sensitive request ID for support correlation.
+error types omit it unless they have a documented structured shape. Every JSON
+response includes a human-safe top-level `message`; error responses include the
+non-sensitive request ID in `meta` for support correlation.
+
+Later endpoint examples may show only their endpoint-specific `data` fragment;
+the envelope in this section is authoritative and its `message` and `meta`
+fields must be present whenever applicable.
 
 ---
 
-## 9.3 Standard Error Codes
+## 9.4 Standard Error Codes
 
 | HTTP Status | Code                       | Usage                            |
 | ----------- | -------------------------- | -------------------------------- |
@@ -327,7 +382,7 @@ responses include the non-sensitive request ID for support correlation.
 
 ---
 
-## 9.4 Pagination
+## 9.5 Pagination
 
 Default query params:
 
@@ -348,14 +403,13 @@ Paginated response:
 ```json
 {
   "success": true,
-  "data": {
-    "items": [],
-    "pagination": {
-      "page": 1,
-      "pageSize": 20,
-      "total": 100,
-      "totalPages": 5
-    }
+  "message": "Request completed successfully.",
+  "data": [],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "totalPages": 5
   }
 }
 ```
@@ -522,6 +576,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "Registration successful. Please verify your email."
   }
@@ -567,6 +622,7 @@ Success response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "accessToken": "jwt_token",
     "user": {
@@ -608,6 +664,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "accessToken": "new_jwt_token"
   }
@@ -633,6 +690,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "Logged out"
   }
@@ -658,6 +716,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "user": {
       "id": "user_id",
@@ -706,6 +765,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "Email verified successfully"
   }
@@ -742,6 +802,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "If the account exists and is unverified, a verification email has been sent."
   }
@@ -779,6 +840,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "If an account exists for this email, a password reset link has been sent."
   }
@@ -817,6 +879,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "Password reset successful"
   }
@@ -854,6 +917,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "Password changed successfully"
   }
@@ -893,6 +957,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "message": "Password set successfully"
   }
@@ -912,6 +977,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "providers": [
       {
@@ -959,6 +1025,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "authorizationUrl": "https://provider.example/authorize?..."
   }
@@ -994,9 +1061,12 @@ Error response when last method:
 ```json
 {
   "success": false,
+  "message": "Cannot remove the last available login method",
   "error": {
-    "code": "CONFLICT",
-    "message": "Cannot remove the last available login method"
+    "code": "CONFLICT"
+  },
+  "meta": {
+    "requestId": "request_id"
   }
 }
 ```
@@ -1148,6 +1218,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "user": {
       "id": "user_id",
@@ -1424,6 +1495,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "application": {
       "id": "application_id",
@@ -1446,6 +1518,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "history": [
       {
@@ -1666,6 +1739,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "totalApplications": 25,
     "activeApplications": 12,
@@ -1864,6 +1938,7 @@ Response:
 ```json
 {
   "success": true,
+  "message": "Request completed successfully.",
   "data": {
     "status": "ok",
     "database": "connected",
@@ -1929,12 +2004,15 @@ Example:
 ```json
 {
   "success": false,
+  "message": "Validation failed",
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Validation failed",
     "details": {
       "company": ["Required"]
     }
+  },
+  "meta": {
+    "requestId": "request_id"
   }
 }
 ```
@@ -1977,9 +2055,12 @@ If not verified:
 ```json
 {
   "success": false,
+  "message": "Please verify your email to continue",
   "error": {
-    "code": "EMAIL_NOT_VERIFIED",
-    "message": "Please verify your email to continue"
+    "code": "EMAIL_NOT_VERIFIED"
+  },
+  "meta": {
+    "requestId": "request_id"
   }
 }
 ```

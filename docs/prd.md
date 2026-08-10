@@ -1476,7 +1476,6 @@ Possible providers:
 - Neon
 - Supabase
 - Render PostgreSQL
-- Railway PostgreSQL
 
 ---
 
@@ -1489,8 +1488,8 @@ Recommended deployment model:
 | Layer    | Suggested Provider                                       |
 | -------- | -------------------------------------------------------- |
 | Frontend | Vercel                                                   |
-| Backend  | Render, Railway, or Fly                                  |
-| Database | Neon, Supabase, Render PostgreSQL, or Railway PostgreSQL |
+| Backend  | Render                                                   |
+| Database | Neon PostgreSQL (Supabase or Render PostgreSQL equivalent) |
 
 ---
 

@@ -30,6 +30,8 @@ export async function runReleaseSmoke({
     typeof body !== "object" ||
     !("success" in body) ||
     body.success !== true ||
+    !("message" in body) ||
+    typeof body.message !== "string" ||
     !("data" in body) ||
     !body.data ||
     typeof body.data !== "object" ||

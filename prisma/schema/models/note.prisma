@@ -1,0 +1,13 @@
+model Note {
+  id            String   @id @default(cuid())
+  applicationId String   @map("application_id")
+  content       String
+  createdAt     DateTime @default(now()) @db.Timestamptz(3) @map("created_at")
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3) @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([applicationId, createdAt])
+  @@map("notes")
+}

@@ -1,0 +1,14 @@
+model StatusHistory {
+  id            String            @id @default(cuid())
+  applicationId String            @map("application_id")
+  fromStatus    ApplicationStatus @map("from_status")
+  toStatus      ApplicationStatus @map("to_status")
+  note          String?
+  changedAt     DateTime          @default(now()) @db.Timestamptz(3) @map("changed_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([applicationId, changedAt])
+  @@map("status_history")
+}

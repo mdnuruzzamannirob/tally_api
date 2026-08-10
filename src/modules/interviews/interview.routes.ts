@@ -43,7 +43,16 @@ export function createApplicationInterviewsRouter(interviewService: InterviewSer
         query,
         applicationIdOrThrow(request),
       );
-      return sendSuccess(response, { items: result.items, pagination: pagination(result, query) });
+      const meta = pagination(result, query);
+      return sendSuccess(response, { items: result.items, pagination: meta }, {
+        message: "Interviews retrieved successfully.",
+        meta: {
+          page: meta.page,
+          limit: meta.pageSize,
+          total: meta.total,
+          totalPages: meta.totalPages,
+        },
+      });
     }),
   );
   router.post(
@@ -69,7 +78,16 @@ export function createInterviewsRouter(interviewService: InterviewService): Rout
     asyncHandler(async (request, response) => {
       const query = interviewListQuerySchema.parse(request.query);
       const result = await interviewService.list(userIdOrThrow(request), query);
-      return sendSuccess(response, { items: result.items, pagination: pagination(result, query) });
+      const meta = pagination(result, query);
+      return sendSuccess(response, { items: result.items, pagination: meta }, {
+        message: "Application interviews retrieved successfully.",
+        meta: {
+          page: meta.page,
+          limit: meta.pageSize,
+          total: meta.total,
+          totalPages: meta.totalPages,
+        },
+      });
     }),
   );
   router.patch(

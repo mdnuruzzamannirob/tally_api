@@ -5,7 +5,11 @@ import { runReleaseSmoke } from "../../src/release/smoke.js";
 function createResponse({
   status = 200,
   headers = {},
-  body = { success: true, data: { status: "ok", database: "connected" } },
+  body = {
+    success: true,
+    message: "Service is healthy.",
+    data: { status: "ok", database: "connected" },
+  },
 }: {
   status?: number;
   headers?: Record<string, string>;

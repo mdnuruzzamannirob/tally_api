@@ -1,0 +1,20 @@
+enum OauthProvider {
+  GOOGLE
+  GITHUB
+}
+
+enum OAuthIntent {
+  LOGIN
+  LINK
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum LandingPagePreference {
+  DASHBOARD
+  APPLICATIONS
+}

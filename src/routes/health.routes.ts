@@ -16,11 +16,15 @@ export function createHealthRouter(checkDatabase: () => Promise<void>): Router {
         throw new ApiError(503, "SERVICE_UNAVAILABLE", "Service temporarily unavailable.");
       }
 
-      return sendSuccess(response, {
-        status: "ok",
-        database: "connected",
-        timestamp: new Date().toISOString(),
-      });
+      return sendSuccess(
+        response,
+        {
+          status: "ok",
+          database: "connected",
+          timestamp: new Date().toISOString(),
+        },
+        { message: "Service is healthy." },
+      );
     }),
   );
 

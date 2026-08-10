@@ -25,14 +25,18 @@ export function createApplicationsRouter(applicationService: ApplicationService)
     asyncHandler(async (request, response) => {
       const query = listApplicationsQuerySchema.parse(request.query);
       const result = await applicationService.list(userIdOrThrow(request), query);
+      const meta = {
+        page: query.page,
+        limit: query.pageSize,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.pageSize),
+      };
       return sendSuccess(response, {
         items: result.items,
-        pagination: {
-          page: query.page,
-          pageSize: query.pageSize,
-          total: result.total,
-          totalPages: Math.ceil(result.total / query.pageSize),
-        },
+        pagination: { ...meta, pageSize: query.pageSize },
+      }, {
+        message: "Applications retrieved successfully.",
+        meta,
       });
     }),
   );

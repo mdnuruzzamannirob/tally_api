@@ -53,9 +53,37 @@ The database must support authentication, OAuth, email verification, password re
 | Money/salary type    | Decimal                                                                        |
 | Migration tool       | Prisma Migrate                                                                 |
 | Local database       | Dockerized PostgreSQL                                                          |
-| Production database  | Managed PostgreSQL, e.g. Neon, Supabase, Render PostgreSQL, Railway PostgreSQL |
+| Production database  | Neon PostgreSQL; Supabase or Render PostgreSQL are equivalent substitutes       |
 
 PostgreSQL is selected because the data is relational, user-scoped, and requires strong integrity constraints.
+
+### Prisma schema layout
+
+The Prisma schema is split only for organization; it remains one Prisma schema
+and preserves the existing migration history and database constraints.
+
+```txt
+prisma/
+├── schema/
+│   ├── base.prisma                 # generator and datasource
+│   ├── enums/
+│   │   ├── auth.enums.prisma
+│   │   └── application.enums.prisma
+│   └── models/
+│       ├── user.prisma
+│       ├── auth-token.prisma
+│       ├── oauth-account.prisma
+│       ├── application.prisma
+│       ├── tag.prisma
+│       ├── note.prisma
+│       ├── interview.prisma
+│       └── status-history.prisma
+├── migrations/
+└── seed.ts
+```
+
+`prisma.config.ts` targets `prisma/schema`; generated client output remains
+`src/generated/prisma`.
 
 ---
 
@@ -516,7 +544,7 @@ import { defineConfig, env } from "prisma/config";
 const migrationUrl = process.env.MIGRATION_DATABASE_URL || env("DATABASE_URL");
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: "prisma/schema",
   migrations: {
     path: "prisma/migrations",
   },
@@ -529,7 +557,7 @@ export default defineConfig({
 ```prisma
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../../src/generated/prisma"
 }
 
 datasource db {

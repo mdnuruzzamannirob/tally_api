@@ -92,17 +92,9 @@ Database
       Managed PostgreSQL
 ```
 
-### Alternative Providers
-
-If needed, the following alternatives are acceptable:
-
-| Layer    | Alternatives                                               |
-| -------- | ---------------------------------------------------------- |
-| Frontend | Cloudflare Pages, Netlify                                  |
-| Backend  | Railway, Fly.io                                            |
-| Database | Supabase PostgreSQL, Render PostgreSQL, Railway PostgreSQL |
-
-The architecture should remain provider-agnostic where possible.
+Neon is the production default. Supabase PostgreSQL or Render PostgreSQL may
+be substituted as equivalent managed PostgreSQL providers without changing the
+application architecture.
 
 ---
 
@@ -139,6 +131,10 @@ Rules:
 
 - Each repository has its own dependency lockfile, CI pipeline, deployment, and version history.
 - API and web communicate only through the versioned HTTP contract.
+- `contracts/openapi.json` is the versioned OpenAPI 3.1 release artifact. The
+  API serves it at `/api/v1/openapi.json` and Swagger UI at `/api/v1/docs`; the
+  web repository pins and validates the released artifact before consuming new
+  endpoints.
 - A shared package, if later needed, is separately versioned and published; it is not a workspace dependency.
 
 ---
@@ -483,15 +479,16 @@ Required pipeline checks:
 1. Install dependencies
 2. Lint
 3. Typecheck
-4. Unit tests
-5. API integration tests
-6. Build frontend
-7. Build backend
-8. Release-candidate E2E tests (optional on each pull request)
+4. OpenAPI validation and contract tests
+5. Unit tests
+6. API integration tests
+7. Build frontend
+8. Build backend
+9. Release-candidate E2E tests (optional on each pull request)
 
 ---
 
-## 11.1 Recommended Workflow
+## 11.1 API Repository Workflow
 
 ```yaml
 name: CI
@@ -543,10 +540,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Prisma generate
-        run: pnpm --filter api prisma:generate
+        run: pnpm prisma:generate
 
       - name: Prisma migrate
-        run: pnpm --filter api prisma:deploy
+        run: pnpm prisma:deploy
 
       - name: Lint
         run: pnpm lint
@@ -560,6 +557,12 @@ jobs:
       - name: Build
         run: pnpm build
 ```
+
+The web repository has its own workflow. It runs install, lint, typecheck,
+unit/component tests, build, and Playwright critical flows; it does not run API
+or database commands. The API workflow additionally runs Prisma validation and
+generation, PostgreSQL-backed integration tests, container build, and release
+smoke checks.
 
 ---
 
@@ -897,11 +900,13 @@ Expected response:
 ```json
 {
   "success": true,
+  "message": "Service is healthy.",
   "data": {
     "status": "ok",
     "database": "connected",
     "timestamp": "2026-01-01T00:00:00.000Z"
-  }
+  },
+  "meta": { "requestId": "request_id" }
 }
 ```
 

@@ -1,0 +1,154 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tally API",
+    "version": "1.0.0",
+    "description": "Versioned REST contract for the independently deployed Tally web application."
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "responses": { "200": { "$ref": "#/components/responses/Health" } }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "refresh",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications": {
+      "get": {
+        "operationId": "listApplications",
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createApplication",
+        "responses": {
+          "201": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/applications/{id}": {
+      "get": {
+        "operationId": "getApplication",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "patch": {
+        "operationId": "updateApplication",
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "delete": {
+        "operationId": "deleteApplication",
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/tags": {
+      "get": {
+        "operationId": "listTags",
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createTag",
+        "responses": { "201": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/interviews": {
+      "get": {
+        "operationId": "listInterviews",
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "operationId": "getDashboard",
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SuccessEnvelope": {
+        "type": "object",
+        "required": ["success", "message", "data"],
+        "properties": {
+          "success": { "const": true },
+          "message": { "type": "string" },
+          "data": {},
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": ["success", "message", "error", "meta"],
+        "properties": {
+          "success": { "const": false },
+          "message": { "type": "string" },
+          "error": {
+            "type": "object",
+            "required": ["code"],
+            "properties": { "code": { "type": "string" }, "details": { "type": "object" } }
+          },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "requestId": { "type": "string" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Successful API response",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } }
+        }
+      },
+      "Health": {
+        "description": "Healthy service",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } }
+        }
+      },
+      "Error": {
+        "description": "API error",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } }
+        }
+      }
+    }
+  }
+}

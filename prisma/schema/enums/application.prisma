@@ -1,0 +1,37 @@
+enum ApplicationStatus {
+  WISHLIST
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum RemoteType {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+enum EmploymentType {
+  FULL_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum InterviewType {
+  PHONE
+  TECHNICAL
+  HR
+  SYSTEM_DESIGN
+  ONSITE
+  OTHER
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}

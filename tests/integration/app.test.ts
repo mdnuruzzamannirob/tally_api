@@ -11,7 +11,9 @@ describe("API application", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       success: true,
+      message: "Service is healthy.",
       data: expect.objectContaining({ status: "ok", database: "connected" }),
+      meta: expect.objectContaining({ requestId: "health-check-1" }),
     });
     expect(response.headers["x-request-id"]).toBe("health-check-1");
   });
@@ -23,9 +25,10 @@ describe("API application", () => {
     expect(response.status).toBe(503);
     expect(response.body).toMatchObject({
       success: false,
-      error: { code: "SERVICE_UNAVAILABLE", message: "Service temporarily unavailable." },
+      message: "Service temporarily unavailable.",
+      error: { code: "SERVICE_UNAVAILABLE" },
     });
-    expect(response.body.error.requestId).toEqual(expect.any(String));
+    expect(response.body.meta.requestId).toEqual(expect.any(String));
   });
 
   it("returns a structured 404 envelope", async () => {

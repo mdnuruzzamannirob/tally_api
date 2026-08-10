@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
 import { ApiError } from "../utils/api-error.js";
+import type { ErrorResponse } from "../utils/api-response.js";
 
 type HttpError = Error & { status?: number; statusCode?: number; type?: string };
 
@@ -45,15 +46,19 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, request, re
   if (statusCode >= 500) logger.error(logPayload, "Request failed");
   else logger.warn(logPayload, "Request failed");
 
-  const errorBody: { code: string; message: string; requestId?: string; details?: unknown } = {
-    code,
-    message:
-      statusCode >= 500 && env.NODE_ENV === "production"
-        ? "An unexpected error occurred."
-        : message,
+  const safeMessage =
+    statusCode >= 500 && env.NODE_ENV === "production"
+      ? "An unexpected error occurred."
+      : message;
+  const body: ErrorResponse = {
+    success: false,
+    message: safeMessage,
+    error: {
+      code,
+      ...(details !== undefined ? { details: details as Record<string, string[]> } : {}),
+    },
+    meta: { requestId: requestId ?? "unknown" },
   };
-  if (requestId) errorBody.requestId = requestId;
-  if (details !== undefined) errorBody.details = details;
 
-  response.status(statusCode).json({ success: false, error: errorBody });
+  response.status(statusCode).json(body);
 };

@@ -1,0 +1,24 @@
+model User {
+  id                   String                 @id @default(cuid())
+  name                 String?
+  email                String                 @unique
+  passwordHash         String?                @map("password_hash")
+  emailVerified        Boolean                @default(false) @map("email_verified")
+  emailVerifiedAt      DateTime?              @db.Timestamptz(3) @map("email_verified_at")
+  theme                ThemePreference        @default(SYSTEM)
+  defaultLandingPage   LandingPagePreference  @default(DASHBOARD) @map("default_landing_page")
+  timeZone             String                 @default("UTC") @map("time_zone")
+  notificationsEnabled Boolean                @default(false) @map("notifications_enabled")
+  createdAt            DateTime               @default(now()) @db.Timestamptz(3) @map("created_at")
+  updatedAt            DateTime               @updatedAt @db.Timestamptz(3) @map("updated_at")
+
+  oauthAccounts       OauthAccount[]
+  refreshTokens       RefreshToken[]
+  verificationTokens  EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  oauthStates         OAuthState[]
+  applications        Application[]
+  tags                Tag[]
+
+  @@map("users")
+}
