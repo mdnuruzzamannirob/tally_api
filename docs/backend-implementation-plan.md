@@ -35,6 +35,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 20 — Tags
 - Completed: Phase 21 — Notes
 - Completed: Phase 22 — Interviews
+- Completed: Phase 23 — Dashboard
 
 ## Delivery Rules
 

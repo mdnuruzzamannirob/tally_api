@@ -29,6 +29,8 @@ import {
   createInterviewsRouter,
 } from "./modules/interviews/interview.routes.js";
 import { InterviewService } from "./modules/interviews/interview.service.js";
+import { createDashboardRouter } from "./modules/dashboard/dashboard.routes.js";
+import { DashboardService } from "./modules/dashboard/dashboard.service.js";
 import { createGoogleOAuthRouter } from "./oauth/google-oauth.routes.js";
 import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
@@ -46,6 +48,7 @@ export interface AppDependencies {
   tagService?: TagService;
   noteService?: NoteService;
   interviewService?: InterviewService;
+  dashboardService?: DashboardService;
 }
 
 const defaultDatabaseCheck = async (): Promise<void> => {
@@ -62,6 +65,7 @@ export function createApp({
   tagService,
   noteService,
   interviewService,
+  dashboardService,
 }: AppDependencies = {}): Express {
   const app = express();
   const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
@@ -73,6 +77,7 @@ export function createApp({
   const resolvedTagService = tagService ?? new TagService(prisma);
   const resolvedNoteService = noteService ?? new NoteService(prisma);
   const resolvedInterviewService = interviewService ?? new InterviewService(prisma);
+  const resolvedDashboardService = dashboardService ?? new DashboardService(prisma);
 
   app.disable("x-powered-by");
   app.use(requestIdMiddleware);
@@ -115,6 +120,7 @@ export function createApp({
   app.use("/api/v1/tags", createTagsRouter(resolvedTagService));
   app.use("/api/v1", createNotesRouter(resolvedNoteService));
   app.use("/api/v1", createInterviewsRouter(resolvedInterviewService));
+  app.use("/api/v1/dashboard", createDashboardRouter(resolvedDashboardService));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
