@@ -27,6 +27,7 @@
     "prisma:validate": "prisma validate",
     "openapi:validate": "tsx scripts/validate-openapi.ts",
     "audit:identity": "tsx scripts/audit-identity-boundary.ts",
+    "audit:boundary": "tsx scripts/audit-repository-boundary.ts",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "db:deploy": "prisma migrate deploy",

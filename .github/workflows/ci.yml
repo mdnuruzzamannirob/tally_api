@@ -51,6 +51,8 @@ jobs:
         run: pnpm openapi:validate
       - name: Audit identity boundary
         run: pnpm audit:identity
+      - name: Audit repository boundary
+        run: pnpm audit:boundary
       - name: Lint
         run: pnpm lint
       - name: Typecheck

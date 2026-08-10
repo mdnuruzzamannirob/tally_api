@@ -197,7 +197,7 @@ Status must be updated only after the relevant gate passes.
 | 2     | Applications and tags                        | In progress — 2.1–2.6 implementation complete; DB gate pending          |
 | 3     | Notes and interviews                         | In progress — 3.1–3.3 implementation complete; DB gate pending          |
 | 4     | Dashboard, health, export, and import        | In progress — 4.1–4.5 implementation complete; DB gate pending          |
-| 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
+| 5     | Composition, tests, and boundary enforcement | In progress — 5.1–5.4 implementation complete; DB gate pending          |
 | 6     | Release hardening and sign-off               | Pending                                                                 |
 
 ---
@@ -891,6 +891,8 @@ against the documented disposable database before marking Phase 4 complete.
 
 ### 5.1 Final dependency composition
 
+Status: Implementation complete — verified 2026-08-10; database gate pending.
+
 - Make app.ts the composition root: infrastructure client -> repositories ->
   services -> controllers/routes.
 - Keep server.ts responsible only for process startup and shutdown.
@@ -901,7 +903,19 @@ Gate: app construction succeeds with test doubles for every feature; no feature
 test needs a live Prisma client unless it is explicitly a repository or
 integration test.
 
+Recorded 5.1 completion:
+
+- `app.ts` is the composition root for Prisma infrastructure, repositories,
+  services, health, and HTTP routes; `server.ts` remains process lifecycle
+  only.
+- Feature services receive repository instances, and no feature constructor
+  receives the global Prisma singleton.
+- Application construction and health behavior continue to work with injected
+  test dependencies.
+
 ### 5.2 Test factory migration
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Add repository fixtures/stubs for service unit tests.
 - Keep database fixture helpers and PrismaClient imports under tests/helpers,
@@ -914,7 +928,18 @@ integration test.
 Gate: pnpm test:unit and pnpm test:integration pass in normal CI; tests do not
 depend on compatibility constructors.
 
+Recorded 5.2 completion:
+
+- All identity and feature integration factories use repository injection;
+  Prisma clients remain in repository/integration helper boundaries.
+- Added repository-port service tests in
+  `tests/unit/service-boundaries.test.ts`, covering policy error mapping
+  without a live database.
+- Unit suite now passes with 9 files and 27 tests.
+
 ### 5.3 Automated repository-boundary audit
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 Add a small deterministic CI check that fails when:
 
@@ -932,7 +957,35 @@ generated code.
 Gate: the audit passes locally and in CI, with at least one negative fixture
 proving that a forbidden service import fails the check.
 
+Recorded 5.3 completion:
+
+- Added `scripts/audit-repository-boundary.ts` and the `pnpm audit:boundary`
+  command.
+- The deterministic audit scans all source services/controllers/routes and
+  rejects Prisma imports/access, transaction calls, and legacy Prisma-backed
+  service constructors while allowing repository/infrastructure locations.
+- Added a negative unit fixture in
+  `tests/unit/repository-boundary.test.ts` proving forbidden service imports
+  are rejected.
+- CI runs both the identity-specific and full repository-boundary audits.
+- `pnpm audit:boundary` — passed;
+- `pnpm audit:identity` — passed;
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 9 test files, 27 tests;
+- `pnpm build` — passed;
+- `pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- `git diff --check` — passed.
+
+The database integration gate remains pending because this workspace has no safe
+disposable `TEST_DATABASE_URL`. Run `pnpm test:all` with the documented
+disposable database before marking Phase 5 complete.
+
 ### 5.4 Documentation and contract review
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Update api/docs/README.md only if the final file map needs clarification.
 - Keep backend-implementation-plan.md as historical delivery status.
@@ -940,6 +993,32 @@ proving that a forbidden service import fails the check.
 - If the contract changes unexpectedly, stop and investigate before release.
 
 Phase 5 gate: no unexpected OpenAPI/database diff; all automated checks pass.
+
+Recorded 5.4 completion:
+
+- `contracts/openapi.json` has no unexpected refactor diff and remains valid.
+- `prisma/schema` and `prisma/migrations` have no refactor diff; no database
+  migration was introduced by the architecture work.
+- `docs/README.md` already documents `backend-refactor-plan.md`; no file-map
+  clarification was necessary.
+- `docs/backend-implementation-plan.md` remains historical and untouched.
+- `git diff --exit-code -- contracts/openapi.json prisma/schema prisma/migrations
+docs/backend-implementation-plan.md docs/README.md` — passed;
+- `pnpm openapi:validate` — passed;
+- `DATABASE_URL=... pnpm prisma:validate` — passed;
+- `pnpm audit:boundary` — passed;
+- `pnpm audit:identity` — passed;
+- `pnpm test:unit` — passed: 9 test files, 27 tests;
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm build` — passed;
+- `git diff --check` — passed.
+
+The database integration/release gates remain pending because this workspace
+has no safe disposable `TEST_DATABASE_URL` and no running release API target.
+Run `pnpm test:all` and `pnpm test:smoke` in CI or the documented release
+environment before final Phase 5/6 sign-off.
 
 ---
 
