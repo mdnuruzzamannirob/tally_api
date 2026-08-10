@@ -40,6 +40,7 @@ This plan turns the PRD, backend specification, database specification, operatio
 - Completed: Phase 25 — CSV Export
 - Completed: Phase 26 — JSON Import
 - Completed: Phase 27 — API Test Completion
+- Completed: Phase 28 — CI, Container, and Deployment Readiness
 
 ## Delivery Rules
 
