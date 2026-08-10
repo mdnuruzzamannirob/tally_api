@@ -1,73 +1,38 @@
-import { Router, type Request } from "express";
+import { Router } from "express";
 
-import { authenticate } from "../../middleware/auth.middleware.js";
-import { ApiError } from "../../lib/api-error.js";
 import { asyncHandler } from "../../lib/async-handler.js";
-import { sendSuccess } from "../../lib/api-response.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
+import { NoteController } from "./note.controller.js";
 import type { NoteService } from "./note.service.js";
-import { createNoteSchema, updateNoteSchema } from "./note.validators.js";
-
-function userIdOrThrow(request: Request): string {
-  if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-  return request.auth.userId;
-}
-
-function applicationIdOrThrow(request: Request): string {
-  if (typeof request.params.id !== "string" || !request.params.id)
-    throw new ApiError(400, "BAD_REQUEST", "Application ID is required.");
-  return request.params.id;
-}
 
 export function createApplicationNotesRouter(noteService: NoteService): Router {
+  const controller = new NoteController(noteService);
   const router = Router();
   router.get(
     "/:id/notes",
     authenticate,
-    asyncHandler(async (request, response) => {
-      const notes = await noteService.list(userIdOrThrow(request), applicationIdOrThrow(request));
-      return sendSuccess(response, { notes });
-    }),
+    asyncHandler((request, response) => controller.list(request, response)),
   );
   router.post(
     "/:id/notes",
     authenticate,
-    asyncHandler(async (request, response) => {
-      const note = await noteService.create(
-        userIdOrThrow(request),
-        applicationIdOrThrow(request),
-        createNoteSchema.parse(request.body),
-      );
-      return sendSuccess(response, { note }, 201);
-    }),
+    asyncHandler((request, response) => controller.create(request, response)),
   );
   return router;
 }
 
 export function createNotesRouter(noteService: NoteService): Router {
+  const controller = new NoteController(noteService);
   const router = Router();
   router.patch(
     "/notes/:id",
     authenticate,
-    asyncHandler(async (request, response) => {
-      if (typeof request.params.id !== "string" || !request.params.id)
-        throw new ApiError(400, "BAD_REQUEST", "Note ID is required.");
-      const note = await noteService.update(
-        userIdOrThrow(request),
-        request.params.id,
-        updateNoteSchema.parse(request.body),
-      );
-      return sendSuccess(response, { note });
-    }),
+    asyncHandler((request, response) => controller.update(request, response)),
   );
   router.delete(
     "/notes/:id",
     authenticate,
-    asyncHandler(async (request, response) => {
-      if (typeof request.params.id !== "string" || !request.params.id)
-        throw new ApiError(400, "BAD_REQUEST", "Note ID is required.");
-      await noteService.delete(userIdOrThrow(request), request.params.id);
-      return sendSuccess(response, { message: "Note deleted" });
-    }),
+    asyncHandler((request, response) => controller.delete(request, response)),
   );
   return router;
 }

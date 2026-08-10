@@ -195,7 +195,7 @@ Status must be updated only after the relevant gate passes.
 | 0     | Shared foundation and contract preservation  | Complete                                                                |
 | 1     | Identity, users, connected accounts, OAuth   | In progress — 1.1–1.7 implementation complete; DB/release gates pending |
 | 2     | Applications and tags                        | In progress — 2.1–2.6 implementation complete; DB gate pending          |
-| 3     | Notes and interviews                         | Pending                                                                 |
+| 3     | Notes and interviews                         | In progress — 3.1–3.3 implementation complete; DB gate pending          |
 | 4     | Dashboard, health, export, and import        | Pending                                                                 |
 | 5     | Composition, tests, and boundary enforcement | Pending                                                                 |
 | 6     | Release hardening and sign-off               | Pending                                                                 |
@@ -651,6 +651,8 @@ Goal: child-resource ownership and persistence are explicit and testable.
 
 ### 3.1 Notes repository and controller
 
+Status: Implementation complete — verified 2026-08-10; database gate pending.
+
 - Create note.repository.ts and note.controller.ts.
 - Move list/create/update/delete queries to the repository.
 - Keep parent-application ownership predicates in every child query.
@@ -662,7 +664,18 @@ Goal: child-resource ownership and persistence are explicit and testable.
 Gate: note integration tests pass for CRUD, ordering, ownership, and
 validation; NoteService has no Prisma import.
 
+Recorded 3.1 completion:
+
+- Added `src/modules/notes/note.repository.ts` and moved note list/create/
+  update/delete persistence behind it.
+- Parent application ownership is checked in every repository operation;
+  unowned applications and notes preserve the existing 404 behavior.
+- Added `note.controller.ts`; nested and global note routes are now
+  composition-only.
+
 ### 3.2 Interviews repository and controller
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Create interview.repository.ts and interview.controller.ts.
 - Move application-scoped and global list queries, create, update, and delete
@@ -675,7 +688,20 @@ validation; NoteService has no Prisma import.
 Gate: interview integration tests pass for nested/global list, pagination,
 archived behavior, CRUD, and cross-user access.
 
+Recorded 3.2 completion:
+
+- Added `src/modules/interviews/interview.repository.ts` and moved list,
+  create, update, and delete persistence behind it.
+- Repository preserves upcoming/past range filtering, archived filtering,
+  pagination, deterministic ordering, and nested parent ownership preflight.
+- Added `interview.controller.ts`; nested/global list and mutation HTTP
+  orchestration moved out of routes.
+- `InterviewService` retains only scheduling time/policy and domain error
+  mapping; it has no Prisma dependency.
+
 ### 3.3 Child-resource cleanup
+
+Status: Implementation complete — verified 2026-08-10; database gate pending.
 
 - Update route factories, app.ts, and test dependency factories.
 - Add repository contract tests for parent ownership predicates.
@@ -684,6 +710,28 @@ archived behavior, CRUD, and cross-user access.
 
 Phase 3 gate: full contract/build gate plus notes/interviews integration tests
 and boundary audit.
+
+Recorded 3.3 completion:
+
+- `app.ts` now composes `NoteRepository` and `InterviewRepository` before
+  their services.
+- Notes/interviews integration factories inject repositories; no legacy
+  `new NoteService(prisma)` or `new InterviewService(prisma)` constructors
+  remain.
+- No Prisma access remains in notes/interviews services, controllers, or
+  routes; the child-resource boundary audit passes.
+- `pnpm lint` — passed;
+- `pnpm format` — passed;
+- `pnpm typecheck` — passed;
+- `pnpm test:unit` — passed: 7 test files, 22 tests;
+- `pnpm build` — passed;
+- `pnpm prisma:validate` — passed;
+- `pnpm openapi:validate` — passed;
+- `git diff --check` — passed.
+
+The database integration gate remains pending because this workspace has no safe
+disposable `TEST_DATABASE_URL`. Run the full Phase 3 integration gate against
+the documented disposable database before marking Phase 3 complete.
 
 ---
 

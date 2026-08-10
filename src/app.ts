@@ -28,7 +28,9 @@ import { ApplicationRepository } from "./modules/applications/application.reposi
 import { TagService } from "./modules/tags/tag.service.js";
 import { TagRepository } from "./modules/tags/tag.repository.js";
 import { NoteService } from "./modules/notes/note.service.js";
+import { NoteRepository } from "./modules/notes/note.repository.js";
 import { InterviewService } from "./modules/interviews/interview.service.js";
+import { InterviewRepository } from "./modules/interviews/interview.repository.js";
 import { DashboardService } from "./modules/dashboard/dashboard.service.js";
 import { ExportService } from "./modules/export-import/export.service.js";
 import { ImportService } from "./modules/export-import/import.service.js";
@@ -79,6 +81,8 @@ export function createApp({
   const oauthRepository = new OAuthRepository(prisma);
   const applicationRepository = new ApplicationRepository(prisma);
   const tagRepository = new TagRepository(prisma);
+  const noteRepository = new NoteRepository(prisma);
+  const interviewRepository = new InterviewRepository(prisma);
   const resolvedAuthService = authService ?? new AuthService(authRepository, createEmailService());
   const resolvedUserService = userService ?? new UserService(userRepository);
   const resolvedGoogleOAuthService =
@@ -88,8 +92,8 @@ export function createApp({
   const resolvedApplicationService =
     applicationService ?? new ApplicationService(applicationRepository);
   const resolvedTagService = tagService ?? new TagService(tagRepository);
-  const resolvedNoteService = noteService ?? new NoteService(prisma);
-  const resolvedInterviewService = interviewService ?? new InterviewService(prisma);
+  const resolvedNoteService = noteService ?? new NoteService(noteRepository);
+  const resolvedInterviewService = interviewService ?? new InterviewService(interviewRepository);
   const resolvedDashboardService = dashboardService ?? new DashboardService(prisma);
   const resolvedExportService = exportService ?? new ExportService(prisma);
   const resolvedImportService = importService ?? new ImportService(prisma);

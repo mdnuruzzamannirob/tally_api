@@ -3,13 +3,14 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createApp } from "../../src/app.js";
-import { createAccessToken } from "../../src/lib/jwt.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
-import { ApplicationService } from "../../src/modules/applications/application.service.js";
+import { createAccessToken } from "../../src/lib/jwt.js";
 import { ApplicationRepository } from "../../src/modules/applications/application.repository.js";
+import { ApplicationService } from "../../src/modules/applications/application.service.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
+import { NoteRepository } from "../../src/modules/notes/note.repository.js";
 import { NoteService } from "../../src/modules/notes/note.service.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
@@ -35,7 +36,7 @@ describe.skipIf(!runDatabaseTests)("notes", () => {
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
       applicationService: new ApplicationService(new ApplicationRepository(prisma)),
-      noteService: new NoteService(prisma),
+      noteService: new NoteService(new NoteRepository(prisma)),
     });
   });
 

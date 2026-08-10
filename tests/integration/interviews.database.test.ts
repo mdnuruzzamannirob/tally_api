@@ -9,6 +9,7 @@ import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
 import { InterviewService } from "../../src/modules/interviews/interview.service.js";
+import { InterviewRepository } from "../../src/modules/interviews/interview.repository.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 
 const runDatabaseTests = Boolean(process.env.TEST_DATABASE_URL);
@@ -32,7 +33,7 @@ describe.skipIf(!runDatabaseTests)("interviews", () => {
     app = createApp({
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
-      interviewService: new InterviewService(prisma),
+      interviewService: new InterviewService(new InterviewRepository(prisma)),
     });
   });
 
