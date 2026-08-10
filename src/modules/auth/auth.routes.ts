@@ -23,6 +23,7 @@ export function createAuthRouter(authService: AuthService): Router {
   const controller = createAuthController(authService);
   const authRateLimit = createAuthRateLimit(15 * 60 * 1_000, 10);
   const resendRateLimit = createAuthRateLimit(60 * 60 * 1_000, 5);
+  const passwordResetRateLimit = createAuthRateLimit(60 * 60 * 1_000, 5);
 
   router.post("/register", authRateLimit, controller.register);
   router.post("/login", authRateLimit, controller.login);
@@ -31,6 +32,10 @@ export function createAuthRouter(authService: AuthService): Router {
   router.post("/refresh", authRateLimit, requireRefreshRequestOrigin, controller.refresh);
   router.post("/logout", authRateLimit, requireRefreshRequestOrigin, controller.logout);
   router.get("/me", authenticate, controller.me);
+  router.post("/forgot-password", passwordResetRateLimit, controller.forgotPassword);
+  router.post("/reset-password", authRateLimit, controller.resetPassword);
+  router.patch("/change-password", authenticate, controller.changePassword);
+  router.post("/set-password", authenticate, controller.setPassword);
 
   return router;
 }

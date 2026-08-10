@@ -25,7 +25,22 @@ export const loginSchema = z.object({
   password: passwordSchema,
 });
 
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(1),
+  password: passwordSchema,
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: passwordSchema,
+  newPassword: passwordSchema,
+});
+
+export const setPasswordSchema = z.object({ newPassword: passwordSchema });
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

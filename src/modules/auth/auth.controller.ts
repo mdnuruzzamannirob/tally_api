@@ -11,6 +11,10 @@ import { ApiError } from "../../utils/api-error.js";
 import type { AuthService } from "./auth.service.js";
 import {
   loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+  setPasswordSchema,
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
@@ -24,6 +28,10 @@ export function createAuthController(authService: AuthService): {
   refresh: RequestHandler;
   logout: RequestHandler;
   me: RequestHandler;
+  forgotPassword: RequestHandler;
+  resetPassword: RequestHandler;
+  changePassword: RequestHandler;
+  setPassword: RequestHandler;
 } {
   return {
     register: asyncHandler(async (request, response) => {
@@ -77,6 +85,35 @@ export function createAuthController(authService: AuthService): {
     me: asyncHandler(async (request, response) => {
       if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
       return sendSuccess(response, { user: await authService.getCurrentUser(request.auth.userId) });
+    }),
+    forgotPassword: asyncHandler(async (request, response) => {
+      const { email } = forgotPasswordSchema.parse(request.body);
+      await authService.requestPasswordReset(email);
+      return sendSuccess(response, {
+        message: "If an account exists for this email, a password reset link has been sent.",
+      });
+    }),
+    resetPassword: asyncHandler(async (request, response) => {
+      const { token, password } = resetPasswordSchema.parse(request.body);
+      await authService.resetPassword(token, password);
+      return sendSuccess(response, { message: "Password reset successful" });
+    }),
+    changePassword: asyncHandler(async (request, response) => {
+      if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+      const input = changePasswordSchema.parse(request.body);
+      const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME];
+      await authService.changePassword(
+        request.auth.userId,
+        input,
+        typeof refreshToken === "string" ? refreshToken : undefined,
+      );
+      return sendSuccess(response, { message: "Password changed successfully" });
+    }),
+    setPassword: asyncHandler(async (request, response) => {
+      if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+      const { newPassword } = setPasswordSchema.parse(request.body);
+      await authService.setPassword(request.auth.userId, newPassword);
+      return sendSuccess(response, { message: "Password set successfully" });
     }),
   };
 }

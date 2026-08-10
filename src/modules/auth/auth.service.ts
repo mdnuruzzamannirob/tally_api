@@ -5,9 +5,10 @@ import { ApiError } from "../../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../../auth/password.js";
 import { getRefreshTokenExpiresAt } from "../../auth/refresh-cookie.js";
 import { generateOpaqueToken, hashToken } from "../../auth/tokens.js";
-import type { LoginInput, RegisterInput } from "./auth.validators.js";
+import type { ChangePasswordInput, LoginInput, RegisterInput } from "./auth.validators.js";
 
 const VERIFICATION_TOKEN_LIFETIME_MS = 24 * 60 * 60 * 1_000;
+const PASSWORD_RESET_TOKEN_LIFETIME_MS = 30 * 60 * 1_000;
 
 type PublicUser = {
   id: string;
@@ -228,6 +229,98 @@ export class AuthService {
     await this.prisma.refreshToken.updateMany({
       where: { tokenHash: hashToken(refreshToken), revokedAt: null },
       data: { revokedAt: new Date() },
+    });
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return;
+
+    const rawToken = generateOpaqueToken();
+    await this.prisma.$transaction([
+      this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
+      this.prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashToken(rawToken),
+          expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_LIFETIME_MS),
+        },
+      }),
+    ]);
+    await this.emailService.sendPasswordResetEmail({ email: user.email, token: rawToken });
+  }
+
+  async resetPassword(rawToken: string, password: string): Promise<void> {
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashToken(rawToken) },
+    });
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt <= new Date()) {
+      throw new ApiError(
+        400,
+        "INVALID_OR_EXPIRED_TOKEN",
+        "Password reset token is invalid or expired.",
+      );
+    }
+
+    const passwordHash = await hashPassword(password);
+    await this.prisma.$transaction(async (transaction) => {
+      const markedUsed = await transaction.passwordResetToken.updateMany({
+        where: { id: resetToken.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      if (markedUsed.count !== 1) {
+        throw new ApiError(
+          400,
+          "INVALID_OR_EXPIRED_TOKEN",
+          "Password reset token is invalid or expired.",
+        );
+      }
+      await transaction.user.update({ where: { id: resetToken.userId }, data: { passwordHash } });
+      await transaction.refreshToken.updateMany({
+        where: { userId: resetToken.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    });
+  }
+
+  async changePassword(
+    userId: string,
+    input: ChangePasswordInput,
+    currentRefreshToken: string | undefined,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+    if (!user.passwordHash) {
+      throw new ApiError(409, "CONFLICT", "Use the set-password flow for this account.");
+    }
+    if (!(await verifyPassword(input.currentPassword, user.passwordHash))) {
+      throw new ApiError(401, "INVALID_CREDENTIALS", "Current password is incorrect.");
+    }
+
+    const passwordHash = await hashPassword(input.newPassword);
+    const currentTokenHash = currentRefreshToken ? hashToken(currentRefreshToken) : undefined;
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      this.prisma.refreshToken.updateMany({
+        where: {
+          userId,
+          revokedAt: null,
+          ...(currentTokenHash ? { tokenHash: { not: currentTokenHash } } : {}),
+        },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+  }
+
+  async setPassword(userId: string, password: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
+    if (user.passwordHash) {
+      throw new ApiError(409, "CONFLICT", "Use the change-password flow for this account.");
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hashPassword(password) },
     });
   }
 
