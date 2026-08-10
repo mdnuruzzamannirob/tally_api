@@ -2,8 +2,8 @@ import type { Express } from "express";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { hashPassword } from "../../src/auth/password.js";
-import { REFRESH_COOKIE_NAME } from "../../src/auth/refresh-cookie.js";
+import { hashPassword } from "../../src/lib/password.js";
+import { REFRESH_COOKIE_NAME } from "../../src/config/cookie.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import { createApp } from "../../src/app.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";

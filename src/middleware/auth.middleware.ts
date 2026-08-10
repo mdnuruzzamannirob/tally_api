@@ -4,8 +4,8 @@ import {
   AccessTokenExpiredError,
   InvalidAccessTokenError,
   verifyAccessToken,
-} from "../auth/jwt.js";
-import { ApiError } from "../utils/api-error.js";
+} from "../lib/jwt.js";
+import { ApiError } from "../lib/api-error.js";
 
 export const authenticate: RequestHandler = (request, _response, next) => {
   const authorization = request.header("Authorization");

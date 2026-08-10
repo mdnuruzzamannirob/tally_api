@@ -20,6 +20,7 @@ import { errorMiddleware } from "./middleware/error.middleware.js";
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { AuthService } from "./modules/auth/auth.service.js";
+import { AuthRepository } from "./modules/auth/auth.repository.js";
 import { ApplicationService } from "./modules/applications/application.service.js";
 import { TagService } from "./modules/tags/tag.service.js";
 import { NoteService } from "./modules/notes/note.service.js";
@@ -31,6 +32,7 @@ import { GoogleOAuthService } from "./oauth/google-oauth.service.js";
 import { GoogleOAuthHttpClient } from "./oauth/google.oauth.js";
 import { GitHubOAuthService } from "./oauth/github-oauth.service.js";
 import { GitHubOAuthHttpClient } from "./oauth/github.oauth.js";
+import { OAuthRepository } from "./oauth/oauth.repository.js";
 import { createApiRouter } from "./routes/index.js";
 
 export interface AppDependencies {
@@ -66,11 +68,13 @@ export function createApp({
   importService,
 }: AppDependencies = {}): Express {
   const app = express();
-  const resolvedAuthService = authService ?? new AuthService(prisma, createEmailService());
+  const authRepository = new AuthRepository(prisma);
+  const oauthRepository = new OAuthRepository(prisma);
+  const resolvedAuthService = authService ?? new AuthService(authRepository, createEmailService());
   const resolvedGoogleOAuthService =
-    googleOAuthService ?? new GoogleOAuthService(prisma, new GoogleOAuthHttpClient());
+    googleOAuthService ?? new GoogleOAuthService(oauthRepository, new GoogleOAuthHttpClient());
   const resolvedGitHubOAuthService =
-    githubOAuthService ?? new GitHubOAuthService(prisma, new GitHubOAuthHttpClient());
+    githubOAuthService ?? new GitHubOAuthService(oauthRepository, new GitHubOAuthHttpClient());
   const resolvedApplicationService = applicationService ?? new ApplicationService(prisma);
   const resolvedTagService = tagService ?? new TagService(prisma);
   const resolvedNoteService = noteService ?? new NoteService(prisma);

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 
-import { ApiError } from "../../utils/api-error.js";
+import { ApiError } from "../../lib/api-error.js";
 import { authenticate } from "../../middleware/auth.middleware.js";
 import { requireRefreshRequestOrigin } from "../../middleware/refresh-origin.middleware.js";
 import type { AuthService } from "./auth.service.js";

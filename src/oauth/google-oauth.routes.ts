@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { Router } from "express";
 
-import { setRefreshCookie } from "../auth/refresh-cookie.js";
+import { setRefreshCookie } from "../config/cookie.js";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
 import type { GoogleOAuthService } from "./google-oauth.service.js";

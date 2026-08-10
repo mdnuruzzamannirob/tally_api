@@ -3,7 +3,7 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createApp } from "../../src/app.js";
-import { createAccessToken } from "../../src/auth/jwt.js";
+import { createAccessToken } from "../../src/lib/jwt.js";
 import type { EmailService } from "../../src/email/email.service.js";
 import { ExportService } from "../../src/modules/export-import/export.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";

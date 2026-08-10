@@ -3,7 +3,7 @@ import type { Express } from "express";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { createApp } from "../../src/app.js";
 import { AuthService } from "../../src/modules/auth/auth.service.js";
-import { hashToken } from "../../src/auth/tokens.js";
+import { hashToken } from "../../src/lib/crypto.js";
 import { clearTestDatabase, createTestPrismaClient } from "../helpers/database.js";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";

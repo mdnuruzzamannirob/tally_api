@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 
 import { env } from "../config/env.js";
-import { ApiError } from "../utils/api-error.js";
+import { ApiError } from "../lib/api-error.js";
 
 /** CSRF defense for refresh-token cookie endpoints. */
 export const requireRefreshRequestOrigin: RequestHandler = (request, _response, next) => {

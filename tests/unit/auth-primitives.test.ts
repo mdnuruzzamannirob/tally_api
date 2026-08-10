@@ -8,19 +8,19 @@ import {
   InvalidAccessTokenError,
   createAccessToken,
   verifyAccessToken,
-} from "../../src/auth/jwt.js";
-import { hashPassword, verifyPassword } from "../../src/auth/password.js";
+} from "../../src/lib/jwt.js";
+import { hashPassword, verifyPassword } from "../../src/lib/password.js";
 import {
   REFRESH_COOKIE_NAME,
   getRefreshCookieOptions,
   setRefreshCookie,
-} from "../../src/auth/refresh-cookie.js";
-import { generateOpaqueToken, hashToken } from "../../src/auth/tokens.js";
+} from "../../src/config/cookie.js";
+import { generateOpaqueToken, hashToken } from "../../src/lib/crypto.js";
 import { errorMiddleware } from "../../src/middleware/error.middleware.js";
 import { authenticate } from "../../src/middleware/auth.middleware.js";
 import { requireRefreshRequestOrigin } from "../../src/middleware/refresh-origin.middleware.js";
 import { requireVerifiedUser } from "../../src/middleware/verified-user.middleware.js";
-import { getPagination } from "../../src/utils/pagination.js";
+import { getPagination } from "../../src/lib/pagination.js";
 
 const testSecret = "unit-test-signing-secret";
 

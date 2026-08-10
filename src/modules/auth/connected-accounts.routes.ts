@@ -1,9 +1,9 @@
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth.middleware.js";
-import { asyncHandler } from "../../utils/async-handler.js";
-import { ApiError } from "../../utils/api-error.js";
-import { sendSuccess } from "../../utils/api-response.js";
+import { asyncHandler } from "../../lib/async-handler.js";
+import { ApiError } from "../../lib/api-error.js";
+import { sendSuccess } from "../../lib/api-response.js";
 import { getGitHubCallbackUri } from "../../oauth/github-oauth.routes.js";
 import type { GitHubOAuthService } from "../../oauth/github-oauth.service.js";
 import { getGoogleCallbackUri } from "../../oauth/google-oauth.routes.js";

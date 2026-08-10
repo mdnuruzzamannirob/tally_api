@@ -1,16 +1,25 @@
-import { getRefreshTokenExpiresAt } from "../auth/refresh-cookie.js";
-import { generateOpaqueToken, hashToken } from "../auth/tokens.js";
-import type { PrismaClient } from "../generated/prisma/client.js";
-import { ApiError } from "../utils/api-error.js";
+import { getRefreshTokenExpiresAt } from "../config/cookie.js";
+import { generateOpaqueToken, hashToken } from "../lib/crypto.js";
+import { ApiError } from "../lib/api-error.js";
 import type { GoogleOAuthClient, GoogleProfile } from "./google.oauth.js";
+import { OAuthRepository } from "./oauth.repository.js";
+import type { PrismaClient } from "../generated/prisma/client.js";
 
 const STATE_LIFETIME_MS = 10 * 60 * 1_000;
 
 export class GoogleOAuthService {
   constructor(
-    private readonly prisma: PrismaClient,
+    repository: OAuthRepository | PrismaClient,
     private readonly client: GoogleOAuthClient,
-  ) {}
+  ) {
+    this.repository = repository instanceof OAuthRepository ? repository : new OAuthRepository(repository);
+  }
+
+  private readonly repository: OAuthRepository;
+
+  private get prisma() {
+    return this.repository.client;
+  }
 
   async start(redirectUri: string, linkUserId?: string): Promise<string> {
     const state = generateOpaqueToken();

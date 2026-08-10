@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import { ApiError } from "../utils/api-error.js";
+import { ApiError } from "../lib/api-error.js";
 
 export const requireVerifiedUser: RequestHandler = (request, _response, next) => {
   if (!request.auth) return next(new ApiError(401, "UNAUTHORIZED", "Authentication is required."));

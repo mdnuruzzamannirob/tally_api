@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from "../../generated/prisma/client.js";
-import { ApiError } from "../../utils/api-error.js";
+import { ApiError } from "../../lib/api-error.js";
 import type {
   CreateApplicationInput,
   ListApplicationsQuery,

@@ -1,5 +1,5 @@
 import { env } from "../config/env.js";
-import { ApiError } from "../utils/api-error.js";
+import { ApiError } from "../lib/api-error.js";
 
 export interface GitHubProfile {
   providerAccountId: string;

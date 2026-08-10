@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import { ApiError } from "../utils/api-error.js";
+import { ApiError } from "../lib/api-error.js";
 
 export const notFoundMiddleware: RequestHandler = (request, _response, next) => {
   next(

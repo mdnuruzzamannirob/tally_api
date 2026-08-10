@@ -1,10 +1,9 @@
-import type { PrismaClient } from "../../generated/prisma/client.js";
-import { createAccessToken } from "../../auth/jwt.js";
+import { createAccessToken } from "../../lib/jwt.js";
 import type { EmailService } from "../../email/email.service.js";
-import { ApiError } from "../../utils/api-error.js";
-import { hashPassword, verifyPassword } from "../../auth/password.js";
-import { getRefreshTokenExpiresAt } from "../../auth/refresh-cookie.js";
-import { generateOpaqueToken, hashToken } from "../../auth/tokens.js";
+import { ApiError } from "../../lib/api-error.js";
+import { hashPassword, verifyPassword } from "../../lib/password.js";
+import { getRefreshTokenExpiresAt } from "../../config/cookie.js";
+import { generateOpaqueToken, hashToken } from "../../lib/crypto.js";
 import type {
   ChangePasswordInput,
   LoginInput,
@@ -12,6 +11,8 @@ import type {
   UpdatePreferencesInput,
   UpdateProfileInput,
 } from "./auth.validators.js";
+import { AuthRepository } from "./auth.repository.js";
+import type { PrismaClient } from "../../generated/prisma/client.js";
 
 const VERIFICATION_TOKEN_LIFETIME_MS = 24 * 60 * 60 * 1_000;
 const PASSWORD_RESET_TOKEN_LIFETIME_MS = 30 * 60 * 1_000;
@@ -63,12 +64,20 @@ function toPublicUser(user: {
 
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaClient,
+    repository: AuthRepository | PrismaClient,
     private readonly emailService: EmailService,
-  ) {}
+  ) {
+    this.repository = repository instanceof AuthRepository ? repository : new AuthRepository(repository);
+  }
+
+  private readonly repository: AuthRepository;
+
+  private get prisma() {
+    return this.repository.client;
+  }
 
   async register(input: RegisterInput): Promise<void> {
-    const existingUser = await this.prisma.user.findUnique({ where: { email: input.email } });
+    const existingUser = await this.repository.findUserByEmail(input.email);
     if (existingUser)
       throw new ApiError(409, "CONFLICT", "An account with this email already exists.");
 
@@ -77,22 +86,19 @@ export class AuthService {
     const tokenHash = hashToken(rawToken);
     const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_LIFETIME_MS);
 
-    await this.prisma.$transaction(async (transaction) => {
-      const user = await transaction.user.create({
-        data: { name: input.name ?? null, email: input.email, passwordHash },
-      });
-      await transaction.emailVerificationToken.create({
-        data: { userId: user.id, tokenHash, expiresAt },
-      });
+    await this.repository.createUserWithVerification({
+      name: input.name ?? null,
+      email: input.email,
+      passwordHash,
+      tokenHash,
+      expiresAt,
     });
 
     await this.emailService.sendVerificationEmail({ email: input.email, token: rawToken });
   }
 
   async verifyEmail(rawToken: string): Promise<void> {
-    const token = await this.prisma.emailVerificationToken.findUnique({
-      where: { tokenHash: hashToken(rawToken) },
-    });
+    const token = await this.repository.findVerificationToken(hashToken(rawToken));
     if (!token || token.expiresAt <= new Date()) {
       throw new ApiError(
         400,
@@ -102,30 +108,19 @@ export class AuthService {
     }
 
     const verifiedAt = new Date();
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: token.userId },
-        data: { emailVerified: true, emailVerifiedAt: verifiedAt },
-      }),
-      this.prisma.emailVerificationToken.deleteMany({ where: { userId: token.userId } }),
-    ]);
+    await this.repository.verifyUserAndClearVerificationTokens(token.userId, verifiedAt);
   }
 
   async resendVerificationEmail(email: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.repository.findUserByEmail(email);
     if (!user || user.emailVerified) return;
 
     const rawToken = generateOpaqueToken();
-    await this.prisma.$transaction([
-      this.prisma.emailVerificationToken.deleteMany({ where: { userId: user.id } }),
-      this.prisma.emailVerificationToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: hashToken(rawToken),
-          expiresAt: new Date(Date.now() + VERIFICATION_TOKEN_LIFETIME_MS),
-        },
-      }),
-    ]);
+    await this.repository.replaceVerificationToken(
+      user.id,
+      hashToken(rawToken),
+      new Date(Date.now() + VERIFICATION_TOKEN_LIFETIME_MS),
+    );
 
     await this.emailService.sendVerificationEmail({ email: user.email, token: rawToken });
   }

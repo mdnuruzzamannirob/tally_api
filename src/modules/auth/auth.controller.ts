@@ -1,13 +1,13 @@
 import type { RequestHandler } from "express";
 
-import { sendSuccess } from "../../utils/api-response.js";
-import { asyncHandler } from "../../utils/async-handler.js";
+import { sendSuccess } from "../../lib/api-response.js";
+import { asyncHandler } from "../../lib/async-handler.js";
 import {
   clearRefreshCookie,
   REFRESH_COOKIE_NAME,
   setRefreshCookie,
-} from "../../auth/refresh-cookie.js";
-import { ApiError } from "../../utils/api-error.js";
+} from "../../config/cookie.js";
+import { ApiError } from "../../lib/api-error.js";
 import type { AuthService } from "./auth.service.js";
 import {
   loginSchema,

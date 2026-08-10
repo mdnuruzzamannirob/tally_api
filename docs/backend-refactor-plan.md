@@ -1,108 +1,125 @@
 # Backend Refactor Plan
 
-## Purpose
+## Purpose and non-negotiable rules
 
-The API feature set is already implemented. This plan refactors its internals
-to the approved feature-first layered architecture without changing documented
-routes, database behavior, authentication flow, or export/OAuth exceptions.
-`backend-implementation-plan.md` remains the original feature-delivery record.
+The API behavior already exists. This refactor changes code ownership only:
+routes, status codes, envelope shape, database schema, migrations, refresh
+cookie, OAuth redirects, and raw export responses must not change. The
+delivery history in `backend-implementation-plan.md` is not edited.
 
-## Final architecture rules
+Every phase is atomic: change one bounded area, run its gate, then update this
+document. Do not create compatibility facades, duplicate implementations, or
+mark a phase complete before its gate passes. Repositories own every Prisma
+query and transaction; services own policy and orchestration; controllers own
+HTTP; routes only compose middleware and controllers.
 
-- `route → middleware → controller → service → repository → Prisma` is the
-  required dependency direction.
-- Routes only declare HTTP mappings. Controllers validate/read HTTP input and
-  return the standard envelope. Services own business policy and transaction
-  coordination. Repositories contain every Prisma query/transaction.
-- Modules use kebab-case folders and singular resource files: `*.routes.ts`,
-  `*.controller.ts`, `*.service.ts`, `*.repository.ts`, `*.validators.ts`,
-  `*.types.ts`, and `*.constants.ts` where applicable.
-- Shared code lives in `config`, `lib`, `middleware`, `email`, `oauth`,
-  `routes`, `types`, and `utils`; no module reaches into another module's
-  repository.
-- All normal JSON responses use `{ success, message, data/error, meta }`.
-  `data` is the direct payload: objects for single resources and arrays for
-  collections, never an `items` wrapper; pagination belongs in `meta`.
+## Baseline gate — required before every phase
 
-## Phase 0 — Shared foundation — Complete (2026-08-10)
+- Capture the affected existing integration tests and run them before editing.
+- Run `pnpm typecheck` and `pnpm test:unit` after each bounded change.
+- Run `pnpm test:integration` after any database-facing phase against the
+  dedicated disposable `TEST_DATABASE_URL` described in `testing.md`.
+- If a gate fails, fix or revert that phase before starting another one.
 
-- Establish `lib/api-error.ts`, `lib/async-handler.ts`, `lib/pagination.ts`,
-  `lib/jwt.ts`, `lib/crypto.ts`, `lib/prisma.ts`, and `lib/logger.ts`.
-- Establish shared constants and the versioned route composition entry point.
-- Split Prisma into `prisma/schema/base.prisma`, `enums/`, and `models/`,
-  keeping migrations and generated client paths unchanged.
-- Implement `contracts/openapi.json` as the OpenAPI 3.1 source artifact,
-  expose `/api/v1/openapi.json` and `/api/v1/docs` (Swagger UI), then add
-  schema validation and envelope/contract guard tests.
+## Phase 0 — Shared foundation — complete
 
-**Done when:** Prisma validates without a migration, OpenAPI validates, every
-JSON success has a message, errors have `meta.requestId`, and paginated
-responses expose `meta`.
+Shared helpers now have one home: `lib` owns API errors, async handling,
+pagination, envelopes, JWT, opaque-token crypto, and password hashing;
+`config/cookie.ts` owns refresh-cookie behavior. Prisma is split under
+`prisma/schema`, OpenAPI is validated and served, and legacy helper paths are
+removed.
 
-**Completed:** The shared `lib` implementations now own API errors, async
-handling, pagination, JWT, token crypto, and response envelopes; legacy paths
-remain as compatibility re-exports until their feature phases migrate imports.
-The multi-file Prisma schema validates without a migration. The OpenAPI 3.1
-release artifact is validated in CI and is served at `/api/v1/openapi.json`
-with Swagger UI at `/api/v1/docs`; app tests cover both endpoints.
+**Recorded gate:** typecheck, unit/app tests, build, Prisma validation, and
+OpenAPI validation pass. Do not reopen Phase 0 unless a shared-helper change is
+required by a later phase.
 
-## Phase 1 — Auth, users, email, OAuth
+## Phase 1 — Identity boundary
 
-- Create full repository/controller/service/type/constants boundaries for auth
-  and users; profile/preferences leave `AuthService` for `UsersService`.
-- Move password, verification, refresh, reset, OAuth-state, and connected
-  account persistence into `AuthRepository`.
-- Keep OAuth provider integrations in top-level `oauth/`; keep provider HTTP
-  and email-provider details outside feature services.
+### 1.1 Auth repository: registration and verification
 
-**Done when:** no auth/user service imports Prisma; existing security and
-cookie integration tests pass unchanged except for the approved envelope.
+- Implement `AuthRepository` methods for user lookup, registration plus email
+  verification-token creation, verification-token lookup/consume, and resend
+  replacement transaction.
+- Change only those `AuthService` methods to repository calls; keep hashing,
+  expiry policy, token generation, email dispatch, and domain errors in the
+  service.
+- **Gate:** registration and verification integration tests; no `PrismaClient`,
+  `.prisma`, or `.client` usage remains in the migrated service methods.
+
+### 1.2 Auth repository: login, refresh, and logout
+
+- Add repository methods for password-login user lookup, refresh-session
+  creation, token lookup with user, atomic rotation, single-token revocation,
+  and all-session revocation.
+- Migrate login/refresh/logout service methods without changing `tally_rt`,
+  replay handling, origin checks, or error codes.
+- **Gate:** session integration tests, including rotation and replay revocation.
+
+### 1.3 Auth repository: password lifecycle
+
+- Add repository methods for reset-token replacement/consume, password update,
+  and required session revocation transactions.
+- Migrate forgot/reset/change/set password service methods.
+- **Gate:** password-management integration tests, expired/used token cases,
+  and current-session preservation behavior.
+
+### 1.4 Users module
+
+- Create `user.types.ts`, `user.constants.ts`, `user.repository.ts`,
+  `user.service.ts`, and `user.controller.ts`.
+- Move profile/preferences from `AuthService`; `users.routes.ts` contains only
+  authentication middleware and controller mappings.
+- **Gate:** user-preferences integration tests and an audit that `AuthService`
+  has no profile/preferences persistence method.
+
+### 1.5 Auth connected accounts
+
+- Add repository methods for connected-account reads and serializable unlink
+  protection; migrate service logic without changing last-login-method rules.
+- **Gate:** connected-account integration tests and conflict/not-found cases.
+
+### 1.6 OAuth repository: state and identity persistence
+
+- Implement provider-neutral `OAuthRepository` methods for state creation and
+  atomic single-use consumption, account lookup/linking, OAuth user
+  resolution/creation, and OAuth refresh-session creation.
+- Google/GitHub services retain only provider HTTP exchange, verified-email
+  policy, and redirect-result orchestration. Remove all Prisma imports/calls
+  and temporary `PrismaClient | Repository` constructors.
+- **Gate:** Google and GitHub OAuth integration tests for login, callback
+  failure, state reuse, linking, duplicate identity, and refresh-cookie result.
+
+### 1.7 Identity cleanup gate
+
+- Delete facades, compatibility constructors, and dead identity code.
+- `rg` must show Prisma imports only in `*.repository.ts` and `lib/prisma.ts`;
+  `AuthService`, `UserService`, `GoogleOAuthService`, and `GitHubOAuthService`
+  must have no Prisma call or client exposure.
+- **Gate:** `pnpm test:all`, `pnpm typecheck`, `pnpm build`, `pnpm prisma:validate`,
+  `pnpm openapi:validate`, Docker build, and release smoke test. Only then mark
+  Phase 1 complete.
 
 ## Phase 2 — Applications and tags
 
-- Extract application/tag repositories for all ownership-scoped reads/writes,
-  filtering, pagination, status history, archive actions, and tag assignment.
-- Create controllers and constants; routes retain middleware/controller mapping
-  only.
-- Keep status policy and multi-table transaction orchestration in services.
-
-**Done when:** services have no Prisma access and ownership, filter, archive,
-status-transition, and pagination tests pass.
+Split this into application create/detail, application list/filter/pagination,
+application update/archive/delete, status history, tag CRUD, and application
+tag assignment/removal. Each subphase gets its own repository, controller,
+ownership tests, and no-Prisma service audit before the next begins.
 
 ## Phase 3 — Notes and interviews
 
-- Apply the complete module pattern to notes and interviews.
-- Query child entities through user-scoped application ownership in repositories.
-- Preserve application child endpoints and global interview list semantics.
+Refactor notes CRUD, application interviews, global interviews, and interview
+updates/deletes as separate gated subphases. Child-resource repository queries
+must enforce application ownership.
 
-**Done when:** CRUD, filter, pagination, and cross-user `404` tests pass.
+## Phase 4 — Read and transfer modules
 
-## Phase 4 — Dashboard, import/export, health
+Refactor dashboard aggregates, JSON/CSV export, JSON import transactions, and
+health database probe separately. Raw downloads and OAuth redirects remain the
+only response-envelope exceptions.
 
-- Move dashboard aggregates to a repository and leave summary shaping in the
-  service.
-- Split import/export into separate controller/service/repository layers while
-  preserving import transactions and raw download responses.
-- Add health controller/service/database probe and preserve the unauthenticated
-  `503` health failure contract.
+## Phase 5 — Release hardening
 
-**Done when:** dashboard, import/export, health, smoke, and container checks pass.
-
-## Phase 5 — Cleanup and release
-
-- Migrate imports into the approved `lib`, `oauth`, and `utils` locations;
-  remove only legacy files with no remaining imports.
-- Add CI validation that blocks Prisma imports outside repositories and
-  `lib/prisma.ts`.
-- Run full PostgreSQL integration tests, Docker build, migration deploy, and
-  release smoke test.
-
-## Documentation and frontend handoff
-
-- Update architecture, database, operations, testing, deployment, and DoD docs
-  only after each phase is complete.
-- Release/version `contracts/openapi.json` with each contract change; the web
-  repository pins and validates that artifact before deployment.
-- The untouched web project implements from its own docs in order: foundation
-  and `app-ui`, auth, dashboard, applications/tags/notes, interviews, settings,
-then import/export. Each feature consumes the released, versioned API contract.
+Add the repository-boundary CI audit, execute the full release checklist in
+`release-verification.md`, validate the Docker migration/runtime images, and
+release the matching versioned OpenAPI contract only after all prior gates pass.
