@@ -9,3 +9,7 @@ both JSON artifacts. Then run `pnpm contracts:validate`.
 In Postman, import the collection JSON, confirm `baseUrl`, then run requests in numbered folder
 order. Login and create requests automatically save the access token and generated resource IDs.
 Postman stores the `tally_rt` refresh cookie in its cookie jar.
+
+The local collection default is `http://localhost:5000/api/v1`. The documented
+dashboard endpoint is `GET /dashboard`; `GET /dashboard/summary` remains a
+compatible alias.
