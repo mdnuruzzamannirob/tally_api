@@ -171,8 +171,8 @@ cp .env.example .env
 
 docker compose up -d
 
-pnpm prisma:migrate
-pnpm prisma:seed
+pnpm db:migrate
+pnpm db:seed
 
 pnpm dev
 ```
@@ -202,10 +202,10 @@ Recommended root `package.json` scripts:
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "tsx prisma/seed.ts",
-    "prisma:studio": "prisma studio"
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
   }
 }
 ```
@@ -540,10 +540,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Prisma generate
-        run: pnpm prisma:generate
+        run: pnpm db:generate
 
       - name: Prisma migrate
-        run: pnpm prisma:deploy
+        run: pnpm db:deploy
 
       - name: Lint
         run: pnpm lint
@@ -680,7 +680,7 @@ pnpm start
 Pre-deploy command, using `MIGRATION_DATABASE_URL`:
 
 ```txt
-pnpm prisma:deploy
+pnpm db:deploy
 ```
 
 Environment variables:

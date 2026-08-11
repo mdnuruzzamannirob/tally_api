@@ -155,8 +155,8 @@ pnpm test:unit
 Database gate after every repository or transaction step:
 
 ```sh
-pnpm prisma:validate
-pnpm prisma:deploy
+pnpm db:validate
+pnpm db:deploy
 pnpm test:integration
 ```
 
@@ -168,7 +168,7 @@ pnpm format
 pnpm typecheck
 pnpm test:all
 pnpm build
-pnpm openapi:validate
+pnpm contracts:validate
 ```
 
 The integration suite must use the disposable TEST_DATABASE_URL described in
@@ -225,8 +225,8 @@ Recorded completion gate:
 - `pnpm format` — passed;
 - `pnpm typecheck` — passed;
 - `pnpm build` — passed;
-- `DATABASE_URL=... pnpm prisma:validate` — passed; all schemas valid;
-- `pnpm openapi:validate` — passed;
+- `DATABASE_URL=... pnpm db:validate` — passed; all schemas valid;
+- `pnpm contracts:validate` — passed;
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `git diff --check` — passed.
 
@@ -302,8 +302,8 @@ Recorded 1.1–1.3 completion gate:
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `pnpm build` — passed;
 - `pnpm format` — passed;
-- `DATABASE_URL=... pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `DATABASE_URL=... pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - Auth boundary audit — passed: Prisma access remains in
   `auth.repository.ts` only within the auth module.
 
@@ -315,7 +315,7 @@ gate with a disposable database before merging:
 ```sh
 DATABASE_URL=postgresql://tally:tally@localhost:5432/tally_test \
 TEST_DATABASE_URL=postgresql://tally:tally@localhost:5432/tally_test \
-pnpm prisma:deploy
+pnpm db:deploy
 TEST_DATABASE_URL=postgresql://tally:tally@localhost:5432/tally_test \
 pnpm test:integration
 ```
@@ -447,8 +447,8 @@ Recorded 1.7 completion:
 - `pnpm typecheck` — passed;
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `pnpm build` — passed;
-- `DATABASE_URL=... pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `DATABASE_URL=... pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - `git diff --check` — passed.
 
 The required database/release gates remain pending because this workspace does
@@ -464,8 +464,8 @@ pnpm lint
 pnpm typecheck
 pnpm test:all
 pnpm build
-DATABASE_URL=... pnpm prisma:validate
-pnpm openapi:validate
+DATABASE_URL=... pnpm db:validate
+pnpm contracts:validate
 pnpm test:smoke
 ```
 
@@ -635,8 +635,8 @@ Recorded 2.6 completion:
 - `pnpm typecheck` — passed;
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `pnpm build` — passed;
-- `pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - `git diff --check` — passed.
 
 The database integration gate remains pending because this workspace has no safe
@@ -725,8 +725,8 @@ Recorded 3.3 completion:
 - `pnpm typecheck` — passed;
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `pnpm build` — passed;
-- `pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - `git diff --check` — passed.
 
 The database integration gate remains pending because this workspace has no safe
@@ -816,8 +816,8 @@ Recorded 4.1–4.3 validation:
 - `pnpm typecheck` — passed;
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `pnpm build` — passed;
-- `pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - dashboard/export/import boundary audit — passed: no Prisma access remains in
   services, controllers, or routes;
 - `git diff --check` — passed.
@@ -876,8 +876,8 @@ Recorded 4.5 completion:
 - `pnpm typecheck` — passed;
 - `pnpm test:unit` — passed: 7 test files, 22 tests;
 - `pnpm build` — passed;
-- `pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - health/read-transfer boundary audit — passed;
 - `git diff --check` — passed.
 
@@ -959,7 +959,7 @@ proving that a forbidden service import fails the check.
 
 Recorded 5.3 completion:
 
-- Added `scripts/audit-repository-boundary.ts` and the `pnpm audit:boundary`
+- Added `scripts/audit-repository-boundary.ts` and the `pnpm audit:repository`
   command.
 - The deterministic audit scans all source services/controllers/routes and
   rejects Prisma imports/access, transaction calls, and legacy Prisma-backed
@@ -968,15 +968,15 @@ Recorded 5.3 completion:
   `tests/unit/repository-boundary.test.ts` proving forbidden service imports
   are rejected.
 - CI runs both the identity-specific and full repository-boundary audits.
-- `pnpm audit:boundary` — passed;
+- `pnpm audit:repository` — passed;
 - `pnpm audit:identity` — passed;
 - `pnpm lint` — passed;
 - `pnpm format` — passed;
 - `pnpm typecheck` — passed;
 - `pnpm test:unit` — passed: 9 test files, 27 tests;
 - `pnpm build` — passed;
-- `pnpm prisma:validate` — passed;
-- `pnpm openapi:validate` — passed;
+- `pnpm db:validate` — passed;
+- `pnpm contracts:validate` — passed;
 - `git diff --check` — passed.
 
 The database integration gate remains pending because this workspace has no safe
@@ -1004,9 +1004,9 @@ Recorded 5.4 completion:
 - `docs/backend-implementation-plan.md` remains historical and untouched.
 - `git diff --exit-code -- contracts/openapi.json prisma/schema prisma/migrations
 docs/backend-implementation-plan.md docs/README.md` — passed;
-- `pnpm openapi:validate` — passed;
-- `DATABASE_URL=... pnpm prisma:validate` — passed;
-- `pnpm audit:boundary` — passed;
+- `pnpm contracts:validate` — passed;
+- `DATABASE_URL=... pnpm db:validate` — passed;
+- `pnpm audit:repository` — passed;
 - `pnpm audit:identity` — passed;
 - `pnpm test:unit` — passed: 9 test files, 27 tests;
 - `pnpm lint` — passed;
@@ -1032,15 +1032,15 @@ Run from a clean checkout or clean build workspace:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm prisma:generate
-pnpm prisma:validate
-pnpm prisma:deploy
+pnpm db:generate
+pnpm db:validate
+pnpm db:deploy
 pnpm lint
 pnpm format
 pnpm typecheck
 pnpm test:all
 pnpm build
-pnpm openapi:validate
+pnpm contracts:validate
 ```
 
 No migration should be generated by this refactor. If Prisma reports a schema
@@ -1049,17 +1049,17 @@ change, stop and review it against database-spec.md.
 Recorded 6.1 completion:
 
 - `pnpm install --frozen-lockfile` — passed from the lockfile;
-- `pnpm prisma:generate` — passed;
-- `pnpm prisma:validate` — passed;
-- `pnpm prisma:deploy` — passed against a disposable PostgreSQL 16 database;
+- `pnpm db:generate` — passed;
+- `pnpm db:validate` — passed;
+- `pnpm db:deploy` — passed against a disposable PostgreSQL 16 database;
   all four existing migrations applied and no new migration was generated;
 - `pnpm lint` — passed;
 - `pnpm format` — passed;
 - `pnpm typecheck` — passed;
 - `pnpm test:all` — passed: 17 test files, 41 tests;
 - `pnpm build` — passed;
-- `pnpm openapi:validate` — passed;
-- `pnpm audit:boundary` — passed;
+- `pnpm contracts:validate` — passed;
+- `pnpm audit:repository` — passed;
 - `pnpm audit:identity` — passed for 21 identity source files;
 - production-target Docker runtime image build — passed;
 - `pnpm test:smoke` — passed against the rebuilt runtime image with the
@@ -1172,7 +1172,7 @@ Status: Complete — verified 2026-08-10.
 The requirements audit identified and resolved the backend-critical gaps:
 
 - Replaced the 13-operation placeholder OpenAPI artifact with a generated
-  49-operation contract covering every feature route; `openapi:validate` now
+  49-operation contract covering every feature route; `contracts:validate` now
   validates both Swagger structure and runtime route parity.
 - Implemented Resend, SendGrid, Mailgun, and SMTP email adapters. Provider
   credentials and provider-specific settings are validated at startup;
@@ -1185,7 +1185,7 @@ The requirements audit identified and resolved the backend-critical gaps:
 
 Validation recorded:
 
-- `pnpm openapi:validate` — passed with route parity;
+- `pnpm contracts:validate` — passed with route parity;
 - `pnpm test:unit` — passed: 9 test files, 29 tests;
 - `pnpm test:integration` — passed: 17 test files, 41 tests;
 - `pnpm lint`, `pnpm format`, `pnpm typecheck`, `pnpm build` — passed;

@@ -14,7 +14,7 @@ Run the database-backed integration suite after applying migrations to the
 dedicated test database:
 
 ```sh
-pnpm prisma:deploy
+pnpm db:deploy
 pnpm test:integration
 ```
 

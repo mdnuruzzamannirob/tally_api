@@ -12,7 +12,7 @@ dedicated, disposable test database.
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm prisma:generate
+pnpm db:generate
 pnpm lint
 pnpm typecheck
 pnpm test:all

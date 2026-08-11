@@ -44,19 +44,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Generate Prisma client
-        run: pnpm prisma:generate
+        run: pnpm db:generate
       - name: Apply migrations
-        run: pnpm prisma:deploy
-      - name: Regenerate and verify OpenAPI artifact
+        run: pnpm db:deploy
+      - name: Regenerate and verify API contract artifacts
         run: |
-          pnpm openapi:generate
-          git diff --exit-code -- contracts/openapi.json
-      - name: Validate OpenAPI contract
-        run: pnpm openapi:validate
+          pnpm contracts:generate
+          git diff --exit-code -- contracts/openapi.json contracts/tally.postman.json
+      - name: Validate API contracts
+        run: pnpm contracts:validate
       - name: Audit identity boundary
         run: pnpm audit:identity
       - name: Audit repository boundary
-        run: pnpm audit:boundary
+        run: pnpm audit:repository
       - name: Lint
         run: pnpm lint
       - name: Typecheck
