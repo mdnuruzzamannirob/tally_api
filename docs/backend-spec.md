@@ -2317,7 +2317,7 @@ Repository layer should avoid exposing Prisma internals to controllers.
 
 ```txt
 NODE_ENV=development
-PORT=4000
+PORT=5000
 
 DATABASE_URL=postgresql://tally:tally@localhost:5433/tally
 MIGRATION_DATABASE_URL=

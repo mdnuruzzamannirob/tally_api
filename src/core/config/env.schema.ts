@@ -32,7 +32,7 @@ const databaseUrlSchema = z
 const envSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvironments).default("development"),
-    PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
+    PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
     DATABASE_URL: databaseUrlSchema,
     TEST_DATABASE_URL: databaseUrlSchema.optional(),
     API_BASE_URL: z.string().url(),

@@ -527,7 +527,7 @@ async function generateOpenApi(): Promise<void> {
     },
     servers: [
       { url: "/api/v1", description: "Current host" },
-      { url: "http://localhost:4000/api/v1", description: "Local development" },
+      { url: "http://localhost:5000/api/v1", description: "Local development" },
     ],
     tags: [
       { name: "System", description: "Service health and operational endpoints." },
@@ -1026,9 +1026,9 @@ async function generatePostman(): Promise<void> {
       },
     ],
     variable: [
-      { key: "baseUrl", value: "http://localhost:4000/api/v1", type: "string" },
+      { key: "baseUrl", value: "http://localhost:5000/api/v1", type: "string" },
       { key: "webAppUrl", value: "http://localhost:3000", type: "string" },
-      { key: "openApiUrl", value: "http://localhost:4000/api/v1/openapi.json", type: "string" },
+      { key: "openApiUrl", value: "http://localhost:5000/api/v1/openapi.json", type: "string" },
       { key: "accessToken", value: "", type: "string" },
       { key: "userEmail", value: "nirob@example.com", type: "string" },
       { key: "userPassword", value: "StrongPass123!", type: "string" },

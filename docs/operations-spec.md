@@ -184,7 +184,7 @@ Expected local URLs:
 
 ```txt
 Frontend: http://localhost:3000
-Backend:  http://localhost:4000
+Backend:  http://localhost:5000
 Database: postgresql://tally:tally@localhost:5433/tally
 ```
 
@@ -268,7 +268,7 @@ web/.env
 Required variables:
 
 ```txt
-NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -299,7 +299,7 @@ Required variables:
 
 ```txt
 NODE_ENV=development
-PORT=4000
+PORT=5000
 
 DATABASE_URL=postgresql://tally:tally@localhost:5433/tally
 MIGRATION_DATABASE_URL=
@@ -331,7 +331,7 @@ Production example:
 
 ```txt
 NODE_ENV=production
-PORT=4000
+PORT=5000
 
 DATABASE_URL=postgresql://...
 MIGRATION_DATABASE_URL=postgresql://...privileged-migration-role...
@@ -819,7 +819,7 @@ https://api.tally.example.com/api/v1/auth/google/callback
 Local redirect:
 
 ```txt
-http://localhost:4000/api/v1/auth/google/callback
+http://localhost:5000/api/v1/auth/google/callback
 ```
 
 Store:
@@ -845,7 +845,7 @@ https://api.tally.example.com/api/v1/auth/github/callback
 Local callback:
 
 ```txt
-http://localhost:4000/api/v1/auth/github/callback
+http://localhost:5000/api/v1/auth/github/callback
 ```
 
 Store:

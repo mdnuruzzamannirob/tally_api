@@ -30,7 +30,7 @@ describe("environment configuration", () => {
 
     expect(env).toMatchObject({
       NODE_ENV: "development",
-      PORT: 4000,
+      PORT: 5000,
       COOKIE_SECURE: false,
       COOKIE_SAME_SITE: "lax",
       EMAIL_PROVIDER: "console",

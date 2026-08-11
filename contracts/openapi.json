@@ -8,7 +8,7 @@
   },
   "servers": [
     { "url": "/api/v1", "description": "Current host" },
-    { "url": "http://localhost:4000/api/v1", "description": "Local development" }
+    { "url": "http://localhost:5000/api/v1", "description": "Local development" }
   ],
   "tags": [
     { "name": "System", "description": "Service health and operational endpoints." },
