@@ -90,7 +90,7 @@ export function createAuthController(authService: AuthService): {
     }),
     me: asyncHandler(async (request, response) => {
       if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
-      return sendSuccess(response, { user: await authService.getCurrentUser(request.auth.userId) });
+      return sendSuccess(response, await authService.getCurrentUser(request.auth.userId));
     }),
     forgotPassword: asyncHandler(async (request, response) => {
       const { email } = forgotPasswordSchema.parse(request.body);

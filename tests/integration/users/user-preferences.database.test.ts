@@ -52,7 +52,7 @@ describe.skipIf(!runDatabaseTests)("user profile and preferences", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ name: "  Tally User  " });
     expect(updated.status).toBe(200);
-    expect(updated.body.data.user).toMatchObject({ name: "Tally User", email: user.email });
+    expect(updated.body.data).toMatchObject({ name: "Tally User", email: user.email });
 
     const rejected = await request(app)
       .patch("/api/v1/users/me/profile")
@@ -78,7 +78,7 @@ describe.skipIf(!runDatabaseTests)("user profile and preferences", () => {
         notificationsEnabled: true,
       });
     expect(updated.status).toBe(200);
-    expect(updated.body.data.user.preferences).toMatchObject({
+    expect(updated.body.data.preferences).toMatchObject({
       theme: "dark",
       defaultLandingPage: "applications",
       timeZone: "Asia/Dhaka",

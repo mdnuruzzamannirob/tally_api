@@ -61,19 +61,19 @@ describe.skipIf(!runDatabaseTests)("notes", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ content: "  Recruiter replied.  " });
     expect(created.status).toBe(201);
-    expect(created.body.data.note.content).toBe("Recruiter replied.");
-    const noteId = created.body.data.note.id as string;
+    expect(created.body.data.content).toBe("Recruiter replied.");
+    const noteId = created.body.data.id as string;
     const listed = await request(app)
       .get(`/api/v1/applications/${application.id}/notes`)
       .set("Authorization", `Bearer ${accessToken}`);
     expect(listed.status).toBe(200);
-    expect(listed.body.data.notes).toHaveLength(1);
+    expect(listed.body.data).toHaveLength(1);
 
     const updated = await request(app)
       .patch(`/api/v1/notes/${noteId}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ content: "  Sent resume.  " });
-    expect(updated.body.data.note.content).toBe("Sent resume.");
+    expect(updated.body.data.content).toBe("Sent resume.");
     await request(app)
       .delete(`/api/v1/notes/${noteId}`)
       .set("Authorization", `Bearer ${accessToken}`)

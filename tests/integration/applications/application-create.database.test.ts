@@ -68,13 +68,13 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
         initialNote: "  Applied through careers page.  ",
       });
     expect(created.status).toBe(201);
-    const applicationId = created.body.data.application.id as string;
-    expect(created.body.data.application).toMatchObject({
+    const applicationId = created.body.data.id as string;
+    expect(created.body.data).toMatchObject({
       company: "Tally",
       role: "Engineer",
       status: "APPLIED",
     });
-    expect(created.body.data.application.tags[0].tag).toMatchObject({
+    expect(created.body.data.tags[0].tag).toMatchObject({
       id: tag.id,
       name: "priority",
     });
@@ -89,7 +89,7 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .get(`/api/v1/applications/${applicationId}`)
       .set("Authorization", `Bearer ${accessToken}`);
     expect(detail.status).toBe(200);
-    expect(detail.body.data.application.tags).toHaveLength(1);
+    expect(detail.body.data.tags).toHaveLength(1);
   });
 
   it("rejects unowned tags and does not create a partial application", async () => {
@@ -149,10 +149,10 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ company: "Updated Tally", tagIds: [secondTag.id] });
     expect(updated.status).toBe(200);
-    expect(updated.body.data.application.company).toBe("Updated Tally");
-    expect(
-      updated.body.data.application.tags.map((assignment: { tagId: string }) => assignment.tagId),
-    ).toEqual([secondTag.id]);
+    expect(updated.body.data.company).toBe("Updated Tally");
+    expect(updated.body.data.map((assignment: { tagId: string }) => assignment.tagId)).toEqual([
+      secondTag.id,
+    ]);
 
     await request(app)
       .patch(`/api/v1/applications/${application.id}`)
@@ -230,9 +230,9 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .get("/api/v1/applications")
       .set("Authorization", `Bearer ${accessToken}`);
     expect(defaultList.status).toBe(200);
-    expect(defaultList.body.data.pagination).toMatchObject({
+    expect(defaultList.body.meta).toMatchObject({
       page: 1,
-      pageSize: 20,
+      limit: 20,
       total: 2,
       totalPages: 1,
     });
@@ -240,23 +240,21 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
     const tagSearch = await request(app)
       .get(`/api/v1/applications?tag=${tag.id}`)
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(tagSearch.body.data.items.map((item: { id: string }) => item.id)).toEqual([applied.id]);
+    expect(tagSearch.body.data.map((item: { id: string }) => item.id)).toEqual([applied.id]);
 
     const noteSearch = await request(app)
       .get("/api/v1/applications?search=referral")
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(noteSearch.body.data.items.map((item: { id: string }) => item.id)).toEqual([
-      wishlist.id,
-    ]);
+    expect(noteSearch.body.data.map((item: { id: string }) => item.id)).toEqual([wishlist.id]);
 
     const statusOrder = await request(app)
       .get("/api/v1/applications?includeArchived=true&sort=status&order=desc&pageSize=2")
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(statusOrder.body.data.items.map((item: { status: string }) => item.status)).toEqual([
+    expect(statusOrder.body.data.map((item: { status: string }) => item.status)).toEqual([
       "INTERVIEW",
       "APPLIED",
     ]);
-    expect(statusOrder.body.data.pagination).toMatchObject({ total: 3, totalPages: 2 });
+    expect(statusOrder.body.meta).toMatchObject({ total: 3, totalPages: 2 });
 
     await request(app)
       .get("/api/v1/applications?sort=unknown")
@@ -280,7 +278,7 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ toStatus: "INTERVIEW", note: "  Technical interview confirmed.  " });
     expect(changed.status).toBe(200);
-    expect(changed.body.data.application).toMatchObject({
+    expect(changed.body.data).toMatchObject({
       id: application.id,
       status: "INTERVIEW",
     });
@@ -305,7 +303,7 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .get(`/api/v1/applications/${application.id}/history`)
       .set("Authorization", `Bearer ${accessToken}`);
     expect(history.status).toBe(200);
-    expect(history.body.data.history).toHaveLength(1);
+    expect(history.body.data).toHaveLength(1);
     await request(app)
       .get(`/api/v1/applications/${otherApplication.id}/history`)
       .set("Authorization", `Bearer ${accessToken}`)

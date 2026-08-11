@@ -91,6 +91,12 @@ async function generateOpenApi(): Promise<void> {
   const successExamples: Record<string, unknown> = {
     health: { status: "ok", database: "connected", timestamp: "2026-08-11T00:00:00.000Z" },
     register: {},
+    listApplications: [],
+    getApplicationHistory: [],
+    listTags: [],
+    listApplicationNotes: [],
+    listInterviews: [],
+    listApplicationInterviews: [],
     login: {
       accessToken: "eyJhbGciOiJIUzI1NiJ9.example.signature",
       user: {
@@ -110,22 +116,18 @@ async function generateOpenApi(): Promise<void> {
     },
     refresh: { accessToken: "eyJhbGciOiJIUzI1NiJ9.refreshed.signature" },
     createApplication: {
-      application: {
-        id: "cm0application123",
-        company: "OpenAI",
-        role: "Software Engineer",
-        status: "APPLIED",
-      },
+      id: "cm0application123",
+      company: "OpenAI",
+      role: "Software Engineer",
+      status: "APPLIED",
     },
-    createTag: { tag: { id: "cm0tag123", name: "priority", color: "#2563EB" } },
-    createNote: { note: { id: "cm0note123", content: "Follow up with the recruiter." } },
+    createTag: { id: "cm0tag123", name: "priority", color: "#2563EB" },
+    createNote: { id: "cm0note123", content: "Follow up with the recruiter." },
     createInterview: {
-      interview: {
-        id: "cm0interview123",
-        type: "TECHNICAL",
-        status: "SCHEDULED",
-        scheduledAt: "2026-08-20T10:00:00.000Z",
-      },
+      id: "cm0interview123",
+      type: "TECHNICAL",
+      status: "SCHEDULED",
+      scheduledAt: "2026-08-20T10:00:00.000Z",
     },
   };
 
@@ -286,7 +288,7 @@ async function generateOpenApi(): Promise<void> {
       {
         success: { const: true },
         message: string(),
-        data: { type: "object", additionalProperties: true },
+        data: {},
         meta: ref("Meta"),
       },
       ["success", "message", "data"],
@@ -298,7 +300,7 @@ async function generateOpenApi(): Promise<void> {
         message: string(),
         error: {
           type: "object",
-          properties: { code: string(), details: { type: "object" } },
+          properties: { code: string(), details: { type: "object" }, stack: string() },
           required: ["code"],
         },
         meta: ref("Meta"),
@@ -313,7 +315,7 @@ async function generateOpenApi(): Promise<void> {
       totalPages: { type: "integer" },
     }),
     MessageData: dataObject(),
-    UserData: dataObject({ user: dataObject() }),
+    UserData: dataObject(),
     AuthData: dataObject({ accessToken: string(), user: dataObject() }),
     AccessTokenData: dataObject({ accessToken: string() }),
     ConnectedAccountsData: dataObject({
@@ -321,21 +323,15 @@ async function generateOpenApi(): Promise<void> {
       hasPassword: { type: "boolean" },
     }),
     AuthorizationUrlData: dataObject({ authorizationUrl: string("uri") }),
-    ApplicationData: dataObject({ application: dataObject() }),
-    ApplicationsData: dataObject({
-      items: { type: "array", items: dataObject() },
-      pagination: dataObject(),
-    }),
-    HistoryData: dataObject({ history: { type: "array", items: dataObject() } }),
-    TagsData: dataObject({ tags: { type: "array", items: dataObject() } }),
-    TagData: dataObject({ tag: dataObject() }),
-    NotesData: dataObject({ notes: { type: "array", items: dataObject() } }),
-    NoteData: dataObject({ note: dataObject() }),
-    InterviewsData: dataObject({
-      items: { type: "array", items: dataObject() },
-      pagination: dataObject(),
-    }),
-    InterviewData: dataObject({ interview: dataObject() }),
+    ApplicationData: dataObject(),
+    ApplicationsData: { type: "array", items: dataObject() },
+    HistoryData: { type: "array", items: dataObject() },
+    TagsData: { type: "array", items: dataObject() },
+    TagData: dataObject(),
+    NotesData: { type: "array", items: dataObject() },
+    NoteData: dataObject(),
+    InterviewsData: { type: "array", items: dataObject() },
+    InterviewData: dataObject(),
     DashboardData: dataObject(),
   };
 
@@ -674,6 +670,12 @@ async function generatePostman(): Promise<void> {
   const successData: Record<string, unknown> = {
     health: { status: "ok", database: "connected", timestamp: "2026-08-11T00:00:00.000Z" },
     register: {},
+    listApplications: [],
+    getApplicationHistory: [],
+    listTags: [],
+    listApplicationNotes: [],
+    listInterviews: [],
+    listApplicationInterviews: [],
     login: {
       accessToken: "eyJhbGciOiJIUzI1NiJ9.example.signature",
       user: {
@@ -685,21 +687,17 @@ async function generatePostman(): Promise<void> {
     },
     refresh: { accessToken: "eyJhbGciOiJIUzI1NiJ9.refreshed.signature" },
     createApplication: {
-      application: {
-        id: "cm0application123",
-        company: "OpenAI",
-        role: "Software Engineer",
-        status: "APPLIED",
-      },
+      id: "cm0application123",
+      company: "OpenAI",
+      role: "Software Engineer",
+      status: "APPLIED",
     },
-    createTag: { tag: { id: "cm0tag123", name: "priority", color: "#2563EB" } },
-    createNote: { note: { id: "cm0note123", content: "Follow up with the recruiter." } },
+    createTag: { id: "cm0tag123", name: "priority", color: "#2563EB" },
+    createNote: { id: "cm0note123", content: "Follow up with the recruiter." },
     createInterview: {
-      interview: {
-        id: "cm0interview123",
-        type: "TECHNICAL",
-        status: "SCHEDULED",
-      },
+      id: "cm0interview123",
+      type: "TECHNICAL",
+      status: "SCHEDULED",
     },
   };
 

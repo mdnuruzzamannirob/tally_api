@@ -63,27 +63,27 @@ describe.skipIf(!runDatabaseTests)("interviews", () => {
         notes: "  Prepare design.  ",
       });
     expect(created.status).toBe(201);
-    expect(created.body.data.interview).toMatchObject({
+    expect(created.body.data).toMatchObject({
       type: "TECHNICAL",
       interviewerName: "Jane Smith",
       notes: "Prepare design.",
     });
-    const interviewId = created.body.data.interview.id as string;
+    const interviewId = created.body.data.id as string;
 
     const globalList = await request(app)
       .get("/api/v1/interviews?range=upcoming")
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(globalList.body.data).toMatchObject({ pagination: { total: 1 } });
+    expect(globalList.body.meta).toMatchObject({ total: 1 });
     const applicationList = await request(app)
       .get(`/api/v1/applications/${application.id}/interviews?range=upcoming`)
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(applicationList.body.data.items).toHaveLength(1);
+    expect(applicationList.body.data).toHaveLength(1);
 
     const updated = await request(app)
       .patch(`/api/v1/interviews/${interviewId}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ status: "COMPLETED", interviewerName: null });
-    expect(updated.body.data.interview).toMatchObject({
+    expect(updated.body.data).toMatchObject({
       status: "COMPLETED",
       interviewerName: null,
       applicationId: application.id,
@@ -115,11 +115,11 @@ describe.skipIf(!runDatabaseTests)("interviews", () => {
     const excluded = await request(app)
       .get("/api/v1/interviews?range=upcoming")
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(excluded.body.data.pagination.total).toBe(0);
+    expect(excluded.body.meta.total).toBe(0);
     const included = await request(app)
       .get("/api/v1/interviews?range=upcoming&includeArchived=true")
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(included.body.data.pagination.total).toBe(1);
+    expect(included.body.meta.total).toBe(1);
     await request(app)
       .patch(`/api/v1/interviews/${privateInterview.id}`)
       .set("Authorization", `Bearer ${accessToken}`)

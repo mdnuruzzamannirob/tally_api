@@ -21,12 +21,13 @@ export class NoteController {
   constructor(private readonly service: NoteService) {}
 
   async list(request: Request, response: Response): Promise<void> {
-    sendSuccess(response, {
-      notes: await this.service.list(
+    sendSuccess(
+      response,
+      await this.service.list(
         userIdOrThrow(request),
         paramOrThrow(request, "id", "Application ID"),
       ),
-    });
+    );
   }
 
   async create(request: Request, response: Response): Promise<void> {
@@ -35,7 +36,7 @@ export class NoteController {
       paramOrThrow(request, "id", "Application ID"),
       createNoteSchema.parse(request.body),
     );
-    sendSuccess(response, { note }, 201);
+    sendSuccess(response, note, 201);
   }
 
   async update(request: Request, response: Response): Promise<void> {
@@ -44,7 +45,7 @@ export class NoteController {
       paramOrThrow(request, "id", "Note ID"),
       updateNoteSchema.parse(request.body),
     );
-    sendSuccess(response, { note });
+    sendSuccess(response, note);
   }
 
   async delete(request: Request, response: Response): Promise<void> {

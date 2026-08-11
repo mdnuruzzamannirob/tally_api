@@ -93,7 +93,7 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
       .get("/api/v1/auth/me")
       .set("Authorization", `Bearer ${response.body.data.accessToken}`);
     expect(me.status).toBe(200);
-    expect(me.body.data.user.id).toBe(user.id);
+    expect(me.body.data.id).toBe(user.id);
   });
 
   it("rotates refresh tokens and revokes every session after replay", async () => {

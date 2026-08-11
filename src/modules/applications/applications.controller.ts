@@ -34,11 +34,7 @@ export class ApplicationController {
       total: result.total,
       totalPages: Math.ceil(result.total / query.pageSize),
     };
-    sendSuccess(
-      response,
-      { items: result.items, pagination: { ...meta, pageSize: query.pageSize } },
-      { message: "Applications retrieved successfully.", meta },
-    );
+    sendSuccess(response, result.items, { message: "Applications retrieved successfully.", meta });
   }
 
   async create(request: Request, response: Response): Promise<void> {
@@ -46,16 +42,14 @@ export class ApplicationController {
       userIdOrThrow(request),
       createApplicationSchema.parse(request.body),
     );
-    sendSuccess(response, { application }, 201);
+    sendSuccess(response, application, 201);
   }
 
   async getById(request: Request, response: Response): Promise<void> {
-    sendSuccess(response, {
-      application: await this.service.getById(
-        userIdOrThrow(request),
-        applicationIdOrThrow(request),
-      ),
-    });
+    sendSuccess(
+      response,
+      await this.service.getById(userIdOrThrow(request), applicationIdOrThrow(request)),
+    );
   }
 
   async update(request: Request, response: Response): Promise<void> {
@@ -64,7 +58,7 @@ export class ApplicationController {
       applicationIdOrThrow(request),
       updateApplicationSchema.parse(request.body),
     );
-    sendSuccess(response, { application });
+    sendSuccess(response, application);
   }
 
   async changeStatus(request: Request, response: Response): Promise<void> {
@@ -73,13 +67,14 @@ export class ApplicationController {
       applicationIdOrThrow(request),
       changeApplicationStatusSchema.parse(request.body),
     );
-    sendSuccess(response, { application });
+    sendSuccess(response, application);
   }
 
   async history(request: Request, response: Response): Promise<void> {
-    sendSuccess(response, {
-      history: await this.service.getHistory(userIdOrThrow(request), applicationIdOrThrow(request)),
-    });
+    sendSuccess(
+      response,
+      await this.service.getHistory(userIdOrThrow(request), applicationIdOrThrow(request)),
+    );
   }
 
   async archive(request: Request, response: Response): Promise<void> {

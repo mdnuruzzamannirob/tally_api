@@ -58,8 +58,8 @@ describe.skipIf(!runDatabaseTests)("tags", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ name: "  Priority  ", color: "#6366f1" });
     expect(created.status).toBe(201);
-    expect(created.body.data.tag).toMatchObject({ name: "priority", color: "#6366f1" });
-    const tagId = created.body.data.tag.id as string;
+    expect(created.body.data).toMatchObject({ name: "priority", color: "#6366f1" });
+    const tagId = created.body.data.id as string;
     await request(app)
       .post("/api/v1/tags")
       .set("Authorization", `Bearer ${accessToken}`)
@@ -70,11 +70,11 @@ describe.skipIf(!runDatabaseTests)("tags", () => {
       .patch(`/api/v1/tags/${tagId}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ name: "  Follow Up ", color: null });
-    expect(updated.body.data.tag).toMatchObject({ name: "follow up", color: null });
+    expect(updated.body.data).toMatchObject({ name: "follow up", color: null });
     const list = await request(app)
       .get("/api/v1/tags")
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(list.body.data.tags.map((tag: { name: string }) => tag.name)).toEqual(["follow up"]);
+    expect(list.body.data.map((tag: { name: string }) => tag.name)).toEqual(["follow up"]);
 
     const otherTag = await prisma.tag.create({ data: { userId: otherUser.id, name: "private" } });
     await request(app)

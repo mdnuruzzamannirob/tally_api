@@ -48,12 +48,15 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, request, re
 
   const safeMessage =
     statusCode >= 500 && env.NODE_ENV === "production" ? "An unexpected error occurred." : message;
+  const stack =
+    env.NODE_ENV === "production" || !(error instanceof Error) ? undefined : error.stack;
   const body: ErrorResponse = {
     success: false,
     message: safeMessage,
     error: {
       code,
       ...(details !== undefined ? { details: details as Record<string, string[]> } : {}),
+      ...(stack ? { stack } : {}),
     },
     meta: { requestId: requestId ?? "unknown" },
   };

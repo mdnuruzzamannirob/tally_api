@@ -41,19 +41,15 @@ export class InterviewController {
       paramOrThrow(request, "Application ID"),
     );
     const meta = pagination(result, query);
-    sendSuccess(
-      response,
-      { items: result.items, pagination: meta },
-      {
-        message: "Interviews retrieved successfully.",
-        meta: {
-          page: meta.page,
-          limit: meta.pageSize,
-          total: meta.total,
-          totalPages: meta.totalPages,
-        },
+    sendSuccess(response, result.items, {
+      message: "Interviews retrieved successfully.",
+      meta: {
+        page: meta.page,
+        limit: meta.pageSize,
+        total: meta.total,
+        totalPages: meta.totalPages,
       },
-    );
+    });
   }
 
   async create(request: Request, response: Response): Promise<void> {
@@ -62,26 +58,22 @@ export class InterviewController {
       paramOrThrow(request, "Application ID"),
       createInterviewSchema.parse(request.body),
     );
-    sendSuccess(response, { interview }, 201);
+    sendSuccess(response, interview, 201);
   }
 
   async list(request: Request, response: Response): Promise<void> {
     const query = interviewListQuerySchema.parse(request.query);
     const result = await this.service.list(userIdOrThrow(request), query);
     const meta = pagination(result, query);
-    sendSuccess(
-      response,
-      { items: result.items, pagination: meta },
-      {
-        message: "Application interviews retrieved successfully.",
-        meta: {
-          page: meta.page,
-          limit: meta.pageSize,
-          total: meta.total,
-          totalPages: meta.totalPages,
-        },
+    sendSuccess(response, result.items, {
+      message: "Application interviews retrieved successfully.",
+      meta: {
+        page: meta.page,
+        limit: meta.pageSize,
+        total: meta.total,
+        totalPages: meta.totalPages,
       },
-    );
+    });
   }
 
   async update(request: Request, response: Response): Promise<void> {
@@ -90,7 +82,7 @@ export class InterviewController {
       paramOrThrow(request, "Interview ID"),
       updateInterviewSchema.parse(request.body),
     );
-    sendSuccess(response, { interview });
+    sendSuccess(response, interview);
   }
 
   async delete(request: Request, response: Response): Promise<void> {

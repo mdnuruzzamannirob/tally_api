@@ -21,7 +21,7 @@ export class TagController {
   constructor(private readonly service: TagService) {}
 
   async list(request: Request, response: Response): Promise<void> {
-    sendSuccess(response, { tags: await this.service.list(userIdOrThrow(request)) });
+    sendSuccess(response, await this.service.list(userIdOrThrow(request)));
   }
 
   async create(request: Request, response: Response): Promise<void> {
@@ -29,7 +29,7 @@ export class TagController {
       userIdOrThrow(request),
       createTagSchema.parse(request.body),
     );
-    sendSuccess(response, { tag }, 201);
+    sendSuccess(response, tag, 201);
   }
 
   async update(request: Request, response: Response): Promise<void> {
@@ -38,7 +38,7 @@ export class TagController {
       paramOrThrow(request, "id", "Tag ID"),
       updateTagSchema.parse(request.body),
     );
-    sendSuccess(response, { tag });
+    sendSuccess(response, tag);
   }
 
   async delete(request: Request, response: Response): Promise<void> {
@@ -52,7 +52,7 @@ export class TagController {
       paramOrThrow(request, "id", "Application ID"),
       addApplicationTagsSchema.parse(request.body),
     );
-    sendSuccess(response, { tags });
+    sendSuccess(response, tags);
   }
 
   async removeFromApplication(request: Request, response: Response): Promise<void> {
