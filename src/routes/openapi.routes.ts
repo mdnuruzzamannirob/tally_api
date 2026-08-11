@@ -13,12 +13,29 @@ export function createOpenApiRouter(): Router {
   const router = Router();
 
   router.get("/openapi.json", (_request, response) => {
-    response.type("application/json").send(openApiDocument);
+    response
+      .set("Cache-Control", "public, max-age=300")
+      .type("application/json")
+      .send(openApiDocument);
+  });
+  router.get("/docs", (request, response, next) => {
+    if (request.path.endsWith("/")) return next();
+    response.redirect(308, `${request.baseUrl}/docs/`);
   });
   router.use(
-    "/docs",
+    "/docs/",
     swaggerUi.serve,
-    swaggerUi.setup(openApiDocument, { customSiteTitle: "Tally API Documentation" }),
+    swaggerUi.setup(openApiDocument, {
+      customSiteTitle: "Tally API Documentation",
+      customCss: ".swagger-ui .topbar { display: none }",
+      swaggerOptions: {
+        displayRequestDuration: true,
+        filter: true,
+        persistAuthorization: true,
+        tryItOutEnabled: true,
+        docExpansion: "list",
+      },
+    }),
   );
 
   return router;

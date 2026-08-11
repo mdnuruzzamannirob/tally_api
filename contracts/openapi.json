@@ -3,37 +3,79 @@
   "info": {
     "title": "Tally API",
     "version": "1.0.0",
-    "description": "Versioned REST contract for the independently deployed Tally web application."
+    "description": "Complete REST contract for Tally. Use Bearer JWT authentication for protected endpoints; refresh and logout use the secure tally_rt cookie.",
+    "contact": { "name": "Tally API Support" }
   },
-  "servers": [{ "url": "/api/v1" }],
+  "servers": [
+    { "url": "/api/v1", "description": "Current host" },
+    { "url": "http://localhost:4000/api/v1", "description": "Local development" }
+  ],
+  "tags": [
+    { "name": "System", "description": "Service health and operational endpoints." },
+    { "name": "Authentication", "description": "Identity, sessions, passwords, and OAuth." },
+    { "name": "Users", "description": "User profile and preferences." },
+    { "name": "Applications", "description": "Job application lifecycle management." },
+    { "name": "Tags", "description": "Application categorization." },
+    { "name": "Notes", "description": "Application notes." },
+    { "name": "Interviews", "description": "Interview scheduling and tracking." },
+    { "name": "Dashboard", "description": "Aggregated user dashboard." },
+    { "name": "Export & Import", "description": "Portable backup and CSV workflows." }
+  ],
   "paths": {
     "/health": {
       "get": {
         "operationId": "health",
+        "tags": ["System"],
+        "summary": "Health",
+        "description": "Health using the versioned Tally API.",
         "responses": {
           "200": {
             "description": "Successful API response.",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } }
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessEnvelope" },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": {
+                    "status": "ok",
+                    "database": "connected",
+                    "timestamp": "2026-08-11T00:00:00.000Z"
+                  },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
+                }
+              }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
         }
       }
     },
     "/auth/register": {
       "post": {
         "operationId": "register",
+        "tags": ["Authentication"],
+        "summary": "Register",
+        "description": "Register using the versioned Tally API.",
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Register" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Register" },
+              "example": {
+                "name": "Nirob Hasan",
+                "email": "nirob@example.com",
+                "password": "StrongPass123!"
+              }
+            }
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful API response.",
+          "201": {
+            "description": "Resource created successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -41,21 +83,37 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resource created successfully.",
+                  "data": { "message": "Registration successful. Please verify your email." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/login": {
       "post": {
         "operationId": "login",
+        "tags": ["Authentication"],
+        "summary": "Login",
+        "description": "Login using the versioned Tally API.",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Login" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Login" },
+              "example": { "email": "nirob@example.com", "password": "StrongPass123!" }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -67,18 +125,45 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/AuthData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": {
+                    "accessToken": "eyJhbGciOiJIUzI1NiJ9.example.signature",
+                    "user": {
+                      "id": "cm0user123",
+                      "name": "Nirob Hasan",
+                      "email": "nirob@example.com",
+                      "emailVerified": true,
+                      "hasPassword": true,
+                      "providers": [],
+                      "preferences": {
+                        "theme": "dark",
+                        "defaultLandingPage": "dashboard",
+                        "timeZone": "Asia/Dhaka",
+                        "notificationsEnabled": true
+                      }
+                    }
+                  },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/logout": {
       "post": {
         "operationId": "logout",
+        "tags": ["Authentication"],
+        "summary": "Logout",
+        "description": "Logout using the versioned Tally API.",
         "security": [{ "refreshCookieAuth": [] }],
         "responses": {
           "200": {
@@ -90,18 +175,31 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/refresh": {
       "post": {
         "operationId": "refresh",
+        "tags": ["Authentication"],
+        "summary": "Refresh",
+        "description": "Refresh using the versioned Tally API.",
         "security": [{ "refreshCookieAuth": [] }],
         "responses": {
           "200": {
@@ -113,18 +211,31 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/AccessTokenData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "accessToken": "eyJhbGciOiJIUzI1NiJ9.refreshed.signature" },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/me": {
       "get": {
         "operationId": "getCurrentUser",
+        "tags": ["Authentication"],
+        "summary": "Get Current User",
+        "description": "Get Current User using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
@@ -136,21 +247,38 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/UserData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/verify-email": {
       "post": {
         "operationId": "verifyEmail",
+        "tags": ["Authentication"],
+        "summary": "Verify Email",
+        "description": "Verify Email using the versioned Tally API.",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Token" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Token" },
+              "example": { "token": "{{verificationToken}}" }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -162,21 +290,37 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/resend-verification": {
       "post": {
         "operationId": "resendVerification",
+        "tags": ["Authentication"],
+        "summary": "Resend Verification",
+        "description": "Resend Verification using the versioned Tally API.",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Email" },
+              "example": { "email": "nirob@example.com" }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -188,21 +332,37 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/forgot-password": {
       "post": {
         "operationId": "forgotPassword",
+        "tags": ["Authentication"],
+        "summary": "Forgot Password",
+        "description": "Forgot Password using the versioned Tally API.",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Email" },
+              "example": { "email": "nirob@example.com" }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -214,22 +374,36 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/reset-password": {
       "post": {
         "operationId": "resetPassword",
+        "tags": ["Authentication"],
+        "summary": "Reset Password",
+        "description": "Reset Password using the versioned Tally API.",
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/ResetPassword" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ResetPassword" },
+              "example": { "token": "{{resetToken}}", "password": "NewStrongPass123!" }
+            }
           }
         },
         "responses": {
@@ -242,23 +416,37 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/change-password": {
       "patch": {
         "operationId": "changePassword",
+        "tags": ["Authentication"],
+        "summary": "Change Password",
+        "description": "Change Password using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/ChangePassword" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangePassword" },
+              "example": { "currentPassword": "StrongPass123!", "newPassword": "NewStrongPass123!" }
+            }
           }
         },
         "responses": {
@@ -271,23 +459,39 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/set-password": {
       "post": {
         "operationId": "setPassword",
+        "tags": ["Authentication"],
+        "summary": "Set Password",
+        "description": "Set Password using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SetPassword" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SetPassword" },
+              "example": { "newPassword": "StrongPass123!" }
+            }
           }
         },
         "responses": {
@@ -300,18 +504,31 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/connected-accounts": {
       "get": {
         "operationId": "listConnectedAccounts",
+        "tags": ["Authentication"],
+        "summary": "List Connected Accounts",
+        "description": "List Connected Accounts using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
@@ -327,18 +544,30 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/connected-accounts/{provider}/link": {
       "post": {
         "operationId": "linkConnectedAccount",
+        "tags": ["Authentication"],
+        "summary": "Link Connected Account",
+        "description": "Link Connected Account using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "provider", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -357,18 +586,32 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/connected-accounts/{provider}": {
       "delete": {
         "operationId": "unlinkConnectedAccount",
+        "tags": ["Authentication"],
+        "summary": "Unlink Connected Account",
+        "description": "Unlink Connected Account using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "provider", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -383,71 +626,112 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/google": {
       "get": {
         "operationId": "startGoogleOAuth",
+        "tags": ["Authentication"],
+        "summary": "Start Google OAuth",
+        "description": "Start Google OAuth using the versioned Tally API.",
         "responses": {
           "302": {
-            "description": "Redirect to the configured OAuth provider or frontend callback."
-          }
+            "description": "Redirect to the configured OAuth provider or frontend callback.",
+            "headers": { "Location": { "schema": { "type": "string", "format": "uri" } } }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/google/callback": {
       "get": {
         "operationId": "completeGoogleOAuth",
+        "tags": ["Authentication"],
+        "summary": "Complete Google OAuth",
+        "description": "Complete Google OAuth using the versioned Tally API.",
         "parameters": [
           { "name": "code", "in": "query", "required": false, "schema": { "type": "string" } },
           { "name": "state", "in": "query", "required": false, "schema": { "type": "string" } }
         ],
         "responses": {
           "302": {
-            "description": "Redirect to the configured OAuth provider or frontend callback."
-          }
+            "description": "Redirect to the configured OAuth provider or frontend callback.",
+            "headers": { "Location": { "schema": { "type": "string", "format": "uri" } } }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/github": {
       "get": {
         "operationId": "startGitHubOAuth",
+        "tags": ["Authentication"],
+        "summary": "Start Git Hub OAuth",
+        "description": "Start Git Hub OAuth using the versioned Tally API.",
         "responses": {
           "302": {
-            "description": "Redirect to the configured OAuth provider or frontend callback."
-          }
+            "description": "Redirect to the configured OAuth provider or frontend callback.",
+            "headers": { "Location": { "schema": { "type": "string", "format": "uri" } } }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/auth/github/callback": {
       "get": {
         "operationId": "completeGitHubOAuth",
+        "tags": ["Authentication"],
+        "summary": "Complete Git Hub OAuth",
+        "description": "Complete Git Hub OAuth using the versioned Tally API.",
         "parameters": [
           { "name": "code", "in": "query", "required": false, "schema": { "type": "string" } },
           { "name": "state", "in": "query", "required": false, "schema": { "type": "string" } }
         ],
         "responses": {
           "302": {
-            "description": "Redirect to the configured OAuth provider or frontend callback."
-          }
+            "description": "Redirect to the configured OAuth provider or frontend callback.",
+            "headers": { "Location": { "schema": { "type": "string", "format": "uri" } } }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/users/me/profile": {
       "patch": {
         "operationId": "updateProfile",
+        "tags": ["Users"],
+        "summary": "Update Profile",
+        "description": "Update Profile using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Profile" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Profile" },
+              "example": { "name": "Nirob Hasan" }
+            }
           }
         },
         "responses": {
@@ -460,23 +744,44 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/UserData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/users/me/preferences": {
       "patch": {
         "operationId": "updatePreferences",
+        "tags": ["Users"],
+        "summary": "Update Preferences",
+        "description": "Update Preferences using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Preferences" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Preferences" },
+              "example": {
+                "theme": "dark",
+                "defaultLandingPage": "dashboard",
+                "timeZone": "Asia/Dhaka",
+                "notificationsEnabled": true
+              }
+            }
           }
         },
         "responses": {
@@ -489,18 +794,31 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/UserData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications": {
       "get": {
         "operationId": "listApplications",
+        "tags": ["Applications"],
+        "summary": "List Applications",
+        "description": "List Applications using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "page", "in": "query", "required": false, "schema": { "type": "string" } },
@@ -550,26 +868,55 @@
                       "properties": { "data": { "$ref": "#/components/schemas/ApplicationsData" } }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "post": {
         "operationId": "createApplication",
+        "tags": ["Applications"],
+        "summary": "Create Application",
+        "description": "Create Application using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CreateApplication" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApplication" },
+              "example": {
+                "company": "OpenAI",
+                "role": "Software Engineer",
+                "jobUrl": "https://example.com/jobs/software-engineer",
+                "location": "Remote",
+                "remoteType": "REMOTE",
+                "employmentType": "FULL_TIME",
+                "source": "LinkedIn",
+                "status": "APPLIED",
+                "appliedAt": "2026-08-11",
+                "salaryMin": 90000,
+                "salaryMax": 120000,
+                "currency": "USD",
+                "initialNote": "Submitted through the careers page."
+              }
+            }
           }
         },
         "responses": {
           "201": {
-            "description": "Successful API response.",
+            "description": "Resource created successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -577,18 +924,38 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resource created successfully.",
+                  "data": {
+                    "application": {
+                      "id": "cm0application123",
+                      "company": "OpenAI",
+                      "role": "Software Engineer",
+                      "status": "APPLIED"
+                    }
+                  },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}": {
       "get": {
         "operationId": "getApplication",
+        "tags": ["Applications"],
+        "summary": "Get Application",
+        "description": "Get Application using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -603,16 +970,29 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "patch": {
         "operationId": "updateApplication",
+        "tags": ["Applications"],
+        "summary": "Update Application",
+        "description": "Update Application using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -620,7 +1000,13 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateApplication" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateApplication" },
+              "example": {
+                "role": "Senior Software Engineer",
+                "nextFollowUpAt": "2026-08-18T09:00:00.000Z"
+              }
+            }
           }
         },
         "responses": {
@@ -633,16 +1019,30 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "delete": {
         "operationId": "deleteApplication",
+        "tags": ["Applications"],
+        "summary": "Delete Application",
+        "description": "Delete Application using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -657,18 +1057,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/archive": {
       "post": {
         "operationId": "archiveApplication",
+        "tags": ["Applications"],
+        "summary": "Archive Application",
+        "description": "Archive Application using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -683,18 +1097,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/unarchive": {
       "post": {
         "operationId": "unarchiveApplication",
+        "tags": ["Applications"],
+        "summary": "Unarchive Application",
+        "description": "Unarchive Application using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -709,18 +1137,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/status": {
       "post": {
         "operationId": "changeApplicationStatus",
+        "tags": ["Applications"],
+        "summary": "Change Application Status",
+        "description": "Change Application Status using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -728,7 +1170,10 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/ChangeStatus" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangeStatus" },
+              "example": { "toStatus": "INTERVIEW", "note": "Technical interview scheduled." }
+            }
           }
         },
         "responses": {
@@ -741,18 +1186,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/ApplicationData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/history": {
       "get": {
         "operationId": "getApplicationHistory",
+        "tags": ["Applications"],
+        "summary": "Get Application History",
+        "description": "Get Application History using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -767,18 +1226,31 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/HistoryData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/tags": {
       "get": {
         "operationId": "listTags",
+        "tags": ["Tags"],
+        "summary": "List Tags",
+        "description": "List Tags using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
@@ -790,45 +1262,73 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "post": {
         "operationId": "createTag",
+        "tags": ["Tags"],
+        "summary": "Create Tag",
+        "description": "Create Tag using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CreateTag" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTag" },
+              "example": { "name": "priority", "color": "#2563EB" }
+            }
           }
         },
         "responses": {
           "201": {
-            "description": "Successful API response.",
+            "description": "Resource created successfully.",
             "content": {
               "application/json": {
                 "schema": {
                   "allOf": [
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
-                    { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
+                    { "properties": { "data": { "$ref": "#/components/schemas/TagData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resource created successfully.",
+                  "data": { "tag": { "id": "cm0tag123", "name": "priority", "color": "#2563EB" } },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/tags/{id}": {
       "patch": {
         "operationId": "updateTag",
+        "tags": ["Tags"],
+        "summary": "Update Tag",
+        "description": "Update Tag using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -836,7 +1336,10 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateTag" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTag" },
+              "example": { "name": "high-priority", "color": "#DC2626" }
+            }
           }
         },
         "responses": {
@@ -847,18 +1350,32 @@
                 "schema": {
                   "allOf": [
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
-                    { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
+                    { "properties": { "data": { "$ref": "#/components/schemas/TagData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "delete": {
         "operationId": "deleteTag",
+        "tags": ["Tags"],
+        "summary": "Delete Tag",
+        "description": "Delete Tag using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -873,18 +1390,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/tags": {
       "post": {
         "operationId": "addApplicationTags",
+        "tags": ["Applications"],
+        "summary": "Add Application Tags",
+        "description": "Add Application Tags using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -892,7 +1423,10 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/AddTags" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddTags" },
+              "example": { "tagIds": ["{{tagId}}"] }
+            }
           }
         },
         "responses": {
@@ -905,18 +1439,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/TagsData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/tags/{tagId}": {
       "delete": {
         "operationId": "removeApplicationTag",
+        "tags": ["Applications"],
+        "summary": "Remove Application Tag",
+        "description": "Remove Application Tag using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
@@ -932,18 +1480,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/notes": {
       "get": {
         "operationId": "listApplicationNotes",
+        "tags": ["Applications"],
+        "summary": "List Application Notes",
+        "description": "List Application Notes using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -958,27 +1520,45 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/NotesData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "post": {
         "operationId": "createNote",
+        "tags": ["Applications"],
+        "summary": "Create Note",
+        "description": "Create Note using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Note" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Note" },
+              "example": { "content": "Follow up with the recruiter next week." }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Successful API response.",
+            "description": "Resource created successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -986,25 +1566,46 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/NoteData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resource created successfully.",
+                  "data": {
+                    "note": { "id": "cm0note123", "content": "Follow up with the recruiter." }
+                  },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/notes/{id}": {
       "patch": {
         "operationId": "updateNote",
+        "tags": ["Notes"],
+        "summary": "Update Note",
+        "description": "Update Note using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Note" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Note" },
+              "example": { "content": "Follow up with the recruiter next week." }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -1016,16 +1617,30 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/NoteData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "delete": {
         "operationId": "deleteNote",
+        "tags": ["Notes"],
+        "summary": "Delete Note",
+        "description": "Delete Note using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -1040,18 +1655,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/interviews": {
       "get": {
         "operationId": "listInterviews",
+        "tags": ["Interviews"],
+        "summary": "List Interviews",
+        "description": "List Interviews using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "range", "in": "query", "required": false, "schema": { "type": "string" } },
@@ -1074,18 +1703,30 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/InterviewsData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/applications/{id}/interviews": {
       "get": {
         "operationId": "listApplicationInterviews",
+        "tags": ["Applications"],
+        "summary": "List Application Interviews",
+        "description": "List Application Interviews using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
@@ -1109,16 +1750,29 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/InterviewsData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "post": {
         "operationId": "createInterview",
+        "tags": ["Applications"],
+        "summary": "Create Interview",
+        "description": "Create Interview using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -1126,12 +1780,21 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CreateInterview" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInterview" },
+              "example": {
+                "type": "TECHNICAL",
+                "scheduledAt": "2026-08-20T10:00:00.000Z",
+                "interviewerName": "Alex Morgan",
+                "meetingLink": "https://meet.example.com/tally-interview",
+                "status": "SCHEDULED"
+              }
+            }
           }
         },
         "responses": {
           "201": {
-            "description": "Successful API response.",
+            "description": "Resource created successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1139,18 +1802,39 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/InterviewData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resource created successfully.",
+                  "data": {
+                    "interview": {
+                      "id": "cm0interview123",
+                      "type": "TECHNICAL",
+                      "status": "SCHEDULED",
+                      "scheduledAt": "2026-08-20T10:00:00.000Z"
+                    }
+                  },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/interviews/{id}": {
       "patch": {
         "operationId": "updateInterview",
+        "tags": ["Interviews"],
+        "summary": "Update Interview",
+        "description": "Update Interview using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -1158,7 +1842,10 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateInterview" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateInterview" },
+              "example": { "status": "COMPLETED", "notes": "Strong technical discussion." }
+            }
           }
         },
         "responses": {
@@ -1171,16 +1858,30 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/InterviewData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       },
       "delete": {
         "operationId": "deleteInterview",
+        "tags": ["Interviews"],
+        "summary": "Delete Interview",
+        "description": "Delete Interview using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -1195,18 +1896,32 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/dashboard": {
       "get": {
         "operationId": "getDashboard",
+        "tags": ["Dashboard"],
+        "summary": "Get Dashboard",
+        "description": "Get Dashboard using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
@@ -1218,53 +1933,110 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/DashboardData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/export/json": {
       "get": {
         "operationId": "exportJson",
+        "tags": ["Export & Import"],
+        "summary": "Export Json",
+        "description": "Export Json using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
             "description": "Downloadable export file.",
+            "headers": {
+              "Content-Disposition": {
+                "description": "Attachment filename.",
+                "schema": { "type": "string" }
+              }
+            },
             "content": {
               "application/json": { "schema": { "type": "string", "format": "binary" } },
               "text/csv": { "schema": { "type": "string", "format": "binary" } }
             }
-          }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/export/csv": {
       "get": {
         "operationId": "exportCsv",
+        "tags": ["Export & Import"],
+        "summary": "Export Csv",
+        "description": "Export Csv using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
             "description": "Downloadable export file.",
+            "headers": {
+              "Content-Disposition": {
+                "description": "Attachment filename.",
+                "schema": { "type": "string" }
+              }
+            },
             "content": {
               "application/json": { "schema": { "type": "string", "format": "binary" } },
               "text/csv": { "schema": { "type": "string", "format": "binary" } }
             }
-          }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     },
     "/import/json": {
       "post": {
         "operationId": "importJson",
+        "tags": ["Export & Import"],
+        "summary": "Import Json",
+        "description": "Import Json using the versioned Tally API.",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/ImportBackup" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ImportBackup" },
+              "example": {
+                "version": 1,
+                "exportedAt": "2026-08-11T00:00:00.000Z",
+                "profile": {
+                  "name": "Nirob Hasan",
+                  "preferences": {
+                    "theme": "DARK",
+                    "defaultLandingPage": "DASHBOARD",
+                    "timeZone": "Asia/Dhaka",
+                    "notificationsEnabled": true
+                  }
+                },
+                "tags": [],
+                "applications": []
+              }
+            }
           }
         },
         "responses": {
@@ -1277,12 +2049,22 @@
                     { "$ref": "#/components/schemas/SuccessEnvelope" },
                     { "properties": { "data": { "$ref": "#/components/schemas/MessageData" } } }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": { "message": "Request completed." },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
         }
       }
     }
@@ -1631,6 +2413,13 @@
         },
         "additionalProperties": true
       },
+      "TagData": {
+        "type": "object",
+        "properties": {
+          "tag": { "type": "object", "properties": {}, "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
       "NotesData": {
         "type": "object",
         "properties": {
@@ -1669,10 +2458,116 @@
       "DashboardData": { "type": "object", "properties": {}, "additionalProperties": true }
     },
     "responses": {
-      "Error": {
-        "description": "API error",
+      "BadRequest": {
+        "description": "The request is invalid.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorEnvelope" } }
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "The request is invalid.",
+              "error": { "code": "BAD_REQUEST" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Authentication is required.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "Authentication is required.",
+              "error": { "code": "UNAUTHORIZED" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The authenticated user cannot perform this action.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "The authenticated user cannot perform this action.",
+              "error": { "code": "FORBIDDEN" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested resource was not found.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "The requested resource was not found.",
+              "error": { "code": "NOT_FOUND" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The request conflicts with existing data.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "The request conflicts with existing data.",
+              "error": { "code": "CONFLICT" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Too many requests.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "Too many requests.",
+              "error": { "code": "RATE_LIMITED" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "An unexpected error occurred.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "An unexpected error occurred.",
+              "error": { "code": "INTERNAL_ERROR" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Service temporarily unavailable.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" },
+            "example": {
+              "success": false,
+              "message": "Service temporarily unavailable.",
+              "error": { "code": "SERVICE_UNAVAILABLE" },
+              "meta": { "requestId": "req_01HZXEXAMPLE" }
+            }
+          }
         }
       }
     }

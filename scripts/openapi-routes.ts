@@ -11,7 +11,13 @@ export type OpenApiRoute = {
 
 export const openApiRoutes: OpenApiRoute[] = [
   { method: "get", path: "/health", operationId: "health" },
-  { method: "post", path: "/auth/register", operationId: "register", body: "Register" },
+  {
+    method: "post",
+    path: "/auth/register",
+    operationId: "register",
+    body: "Register",
+    response: "created",
+  },
   { method: "post", path: "/auth/login", operationId: "login", body: "Login" },
   { method: "post", path: "/auth/logout", operationId: "logout", auth: "cookie" },
   { method: "post", path: "/auth/refresh", operationId: "refresh", auth: "cookie" },

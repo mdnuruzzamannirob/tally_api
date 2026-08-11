@@ -50,10 +50,19 @@ describe("API application", () => {
       paths: expect.any(Object),
     });
 
+    const docsRedirect = await request(app).get("/api/v1/docs");
+    expect(docsRedirect.status).toBe(308);
+    expect(docsRedirect.headers.location).toBe("/api/v1/docs/");
+
     const docsResponse = await request(app).get("/api/v1/docs/");
     expect(docsResponse.status).toBe(200);
     expect(docsResponse.type).toContain("text/html");
     expect(docsResponse.text).toContain("Tally API Documentation");
+    expect(docsResponse.text).toContain("swagger-ui-init.js");
+
+    const swaggerAsset = await request(app).get("/api/v1/docs/swagger-ui.css");
+    expect(swaggerAsset.status).toBe(200);
+    expect(swaggerAsset.type).toContain("text/css");
   });
 
   it("returns a structured error for malformed JSON", async () => {
