@@ -1,16 +1,16 @@
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import type { Express } from "express";
 import express from "express";
 import helmet from "helmet";
-import type { Express } from "express";
 
-import { API_PREFIX, JSON_BODY_LIMIT } from "./config/constants.js";
-import { corsOptions } from "./config/cors.js";
-import { errorMiddleware } from "./middleware/error.middleware.js";
-import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
-import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
-import { requestLoggerMiddleware } from "./middleware/request-logger.middleware.js";
+import { API_PREFIX, JSON_BODY_LIMIT } from "./core/config/app.config.js";
+import { corsOptions } from "./core/config/cors.config.js";
+import { errorMiddleware } from "./http/middleware/error-handler.middleware.js";
+import { notFoundMiddleware } from "./http/middleware/not-found.middleware.js";
+import { requestIdMiddleware } from "./http/middleware/request-id.middleware.js";
+import { requestLoggerMiddleware } from "./http/middleware/request-logger.middleware.js";
 import { appRouter, createApiRouter, type AppDependencies } from "./routes/index.js";
 
 export type { AppDependencies } from "./routes/index.js";

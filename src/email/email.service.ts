@@ -1,27 +1,14 @@
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
-import {
-  TransactionalEmailProvider,
-  type EmailMessage,
-  type EmailProvider,
-} from "./email.provider.js";
+import { emailConfig } from "../core/config/email.config.js";
+import { buildPasswordResetUrl, buildVerificationUrl } from "./email-links.js";
+import type { EmailMessage, EmailProvider, EmailService } from "./email.types.js";
+import { ConsoleEmailProvider } from "./providers/console.provider.js";
+import { MailgunEmailProvider } from "./providers/mailgun.provider.js";
+import { ResendEmailProvider } from "./providers/resend.provider.js";
+import { SendGridEmailProvider } from "./providers/sendgrid.provider.js";
+import { SmtpEmailProvider } from "./providers/smtp.provider.js";
 
-export interface EmailService {
-  sendVerificationEmail(input: { email: string; token: string }): Promise<void>;
-  sendPasswordResetEmail(input: { email: string; token: string }): Promise<void>;
-}
-
-export function buildVerificationUrl(token: string): string {
-  const url = new URL("/verify-email", env.WEB_APP_URL);
-  url.searchParams.set("token", token);
-  return url.toString();
-}
-
-export function buildPasswordResetUrl(token: string): string {
-  const url = new URL("/reset-password", env.WEB_APP_URL);
-  url.searchParams.set("token", token);
-  return url.toString();
-}
+export type { EmailService } from "./email.types.js";
+export { buildPasswordResetUrl, buildVerificationUrl } from "./email-links.js";
 
 function verificationMessage(input: { email: string; token: string }): EmailMessage {
   return {
@@ -39,19 +26,7 @@ function passwordResetMessage(input: { email: string; token: string }): EmailMes
   };
 }
 
-export class ConsoleEmailService implements EmailService {
-  async sendVerificationEmail(input: { email: string; token: string }): Promise<void> {
-    void input;
-    logger.info({ event: "verification_email_created" }, "Verification email created");
-  }
-
-  async sendPasswordResetEmail(input: { email: string; token: string }): Promise<void> {
-    void input;
-    logger.info({ event: "password_reset_email_created" }, "Password reset email created");
-  }
-}
-
-class TransactionalEmailService implements EmailService {
+class DefaultEmailService implements EmailService {
   constructor(private readonly provider: EmailProvider) {}
 
   private send(message: EmailMessage): Promise<void> {
@@ -68,6 +43,12 @@ class TransactionalEmailService implements EmailService {
 }
 
 export function createEmailService(): EmailService {
-  if (env.EMAIL_PROVIDER === "console") return new ConsoleEmailService();
-  return new TransactionalEmailService(new TransactionalEmailProvider(env.EMAIL_PROVIDER));
+  const providers: Record<typeof emailConfig.provider, EmailProvider> = {
+    console: new ConsoleEmailProvider(),
+    resend: new ResendEmailProvider(),
+    sendgrid: new SendGridEmailProvider(),
+    mailgun: new MailgunEmailProvider(),
+    smtp: new SmtpEmailProvider(),
+  };
+  return new DefaultEmailService(providers[emailConfig.provider]);
 }

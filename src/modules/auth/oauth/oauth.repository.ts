@@ -1,7 +1,5 @@
 import type { PrismaClient } from "../../../generated/prisma/client.js";
-
-export type OAuthProvider = "GOOGLE" | "GITHUB";
-export type OAuthIntent = "LOGIN" | "LINK";
+import type { OAuthIntent, OAuthProvider } from "./oauth.types.js";
 
 export type OAuthStateRecord = {
   provider: OAuthProvider;

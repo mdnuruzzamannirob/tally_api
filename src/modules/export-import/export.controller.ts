@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 
-import { ApiError } from "../../lib/api-error.js";
+import { ApiError } from "../../core/errors/api-error.js";
 import type { ExportService } from "./export.service.js";
 
 export class ExportController {

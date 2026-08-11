@@ -1,0 +1,23 @@
+export const loggerRedact = {
+  paths: [
+    "req.headers.authorization",
+    "req.headers.cookie",
+    "req.headers.x-api-key",
+    "req.headers.referer",
+    "req.cookies",
+    "req.url",
+    "req.query",
+    "req.params",
+    "req.body",
+    "res.headers.set-cookie",
+    "res.headers.location",
+    "err.body",
+    "err.message",
+    "err.stack",
+    "password",
+    "passwordHash",
+    "token",
+    "refreshToken",
+  ],
+  censor: "[REDACTED]",
+};

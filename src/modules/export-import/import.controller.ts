@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 
-import { ApiError } from "../../lib/api-error.js";
-import { sendSuccess } from "../../lib/api-response.js";
+import { ApiError } from "../../core/errors/api-error.js";
+import { sendSuccess } from "../../http/response/success-response.js";
 import type { ImportService } from "./import.service.js";
-import { importBackupSchema } from "./import.validators.js";
+import { importBackupSchema } from "./export-import.validators.js";
 
 export class ImportController {
   constructor(private readonly service: ImportService) {}

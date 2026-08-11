@@ -1,48 +1,46 @@
 import { Router } from "express";
 
 import { createEmailService } from "../email/email.service.js";
-import { prisma } from "../lib/prisma.js";
-import { globalApiRateLimit } from "../middleware/global-rate-limit.middleware.js";
-import { ApplicationRepository } from "../modules/applications/application.repository.js";
-import { createApplicationsRouter } from "../modules/applications/application.routes.js";
-import { ApplicationService } from "../modules/applications/application.service.js";
+import { prisma } from "../core/database/prisma.js";
+import { globalApiRateLimit } from "../http/middleware/rate-limit/global-rate-limit.middleware.js";
+import { ApplicationRepository } from "../modules/applications/applications.repository.js";
+import { createApplicationsRouter } from "../modules/applications/applications.routes.js";
+import { ApplicationService } from "../modules/applications/applications.service.js";
 import { AuthRepository } from "../modules/auth/auth.repository.js";
 import { createAuthRouter } from "../modules/auth/auth.routes.js";
 import { AuthService } from "../modules/auth/auth.service.js";
-import { createConnectedAccountsRouter } from "../modules/auth/connected-accounts.routes.js";
-import { createGitHubOAuthRouter } from "../modules/auth/oauth/github-oauth.routes.js";
-import { GitHubOAuthService } from "../modules/auth/oauth/github-oauth.service.js";
-import { GitHubOAuthHttpClient } from "../modules/auth/oauth/github.oauth.js";
-import { createGoogleOAuthRouter } from "../modules/auth/oauth/google-oauth.routes.js";
-import { GoogleOAuthService } from "../modules/auth/oauth/google-oauth.service.js";
-import { GoogleOAuthHttpClient } from "../modules/auth/oauth/google.oauth.js";
+import { createConnectedAccountsRouter } from "../modules/auth/connected-accounts/connected-accounts.routes.js";
+import { createOAuthRouter } from "../modules/auth/oauth/oauth.routes.js";
+import { OAuthService } from "../modules/auth/oauth/oauth.service.js";
 import { OAuthRepository } from "../modules/auth/oauth/oauth.repository.js";
+import { GitHubOAuthHttpClient } from "../modules/auth/oauth/providers/github.provider.js";
+import { GoogleOAuthHttpClient } from "../modules/auth/oauth/providers/google.provider.js";
 import { DashboardRepository } from "../modules/dashboard/dashboard.repository.js";
 import { createDashboardRouter } from "../modules/dashboard/dashboard.routes.js";
 import { DashboardService } from "../modules/dashboard/dashboard.service.js";
-import { ExportRepository } from "../modules/export-import/export.repository.js";
-import { createExportRouter } from "../modules/export-import/export.routes.js";
+import { ExportRepository } from "../modules/export-import/export-import.repository.js";
+import { createExportRouter } from "../modules/export-import/export-import.routes.js";
 import { ExportService } from "../modules/export-import/export.service.js";
-import { ImportRepository } from "../modules/export-import/import.repository.js";
-import { createImportRouter } from "../modules/export-import/import.routes.js";
+import { ImportRepository } from "../modules/export-import/export-import.repository.js";
+import { createImportRouter } from "../modules/export-import/export-import.routes.js";
 import { ImportService } from "../modules/export-import/import.service.js";
 import { createHealthRouter } from "../modules/health/health.routes.js";
 import { HealthService } from "../modules/health/health.service.js";
-import { InterviewRepository } from "../modules/interviews/interview.repository.js";
+import { InterviewRepository } from "../modules/interviews/interviews.repository.js";
 import {
   createApplicationInterviewsRouter,
   createInterviewsRouter,
-} from "../modules/interviews/interview.routes.js";
-import { InterviewService } from "../modules/interviews/interview.service.js";
-import { NoteRepository } from "../modules/notes/note.repository.js";
-import { createApplicationNotesRouter, createNotesRouter } from "../modules/notes/note.routes.js";
-import { NoteService } from "../modules/notes/note.service.js";
+} from "../modules/interviews/interviews.routes.js";
+import { InterviewService } from "../modules/interviews/interviews.service.js";
+import { NoteRepository } from "../modules/notes/notes.repository.js";
+import { createApplicationNotesRouter, createNotesRouter } from "../modules/notes/notes.routes.js";
+import { NoteService } from "../modules/notes/notes.service.js";
 import { createApplicationTagRouter } from "../modules/tags/application-tag.routes.js";
-import { TagRepository } from "../modules/tags/tag.repository.js";
-import { createTagsRouter } from "../modules/tags/tag.routes.js";
-import { TagService } from "../modules/tags/tag.service.js";
-import { UserRepository } from "../modules/users/user.repository.js";
-import { UserService } from "../modules/users/user.service.js";
+import { TagRepository } from "../modules/tags/tags.repository.js";
+import { createTagsRouter } from "../modules/tags/tags.routes.js";
+import { TagService } from "../modules/tags/tags.service.js";
+import { UserRepository } from "../modules/users/users.repository.js";
+import { UserService } from "../modules/users/users.service.js";
 import { createUsersRouter } from "../modules/users/users.routes.js";
 import { createOpenApiRouter } from "./openapi.routes.js";
 
@@ -51,8 +49,8 @@ export interface AppDependencies {
   healthService?: HealthService;
   authService?: AuthService;
   userService?: UserService;
-  googleOAuthService?: GoogleOAuthService;
-  githubOAuthService?: GitHubOAuthService;
+  googleOAuthService?: OAuthService;
+  githubOAuthService?: OAuthService;
   applicationService?: ApplicationService;
   tagService?: TagService;
   noteService?: NoteService;
@@ -74,8 +72,8 @@ function createAppDependencies(overrides: AppDependencies = {}): ResolvedAppDepe
     healthService: new HealthService(overrides.checkDatabase ?? defaultDatabaseCheck),
     authService: new AuthService(new AuthRepository(prisma), createEmailService()),
     userService: new UserService(new UserRepository(prisma)),
-    googleOAuthService: new GoogleOAuthService(oauthRepository, new GoogleOAuthHttpClient()),
-    githubOAuthService: new GitHubOAuthService(oauthRepository, new GitHubOAuthHttpClient()),
+    googleOAuthService: new OAuthService("GOOGLE", oauthRepository, new GoogleOAuthHttpClient()),
+    githubOAuthService: new OAuthService("GITHUB", oauthRepository, new GitHubOAuthHttpClient()),
     applicationService: new ApplicationService(new ApplicationRepository(prisma)),
     tagService: new TagService(new TagRepository(prisma)),
     noteService: new NoteService(new NoteRepository(prisma)),
@@ -101,14 +99,18 @@ export function createApiRouter(overrides: AppDependencies = {}): Router {
   router.use("/auth", createAuthRouter(dependencies.authService));
   router.use(
     "/auth",
-    createConnectedAccountsRouter(
-      dependencies.authService,
-      dependencies.googleOAuthService,
-      dependencies.githubOAuthService,
-    ),
+    createConnectedAccountsRouter(dependencies.authService, {
+      google: dependencies.googleOAuthService,
+      github: dependencies.githubOAuthService,
+    }),
   );
-  router.use("/auth", createGoogleOAuthRouter(dependencies.googleOAuthService));
-  router.use("/auth", createGitHubOAuthRouter(dependencies.githubOAuthService));
+  router.use(
+    "/auth",
+    createOAuthRouter({
+      google: dependencies.googleOAuthService,
+      github: dependencies.githubOAuthService,
+    }),
+  );
   router.use("/users", createUsersRouter(dependencies.userService));
   router.use("/applications", createApplicationsRouter(dependencies.applicationService));
   router.use("/applications", createApplicationTagRouter(dependencies.tagService));

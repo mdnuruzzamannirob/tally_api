@@ -18,7 +18,7 @@
     "format:write": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:unit": "vitest run tests/unit tests/integration/app.test.ts",
+    "test:unit": "vitest run tests/unit tests/integration/health/app.test.ts",
     "test:integration": "REQUIRE_TEST_DATABASE=true vitest run tests/integration --no-file-parallelism",
     "test:all": "pnpm test:unit && pnpm test:integration",
     "test:smoke": "tsx scripts/release-smoke.ts",

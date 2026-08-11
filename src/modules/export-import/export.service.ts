@@ -1,32 +1,6 @@
-import { ApiError } from "../../lib/api-error.js";
-import type { ExportRepository } from "./export.repository.js";
-
-const csvColumns = [
-  "company",
-  "role",
-  "status",
-  "jobUrl",
-  "location",
-  "remoteType",
-  "employmentType",
-  "source",
-  "appliedAt",
-  "nextFollowUpAt",
-  "salaryMin",
-  "salaryMax",
-  "currency",
-  "tags",
-  "createdAt",
-  "updatedAt",
-] as const;
-
-function neutralizeCsvFormula(value: string): string {
-  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
-}
-function escapeCsv(value: string | null): string {
-  const normalized = value === null ? "" : neutralizeCsvFormula(value);
-  return `"${normalized.replaceAll('"', '""')}"`;
-}
+import { ApiError } from "../../core/errors/api-error.js";
+import { buildApplicationsCsv } from "./csv/csv-export.service.js";
+import type { ExportRepository } from "./export-import.repository.js";
 
 export class ExportService {
   constructor(private readonly repository: ExportRepository) {}
@@ -83,28 +57,6 @@ export class ExportService {
 
   async exportCsv(userId: string): Promise<string> {
     const applications = await this.repository.listCsvApplications(userId);
-    const rows = applications.map((application) =>
-      [
-        application.company,
-        application.role,
-        application.status,
-        application.jobUrl,
-        application.location,
-        application.remoteType,
-        application.employmentType,
-        application.source,
-        application.appliedAt?.toISOString().slice(0, 10) ?? null,
-        application.nextFollowUpAt?.toISOString() ?? null,
-        application.salaryMin?.toString() ?? null,
-        application.salaryMax?.toString() ?? null,
-        application.currency,
-        JSON.stringify(application.tags.map(({ tag }) => neutralizeCsvFormula(tag.name))),
-        application.createdAt.toISOString(),
-        application.updatedAt.toISOString(),
-      ]
-        .map(escapeCsv)
-        .join(","),
-    );
-    return [csvColumns.join(","), ...rows].join("\r\n");
+    return buildApplicationsCsv(applications);
   }
 }

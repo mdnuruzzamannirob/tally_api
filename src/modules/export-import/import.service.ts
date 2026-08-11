@@ -1,5 +1,5 @@
-import type { ImportRepository } from "./import.repository.js";
-import type { ImportBackup } from "./import.validators.js";
+import type { ImportRepository } from "./export-import.repository.js";
+import type { ImportBackup } from "./export-import.validators.js";
 
 export class ImportService {
   constructor(private readonly repository: ImportRepository) {}

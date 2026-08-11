@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { asyncHandler } from "../../lib/async-handler.js";
-import { authenticate } from "../../middleware/auth.middleware.js";
+import { asyncHandler } from "../../http/async-handler.js";
+import { authenticate } from "../../http/middleware/auth.middleware.js";
 import { DashboardController } from "./dashboard.controller.js";
 import type { DashboardService } from "./dashboard.service.js";
 

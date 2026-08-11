@@ -1,20 +1,26 @@
 import type { RequestHandler } from "express";
 
-import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from "../../config/cookie.js";
-import { ApiError } from "../../lib/api-error.js";
-import { sendSuccess } from "../../lib/api-response.js";
-import { asyncHandler } from "../../lib/async-handler.js";
+import {
+  clearRefreshCookie,
+  REFRESH_COOKIE_NAME,
+  setRefreshCookie,
+} from "../../core/config/cookie.config.js";
+import { ApiError } from "../../core/errors/api-error.js";
+import { sendSuccess } from "../../http/response/success-response.js";
+import { asyncHandler } from "../../http/async-handler.js";
 import type { AuthService } from "./auth.service.js";
 import {
-  changePasswordSchema,
-  forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resendVerificationSchema,
-  resetPasswordSchema,
-  setPasswordSchema,
   verifyEmailSchema,
 } from "./auth.validators.js";
+import {
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  setPasswordSchema,
+} from "./password/password.validators.js";
 
 export function createAuthController(authService: AuthService): {
   register: RequestHandler;

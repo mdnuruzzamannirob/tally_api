@@ -4,11 +4,6 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 const identityRoots = ["src/modules/auth", "src/modules/users"];
-const repositoryFiles = new Set([
-  "src/modules/auth/auth.repository.ts",
-  "src/modules/users/user.repository.ts",
-  "src/modules/auth/oauth/oauth.repository.ts",
-]);
 
 const forbiddenForApplicationLayer = [
   /PrismaClient/,
@@ -36,7 +31,7 @@ const violations: string[] = [];
 
 for (const relativePath of identityRoots.flatMap(collectTypeScriptFiles)) {
   const source = readFileSync(join(projectRoot, relativePath), "utf8");
-  if (repositoryFiles.has(relativePath)) continue;
+  if (relativePath.endsWith(".repository.ts")) continue;
 
   for (const pattern of forbiddenForApplicationLayer) {
     if (pattern.test(source)) {

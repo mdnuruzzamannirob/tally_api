@@ -1,0 +1,15 @@
+model OauthAccount {
+  id                String        @id @default(cuid())
+  userId            String        @map("user_id")
+  provider          OauthProvider
+  providerAccountId String        @map("provider_account_id")
+  email             String?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("oauth_accounts")
+}

@@ -1,4 +1,4 @@
-import { ApiError } from "../../lib/api-error.js";
+import { ApiError } from "../../core/errors/api-error.js";
 
 export class HealthService {
   constructor(private readonly checkDatabase: () => Promise<void>) {}

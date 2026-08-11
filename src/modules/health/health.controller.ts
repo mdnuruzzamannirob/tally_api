@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 
-import { sendSuccess } from "../../lib/api-response.js";
+import { sendSuccess } from "../../http/response/success-response.js";
 import type { HealthService } from "./health.service.js";
 
 export class HealthController {

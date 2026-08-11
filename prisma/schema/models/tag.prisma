@@ -12,16 +12,3 @@ model Tag {
   @@index([userId])
   @@map("tags")
 }
-
-model ApplicationTag {
-  applicationId String   @map("application_id")
-  tagId         String   @map("tag_id")
-  assignedAt    DateTime @default(now()) @db.Timestamptz(3) @map("assigned_at")
-
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([applicationId, tagId])
-  @@index([tagId])
-  @@map("application_tags")
-}

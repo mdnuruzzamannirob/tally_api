@@ -1,7 +1,7 @@
 import { app } from "./app.js";
-import { env } from "./config/env.js";
-import { disconnectDatabase } from "./lib/prisma.js";
-import { logger } from "./lib/logger.js";
+import { env } from "./core/config/env.js";
+import { disconnectDatabase } from "./core/database/prisma.js";
+import { logger } from "./core/logger/logger.js";
 
 const port = env.PORT;
 const shutdownTimeoutMs = 10_000;
