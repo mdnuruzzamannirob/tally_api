@@ -17,6 +17,8 @@ pnpm lint
 pnpm typecheck
 pnpm test:all
 pnpm build
+pnpm contracts:generate
+pnpm contracts:validate
 ```
 
 After deploying to the target environment, run the smoke test with only the
@@ -34,6 +36,7 @@ does not print environment values, response bodies, tokens, or credentials.
 ## Release-owner checklist
 
 - [ ] CI passed for the release commit.
+- [ ] Generated OpenAPI and Postman contract artifacts are current and validate.
 - [ ] A clean migration was applied to preview/staging before production.
 - [ ] Runtime receives only `DATABASE_URL`; the migration job receives the
       separate `MIGRATION_DATABASE_URL`.

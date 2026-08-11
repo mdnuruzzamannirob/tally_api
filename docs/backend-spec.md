@@ -96,43 +96,37 @@ Routes
 
 ## 5. Backend Folder Structure
 
-Recommended structure:
+Implemented structure:
 
 ```txt
 api/
 ├── src/
 │   ├── server.ts
 │   ├── app.ts
-│   ├── config/
-│   │   ├── env.ts
-│   │   ├── cors.ts
-│   │   ├── cookie.ts
-│   │   └── constants.ts
-│   ├── lib/
-│   │   ├── prisma.ts
-│   │   ├── logger.ts
-│   │   ├── api-error.ts
+│   ├── core/
+│   │   ├── config/                # validated environment and runtime config
+│   │   ├── database/              # Prisma client and test database helpers
+│   │   ├── errors/                # ApiError
+│   │   ├── logger/                # Pino config and redaction
+│   │   └── security/              # crypto, JWT, password helpers
+│   ├── http/
 │   │   ├── async-handler.ts
 │   │   ├── pagination.ts
-│   │   ├── crypto.ts
-│   │   └── jwt.ts
-│   ├── middleware/
 │   │   ├── auth.middleware.ts
 │   │   ├── verified.middleware.ts
-│   │   ├── validation.middleware.ts
-│   │   ├── error.middleware.ts
-│   │   ├── not-found.middleware.ts
-│   │   ├── global-rate-limit.middleware.ts
-│   │   ├── request-id.middleware.ts
-│   │   ├── request-logger.middleware.ts
-│   │   └── refresh-origin.middleware.ts
+│   │   ├── middleware/            # errors, request IDs/logging, rate limits, CORS guards
+│   │   ├── response/              # success and error envelopes
+│   │   ├── types/express.d.ts
+│   │   └── validation/
 │   ├── email/
 │   │   ├── email.service.ts
-│   │   ├── email.provider.ts
-│   │   └── templates/                 # optional; currently unused
+│   │   ├── email-links.ts
+│   │   ├── email.types.ts
+│   │   └── providers/             # console, SMTP, Resend, SendGrid, Mailgun
 │   ├── modules/
 │   │   ├── auth/
-│   │   │   └── oauth/
+│   │   │   ├── session/, password/, verification/, connected-accounts/, oauth/
+│   │   │   └── oauth/providers/   # Google and GitHub HTTP clients
 │   │   ├── users/
 │   │   ├── applications/
 │   │   ├── tags/
@@ -144,8 +138,6 @@ api/
 │   ├── routes/
 │   │   ├── index.ts
 │   │   └── openapi.routes.ts
-│   ├── types/
-│   │   └── express.d.ts
 │   └── generated/
 │       └── prisma/
 ├── prisma/
@@ -156,7 +148,12 @@ api/
 │   ├── migrations/
 │   └── seed.ts
 ├── contracts/
-│   └── openapi.json              # versioned public API contract artifact
+│   ├── openapi.json              # versioned public OpenAPI artifact
+│   └── tally.postman.json        # import-ready Postman collection
+├── scripts/
+│   ├── generate-contracts.ts     # generates both contract artifacts
+│   ├── validate-openapi.ts
+│   └── validate-postman.ts
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -181,18 +178,18 @@ Example:
 
 ```txt
 modules/applications/
-├── application.routes.ts
-├── application.controller.ts
-├── application.service.ts
-├── application.repository.ts
-├── application.validators.ts
-├── application.types.ts
-└── application.constants.ts
+├── applications.routes.ts
+├── applications.controller.ts
+├── applications.service.ts
+├── applications.repository.ts
+├── applications.query.ts
+└── applications.validators.ts
 ```
 
-Use this full pattern for every applicable feature. Small read-only modules may
-omit files they do not need, but must still keep their constants, types, and
-HTTP responsibilities inside the feature boundary.
+Feature filenames use plural naming. Modules contain only the files their
+responsibilities require; related types/constants stay within the module.
+Controllers own HTTP translation, services own use cases, repositories own
+Prisma access, and validators own request parsing.
 
 ---
 
@@ -2451,7 +2448,7 @@ CI should:
 
 # 31. Scripts
 
-Recommended `package.json` scripts:
+Implemented `package.json` scripts are grouped by responsibility:
 
 ```json
 {
@@ -2459,15 +2456,28 @@ Recommended `package.json` scripts:
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
-    "lint": "eslint src",
+    "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit tests/integration/health/app.test.ts",
+    "test:integration": "REQUIRE_TEST_DATABASE=true vitest run tests/integration --no-file-parallelism",
+    "test:all": "pnpm test:unit && pnpm test:integration",
+    "test:smoke": "tsx scripts/release-smoke.ts",
+    "contracts:generate": "tsx scripts/generate-contracts.ts",
+    "contracts:validate": "pnpm contracts:validate:openapi && pnpm contracts:validate:postman",
+    "contracts:validate:openapi": "tsx scripts/validate-openapi.ts",
+    "contracts:validate:postman": "tsx scripts/validate-postman.ts",
     "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "audit:identity": "tsx scripts/audit-identity-boundary.ts",
+    "audit:repository": "tsx scripts/audit-repository-boundary.ts"
   }
 }
 ```

@@ -135,6 +135,12 @@ Rules:
   API serves it at `/api/v1/openapi.json` and Swagger UI at `/api/v1/docs`; the
   web repository pins and validates the released artifact before consuming new
   endpoints.
+- `contracts/tally.postman.json` is the import-ready Postman collection. Both
+  contract artifacts are generated together by `pnpm contracts:generate` and
+  checked by `pnpm contracts:validate`.
+- API internals are organized into `core/` (configuration, database, errors,
+  logging and security), `http/` (middleware, envelopes and validation),
+  `email/` providers, and feature modules under `modules/`.
 - A shared package, if later needed, is separately versioned and published; it is not a workspace dependency.
 
 ---
