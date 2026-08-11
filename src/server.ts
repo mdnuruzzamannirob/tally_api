@@ -5,11 +5,21 @@ import { logger } from "./core/logger/logger.js";
 
 const port = env.PORT;
 const shutdownTimeoutMs = 10_000;
+const baseUrl = env.API_BASE_URL.replace(/\/$/, "");
+const apiUrl = `${baseUrl}/api/v1`;
+const healthUrl = `${apiUrl}/health`;
+const docsUrl = `${apiUrl}/docs/`;
+const openApiUrl = `${apiUrl}/openapi.json`;
 
 const server = app.listen(port, () => {
   logger.info(
-    { event: "server_started", port, nodeEnv: env.NODE_ENV, emailProvider: env.EMAIL_PROVIDER },
-    "Tally API listening",
+    {
+      event: "server_started",
+      port,
+      nodeEnv: env.NODE_ENV,
+      emailProvider: env.EMAIL_PROVIDER,
+    },
+    `Tally API ready • API: ${apiUrl} • Health: ${healthUrl} • Docs: ${docsUrl} • OpenAPI: ${openApiUrl}`,
   );
 });
 
