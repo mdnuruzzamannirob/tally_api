@@ -185,7 +185,7 @@ Expected local URLs:
 ```txt
 Frontend: http://localhost:3000
 Backend:  http://localhost:5000
-Database: postgresql://tally:tally@localhost:5433/tally
+Database: postgresql://tally:tally@localhost:5434/tally
 ```
 
 ---
@@ -301,9 +301,10 @@ Required variables:
 NODE_ENV=development
 PORT=5000
 
-DATABASE_URL=postgresql://tally:tally@localhost:5433/tally
-MIGRATION_DATABASE_URL=
+DATABASE_URL=postgresql://tally:tally@localhost:5434/tally
+MIGRATION_DATABASE_URL=postgresql://tally:tally@localhost:5434/tally
 
+API_BASE_URL=http://localhost:5000
 WEB_APP_URL=http://localhost:3000
 
 ACCESS_TOKEN_SECRET=change_me
@@ -314,6 +315,13 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 EMAIL_PROVIDER=console
 EMAIL_API_KEY=
 EMAIL_FROM=no-reply@tally.local
+EMAIL_API_BASE_URL=
+EMAIL_MAILGUN_DOMAIN=
+EMAIL_SMTP_HOST=
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USER=
+EMAIL_SMTP_PASSWORD=
+EMAIL_SMTP_SECURE=false
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -889,7 +897,9 @@ Rules:
 - Development may use console email provider.
 - Production must use a real transactional email provider.
 - Verification and reset links must use frontend URL.
-- Email logs must not expose tokens in production.
+- The development console provider logs the recipient, subject, and clickable
+  verification/reset link; production logs must not expose tokens or email
+  bodies.
 
 ---
 

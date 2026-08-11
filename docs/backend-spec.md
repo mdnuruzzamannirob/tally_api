@@ -347,6 +347,9 @@ error types omit it unless they have a documented structured shape. Every JSON
 response includes a human-safe top-level `message`; error responses include the
 non-sensitive request ID in `meta` for support correlation.
 
+In development, an error response may include `error.stack` for debugging. It
+is never included in production responses.
+
 Later endpoint examples may show only their endpoint-specific `data` fragment;
 the envelope in this section is authoritative and its `message` and `meta`
 fields must be present whenever applicable.
@@ -566,10 +569,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "Registration successful. Please verify your email."
-  }
+  "message": "Registration successful. Please verify your email.",
+  "data": {}
 }
 ```
 
@@ -680,10 +681,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "Logged out"
-  }
+  "message": "Logged out",
+  "data": {}
 }
 ```
 
@@ -708,19 +707,17 @@ Response:
   "success": true,
   "message": "Request completed successfully.",
   "data": {
-    "user": {
-      "id": "user_id",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "emailVerified": true,
-      "hasPassword": true,
-      "providers": ["google"],
-      "preferences": {
-        "theme": "system",
-        "defaultLandingPage": "dashboard",
-        "timeZone": "Asia/Dhaka",
-        "notificationsEnabled": false
-      }
+    "id": "user_id",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "emailVerified": true,
+    "hasPassword": true,
+    "providers": ["google"],
+    "preferences": {
+      "theme": "system",
+      "defaultLandingPage": "dashboard",
+      "timeZone": "Asia/Dhaka",
+      "notificationsEnabled": false
     }
   }
 }
@@ -755,10 +752,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "Email verified successfully"
-  }
+  "message": "Email verified successfully",
+  "data": {}
 }
 ```
 
@@ -792,10 +787,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "If the account exists and is unverified, a verification email has been sent."
-  }
+  "message": "If the account exists and is unverified, a verification email has been sent.",
+  "data": {}
 }
 ```
 
@@ -830,10 +823,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "If an account exists for this email, a password reset link has been sent."
-  }
+  "message": "If an account exists for this email, a password reset link has been sent.",
+  "data": {}
 }
 ```
 
@@ -869,10 +860,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "Password reset successful"
-  }
+  "message": "Password reset successful",
+  "data": {}
 }
 ```
 
@@ -907,10 +896,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "Password changed successfully"
-  }
+  "message": "Password changed successfully",
+  "data": {}
 }
 ```
 
@@ -947,10 +934,8 @@ Response:
 ```json
 {
   "success": true,
-  "message": "Request completed successfully.",
-  "data": {
-    "message": "Password set successfully"
-  }
+  "message": "Password set successfully",
+  "data": {}
 }
 ```
 
@@ -1210,11 +1195,9 @@ Response:
   "success": true,
   "message": "Request completed successfully.",
   "data": {
-    "user": {
-      "id": "user_id",
-      "name": "John Doe",
-      "email": "john@example.com"
-    }
+    "id": "user_id",
+    "name": "John Doe",
+    "email": "john@example.com"
   }
 }
 ```
@@ -1487,10 +1470,8 @@ Response:
   "success": true,
   "message": "Request completed successfully.",
   "data": {
-    "application": {
-      "id": "application_id",
-      "status": "INTERVIEW"
-    }
+    "id": "application_id",
+    "status": "INTERVIEW"
   }
 }
 ```
@@ -1509,17 +1490,15 @@ Response:
 {
   "success": true,
   "message": "Request completed successfully.",
-  "data": {
-    "history": [
-      {
-        "id": "history_id",
-        "fromStatus": "APPLIED",
-        "toStatus": "INTERVIEW",
-        "note": "Recruiter confirmed technical interview",
-        "changedAt": "2026-01-05T10:00:00.000Z"
-      }
-    ]
-  }
+  "data": [
+    {
+      "id": "history_id",
+      "fromStatus": "APPLIED",
+      "toStatus": "INTERVIEW",
+      "note": "Recruiter confirmed technical interview",
+      "changedAt": "2026-01-05T10:00:00.000Z"
+    }
+  ]
 }
 ```
 
@@ -1721,8 +1700,11 @@ Update/delete rules:
 # 18. Dashboard Endpoint
 
 ```txt
-GET /api/v1/dashboard/summary
+GET /api/v1/dashboard
 ```
+
+`GET /api/v1/dashboard/summary` is kept as a compatible alias. New clients
+should use `/api/v1/dashboard`, which is the documented OpenAPI route.
 
 Response:
 
@@ -2162,11 +2144,13 @@ Recommended body limit:
 
 ## 25.2 CORS
 
-CORS must be environment-driven.
+CORS must be environment-driven. `WEB_APP_URL` is always allowed; local
+development additionally permits both `localhost` and `127.0.0.1` on ports
+3000 through 3005. Production permits only the configured web origin.
 
 ```ts
 const corsOptions = {
-  origin: env.WEB_APP_URL,
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -2319,9 +2303,10 @@ Repository layer should avoid exposing Prisma internals to controllers.
 NODE_ENV=development
 PORT=5000
 
-DATABASE_URL=postgresql://tally:tally@localhost:5433/tally
-MIGRATION_DATABASE_URL=
+DATABASE_URL=postgresql://tally:tally@localhost:5434/tally
+MIGRATION_DATABASE_URL=postgresql://tally:tally@localhost:5434/tally
 
+API_BASE_URL=http://localhost:5000
 WEB_APP_URL=http://localhost:3000
 
 ACCESS_TOKEN_SECRET=change_me
@@ -2332,6 +2317,13 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 EMAIL_PROVIDER=console
 EMAIL_API_KEY=
 EMAIL_FROM=no-reply@tally.local
+EMAIL_API_BASE_URL=
+EMAIL_MAILGUN_DOMAIN=
+EMAIL_SMTP_HOST=
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USER=
+EMAIL_SMTP_PASSWORD=
+EMAIL_SMTP_SECURE=false
 
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -2377,6 +2369,8 @@ EMAIL_FROM
 
 Production must reject `EMAIL_PROVIDER=console`. Provider-specific credentials
 such as `EMAIL_API_KEY` are required whenever the selected adapter needs them.
+The development console provider does not deliver email; it logs the recipient,
+subject, and a clickable verification or password-reset link instead.
 
 Because both providers are MVP Must Haves, production requires:
 

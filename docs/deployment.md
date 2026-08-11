@@ -20,6 +20,6 @@ still supply every required production variable. The runtime process only needs
 `DATABASE_URL`; Prisma migration commands use `MIGRATION_DATABASE_URL` when it
 is set, allowing a separate privileged migration role.
 
-The runtime container exposes port `4000` and its health check calls
+The runtime container exposes port `5000` and its health check calls
 `/api/v1/health`. Do not embed connection strings, OAuth credentials, or token
 secrets in images, Compose files, or source control.
