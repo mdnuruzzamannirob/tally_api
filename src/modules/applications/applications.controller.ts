@@ -84,16 +84,16 @@ export class ApplicationController {
 
   async archive(request: Request, response: Response): Promise<void> {
     await this.service.archive(userIdOrThrow(request), applicationIdOrThrow(request));
-    sendSuccess(response, { message: "Application archived" });
+    sendSuccess(response, {}, { message: "Application archived" });
   }
 
   async unarchive(request: Request, response: Response): Promise<void> {
     await this.service.unarchive(userIdOrThrow(request), applicationIdOrThrow(request));
-    sendSuccess(response, { message: "Application unarchived" });
+    sendSuccess(response, {}, { message: "Application unarchived" });
   }
 
   async delete(request: Request, response: Response): Promise<void> {
     await this.service.delete(userIdOrThrow(request), applicationIdOrThrow(request));
-    sendSuccess(response, { message: "Application deleted" });
+    sendSuccess(response, {}, { message: "Application deleted" });
   }
 }

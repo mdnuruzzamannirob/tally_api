@@ -54,7 +54,7 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
     expect(registration.status).toBe(201);
     expect(registration.body).toMatchObject({
       success: true,
-      data: { message: "Registration successful. Please verify your email." },
+      message: "Registration successful. Please verify your email.",
       meta: { requestId: expect.any(String) },
     });
 
@@ -76,7 +76,7 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
     expect(verification.status).toBe(200);
     expect(verification.body).toMatchObject({
       success: true,
-      data: { message: "Email verified successfully" },
+      message: "Email verified successfully",
       meta: { requestId: expect.any(String) },
     });
 
@@ -100,7 +100,7 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
       .post("/api/v1/auth/resend-verification")
       .send({ email: "RESEND@EXAMPLE.TEST" });
     expect(resend.status).toBe(200);
-    expect(resend.body.data.message).toMatch(/If the account exists/i);
+    expect(resend.body.message).toMatch(/If the account exists/i);
 
     const resentEmail = emailService.sent.at(-1);
     if (!resentEmail) throw new Error("Resent verification email was not sent.");

@@ -134,7 +134,7 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
     expect(logout.status).toBe(200);
     expect(logout.body).toMatchObject({
       success: true,
-      data: { message: "Logged out" },
+      message: "Logged out",
       meta: { requestId: expect.any(String) },
     });
     expect(logout.headers["set-cookie"]?.[0]).toContain(`${REFRESH_COOKIE_NAME}=;`);

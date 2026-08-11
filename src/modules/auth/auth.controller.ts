@@ -41,21 +41,25 @@ export function createAuthController(authService: AuthService): {
       await authService.register(input);
       return sendSuccess(
         response,
-        { message: "Registration successful. Please verify your email." },
-        201,
+        {},
+        { statusCode: 201, message: "Registration successful. Please verify your email." },
       );
     }),
     verifyEmail: asyncHandler(async (request, response) => {
       const { token } = verifyEmailSchema.parse(request.body);
       await authService.verifyEmail(token);
-      return sendSuccess(response, { message: "Email verified successfully" });
+      return sendSuccess(response, {}, { message: "Email verified successfully" });
     }),
     resendVerification: asyncHandler(async (request, response) => {
       const { email } = resendVerificationSchema.parse(request.body);
       await authService.resendVerificationEmail(email);
-      return sendSuccess(response, {
-        message: "If the account exists and is unverified, a verification email has been sent.",
-      });
+      return sendSuccess(
+        response,
+        {},
+        {
+          message: "If the account exists and is unverified, a verification email has been sent.",
+        },
+      );
     }),
     login: asyncHandler(async (request, response) => {
       const input = loginSchema.parse(request.body);
@@ -82,7 +86,7 @@ export function createAuthController(authService: AuthService): {
       const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME];
       await authService.logout(typeof refreshToken === "string" ? refreshToken : undefined);
       clearRefreshCookie(response);
-      return sendSuccess(response, { message: "Logged out" });
+      return sendSuccess(response, {}, { message: "Logged out" });
     }),
     me: asyncHandler(async (request, response) => {
       if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
@@ -91,14 +95,18 @@ export function createAuthController(authService: AuthService): {
     forgotPassword: asyncHandler(async (request, response) => {
       const { email } = forgotPasswordSchema.parse(request.body);
       await authService.requestPasswordReset(email);
-      return sendSuccess(response, {
-        message: "If an account exists for this email, a password reset link has been sent.",
-      });
+      return sendSuccess(
+        response,
+        {},
+        {
+          message: "If an account exists for this email, a password reset link has been sent.",
+        },
+      );
     }),
     resetPassword: asyncHandler(async (request, response) => {
       const { token, password } = resetPasswordSchema.parse(request.body);
       await authService.resetPassword(token, password);
-      return sendSuccess(response, { message: "Password reset successful" });
+      return sendSuccess(response, {}, { message: "Password reset successful" });
     }),
     changePassword: asyncHandler(async (request, response) => {
       if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
@@ -109,13 +117,13 @@ export function createAuthController(authService: AuthService): {
         input,
         typeof refreshToken === "string" ? refreshToken : undefined,
       );
-      return sendSuccess(response, { message: "Password changed successfully" });
+      return sendSuccess(response, {}, { message: "Password changed successfully" });
     }),
     setPassword: asyncHandler(async (request, response) => {
       if (!request.auth) throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.");
       const { newPassword } = setPasswordSchema.parse(request.body);
       await authService.setPassword(request.auth.userId, newPassword);
-      return sendSuccess(response, { message: "Password set successfully" });
+      return sendSuccess(response, {}, { message: "Password set successfully" });
     }),
   };
 }

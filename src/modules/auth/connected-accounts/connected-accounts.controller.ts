@@ -45,7 +45,7 @@ export function createConnectedAccountsController(
         requireUserId(request),
         getProvider(request.params.provider).id,
       );
-      return sendSuccess(response, { message: "Provider disconnected" });
+      return sendSuccess(response, {}, { message: "Provider disconnected" });
     }),
   };
 }

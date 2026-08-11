@@ -95,6 +95,6 @@ export class InterviewController {
 
   async delete(request: Request, response: Response): Promise<void> {
     await this.service.delete(userIdOrThrow(request), paramOrThrow(request, "Interview ID"));
-    sendSuccess(response, { message: "Interview deleted" });
+    sendSuccess(response, {}, { message: "Interview deleted" });
   }
 }

@@ -90,7 +90,7 @@ async function generateOpenApi(): Promise<void> {
 
   const successExamples: Record<string, unknown> = {
     health: { status: "ok", database: "connected", timestamp: "2026-08-11T00:00:00.000Z" },
-    register: { message: "Registration successful. Please verify your email." },
+    register: {},
     login: {
       accessToken: "eyJhbGciOiJIUzI1NiJ9.example.signature",
       user: {
@@ -312,7 +312,7 @@ async function generateOpenApi(): Promise<void> {
       total: { type: "integer" },
       totalPages: { type: "integer" },
     }),
-    MessageData: dataObject({ message: string() }),
+    MessageData: dataObject(),
     UserData: dataObject({ user: dataObject() }),
     AuthData: dataObject({ accessToken: string(), user: dataObject() }),
     AccessTokenData: dataObject({ accessToken: string() }),
@@ -384,6 +384,27 @@ async function generateOpenApi(): Promise<void> {
     importJson: "MessageData",
   };
 
+  const successMessages: Record<string, string> = {
+    register: "Registration successful. Please verify your email.",
+    verifyEmail: "Email verified successfully",
+    resendVerification:
+      "If the account exists and is unverified, a verification email has been sent.",
+    forgotPassword: "If an account exists for this email, a password reset link has been sent.",
+    resetPassword: "Password reset successful",
+    changePassword: "Password changed successfully",
+    setPassword: "Password set successfully",
+    logout: "Logged out",
+    unlinkConnectedAccount: "Provider disconnected",
+    deleteApplication: "Application deleted",
+    archiveApplication: "Application archived",
+    unarchiveApplication: "Application unarchived",
+    deleteTag: "Tag deleted",
+    removeApplicationTag: "Tag removed from application",
+    deleteNote: "Note deleted",
+    deleteInterview: "Interview deleted",
+    importJson: "Import completed",
+  };
+
   const requestBody = (name: string) => ({
     required: true,
     content: {
@@ -451,7 +472,7 @@ async function generateOpenApi(): Promise<void> {
       };
     }
 
-    const dataExample = successExamples[route.operationId] ?? { message: "Request completed." };
+    const dataExample = successExamples[route.operationId] ?? {};
     return {
       [route.response === "created" ? "201" : "200"]: {
         description:
@@ -471,9 +492,10 @@ async function generateOpenApi(): Promise<void> {
             example: {
               success: true,
               message:
-                route.response === "created"
+                successMessages[route.operationId] ??
+                (route.response === "created"
                   ? "Resource created successfully."
-                  : "Request completed successfully.",
+                  : "Request completed successfully."),
               data: dataExample,
               meta: { requestId: "req_01HZXEXAMPLE" },
             },
@@ -651,7 +673,7 @@ async function generatePostman(): Promise<void> {
 
   const successData: Record<string, unknown> = {
     health: { status: "ok", database: "connected", timestamp: "2026-08-11T00:00:00.000Z" },
-    register: { message: "Registration successful. Please verify your email." },
+    register: {},
     login: {
       accessToken: "eyJhbGciOiJIUzI1NiJ9.example.signature",
       user: {
@@ -679,6 +701,27 @@ async function generatePostman(): Promise<void> {
         status: "SCHEDULED",
       },
     },
+  };
+
+  const postmanSuccessMessages: Record<string, string> = {
+    register: "Registration successful. Please verify your email.",
+    verifyEmail: "Email verified successfully",
+    resendVerification:
+      "If the account exists and is unverified, a verification email has been sent.",
+    forgotPassword: "If an account exists for this email, a password reset link has been sent.",
+    resetPassword: "Password reset successful",
+    changePassword: "Password changed successfully",
+    setPassword: "Password set successfully",
+    logout: "Logged out",
+    unlinkConnectedAccount: "Provider disconnected",
+    deleteApplication: "Application deleted",
+    archiveApplication: "Application archived",
+    unarchiveApplication: "Application unarchived",
+    deleteTag: "Tag deleted",
+    removeApplicationTag: "Tag removed from application",
+    deleteNote: "Note deleted",
+    deleteInterview: "Interview deleted",
+    importJson: "Import completed",
   };
 
   const folderNames: Record<string, string> = {
@@ -911,10 +954,11 @@ async function generatePostman(): Promise<void> {
             {
               success: true,
               message:
-                successCode === 201
+                postmanSuccessMessages[route.operationId] ??
+                (successCode === 201
                   ? "Resource created successfully."
-                  : "Request completed successfully.",
-              data: successData[route.operationId] ?? { message: "Request completed." },
+                  : "Request completed successfully."),
+              data: successData[route.operationId] ?? {},
               meta: { requestId: "req_01HZXEXAMPLE" },
             },
             null,

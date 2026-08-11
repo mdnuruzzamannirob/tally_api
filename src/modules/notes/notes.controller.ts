@@ -49,6 +49,6 @@ export class NoteController {
 
   async delete(request: Request, response: Response): Promise<void> {
     await this.service.delete(userIdOrThrow(request), paramOrThrow(request, "id", "Note ID"));
-    sendSuccess(response, { message: "Note deleted" });
+    sendSuccess(response, {}, { message: "Note deleted" });
   }
 }

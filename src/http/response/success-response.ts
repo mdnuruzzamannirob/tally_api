@@ -29,10 +29,21 @@ export function sendSuccess<T>(
   const resolvedOptions = typeof options === "number" ? { statusCode: options } : options;
   const requestId = response.req.requestId;
   const meta = { ...(requestId ? { requestId } : {}), ...(resolvedOptions.meta ?? {}) };
+  let responseData = data;
+  let responseMessage = resolvedOptions.message;
+  if (typeof data === "object" && data !== null && "message" in data) {
+    const messageValue = (data as { message?: unknown }).message;
+    if (typeof messageValue === "string") {
+      responseMessage ??= messageValue;
+      const { message: _message, ...dataWithoutMessage } = data as Record<string, unknown>;
+      void _message;
+      responseData = dataWithoutMessage as T;
+    }
+  }
   const body: SuccessResponse<T> = {
     success: true,
-    message: resolvedOptions.message ?? "Request completed successfully.",
-    data,
+    message: responseMessage ?? "Request completed successfully.",
+    data: responseData,
     ...(Object.keys(meta).length ? { meta } : {}),
   };
   return response.status(resolvedOptions.statusCode ?? 200).json(body);

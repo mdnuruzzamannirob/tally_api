@@ -43,7 +43,7 @@ export class TagController {
 
   async delete(request: Request, response: Response): Promise<void> {
     await this.service.delete(userIdOrThrow(request), paramOrThrow(request, "id", "Tag ID"));
-    sendSuccess(response, { message: "Tag deleted" });
+    sendSuccess(response, {}, { message: "Tag deleted" });
   }
 
   async addToApplication(request: Request, response: Response): Promise<void> {
@@ -61,6 +61,6 @@ export class TagController {
       paramOrThrow(request, "id", "Application ID"),
       paramOrThrow(request, "tagId", "Tag ID"),
     );
-    sendSuccess(response, { message: "Tag removed from application" });
+    sendSuccess(response, {}, { message: "Tag removed from application" });
   }
 }
