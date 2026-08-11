@@ -8,10 +8,8 @@ import type { DashboardService } from "./dashboard.service.js";
 export function createDashboardRouter(dashboardService: DashboardService): Router {
   const controller = new DashboardController(dashboardService);
   const router = Router();
-  router.get(
-    "/summary",
-    authenticate,
-    asyncHandler((request, response) => controller.summary(request, response)),
-  );
+  const summaryHandler = asyncHandler((request, response) => controller.summary(request, response));
+  router.get("/", authenticate, summaryHandler);
+  router.get("/summary", authenticate, summaryHandler);
   return router;
 }
