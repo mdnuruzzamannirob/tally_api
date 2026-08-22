@@ -150,9 +150,9 @@ describe.skipIf(!runDatabaseTests)("application creation and detail", () => {
       .send({ company: "Updated Tally", tagIds: [secondTag.id] });
     expect(updated.status).toBe(200);
     expect(updated.body.data.company).toBe("Updated Tally");
-    expect(updated.body.data.map((assignment: { tagId: string }) => assignment.tagId)).toEqual([
-      secondTag.id,
-    ]);
+    expect(updated.body.data.tags.map((assignment: { tagId: string }) => assignment.tagId)).toEqual(
+      [secondTag.id],
+    );
 
     await request(app)
       .patch(`/api/v1/applications/${application.id}`)
