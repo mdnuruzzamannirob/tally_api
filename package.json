@@ -30,8 +30,8 @@
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
     "audit:identity": "tsx scripts/audit-identity-boundary.ts",
     "audit:repository": "tsx scripts/audit-repository-boundary.ts"
   },
