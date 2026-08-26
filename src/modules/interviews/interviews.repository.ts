@@ -32,7 +32,7 @@ export class InterviewRepository {
     const where: Prisma.InterviewWhereInput = {
       application: { userId, ...(query.includeArchived ? {} : { archivedAt: null }) },
       ...(applicationId ? { applicationId } : {}),
-      scheduledAt: query.range === "upcoming" ? { gte: now } : { lt: now },
+      ...(query.range === "upcoming" ? { scheduledAt: { gte: now } } : query.range === "past" ? { scheduledAt: { lt: now } } : {}),
     };
     const [items, total] = await this.client.$transaction([
       this.client.interview.findMany({
@@ -40,7 +40,7 @@ export class InterviewRepository {
         include: {
           application: { select: { id: true, company: true, role: true, archivedAt: true } },
         },
-        orderBy: [{ scheduledAt: query.range === "upcoming" ? "asc" : "desc" }, { id: "asc" }],
+        orderBy: [{ scheduledAt: query.range === "past" ? "desc" : "asc" }, { id: "asc" }],
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
       }),

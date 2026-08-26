@@ -45,7 +45,7 @@ export const updateInterviewSchema = z
 
 export const interviewListQuerySchema = z
   .object({
-    range: z.enum(["upcoming", "past"]).default("upcoming"),
+    range: z.enum(["upcoming", "past"]).optional(),
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(20),
     includeArchived: z

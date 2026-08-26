@@ -332,7 +332,29 @@ async function generateOpenApi(): Promise<void> {
     NoteData: dataObject(),
     InterviewsData: { type: "array", items: dataObject() },
     InterviewData: dataObject(),
-    DashboardData: dataObject(),
+    DashboardData: dataObject({
+      totalApplications: { type: "integer", minimum: 0 },
+      activeApplications: { type: "integer", minimum: 0 },
+      offers: { type: "integer", minimum: 0 },
+      scheduledInterviews: { type: "integer", minimum: 0 },
+      statusCounts: dataObject({
+        WISHLIST: { type: "integer", minimum: 0 },
+        APPLIED: { type: "integer", minimum: 0 },
+        SCREENING: { type: "integer", minimum: 0 },
+        INTERVIEW: { type: "integer", minimum: 0 },
+        OFFER: { type: "integer", minimum: 0 },
+        REJECTED: { type: "integer", minimum: 0 },
+        WITHDRAWN: { type: "integer", minimum: 0 },
+      }),
+      followUps: dataObject({
+        overdueCount: { type: "integer", minimum: 0 },
+        todayCount: { type: "integer", minimum: 0 },
+        overdue: { type: "array", items: dataObject() },
+        today: { type: "array", items: dataObject() },
+      }),
+      upcomingInterviews: { type: "array", items: dataObject() },
+      recentApplications: { type: "array", items: dataObject() },
+    }),
   };
 
   const responseDataByOperation: Record<string, string> = {
