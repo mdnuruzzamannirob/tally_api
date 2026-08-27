@@ -60,6 +60,7 @@ describe("auth primitives", () => {
       path: "/api/v1/auth",
       maxAge: 604_800_000,
     });
+    expect(getRefreshCookieOptions(new Date(Date.now() + 60_000)).maxAge).toBeGreaterThan(59_000);
 
     const app = express();
     app.get("/cookie", (_request, response) =>

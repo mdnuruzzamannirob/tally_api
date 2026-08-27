@@ -34,7 +34,9 @@ export class RefreshTokenService {
       id: existing.id,
       userId: existing.userId,
       nextTokenHash: hashToken(nextRefreshToken),
-      expiresAt: getRefreshTokenExpiresAt(),
+      // Rotation replaces the credential; it must not extend the session's
+      // absolute lifetime.
+      expiresAt: existing.expiresAt,
       revokedAt: new Date(),
       ...metadata,
     });
@@ -48,6 +50,7 @@ export class RefreshTokenService {
         emailVerified: existing.user.emailVerified,
       }),
       refreshToken: nextRefreshToken,
+      refreshTokenExpiresAt: existing.expiresAt,
     };
   }
 

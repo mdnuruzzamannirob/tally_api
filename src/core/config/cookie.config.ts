@@ -15,18 +15,22 @@ export function getRefreshTokenExpiresAt(): Date {
   return new Date(Date.now() + durationToMilliseconds(env.REFRESH_TOKEN_EXPIRES_IN));
 }
 
-export function getRefreshCookieOptions(): CookieOptions {
+export function getRefreshCookieOptions(expiresAt?: Date): CookieOptions {
+  const maxAge =
+    expiresAt === undefined
+      ? durationToMilliseconds(env.REFRESH_TOKEN_EXPIRES_IN)
+      : Math.max(0, expiresAt.getTime() - Date.now());
   return {
     httpOnly: true,
     secure: env.COOKIE_SECURE,
     sameSite: env.COOKIE_SAME_SITE,
     path: "/api/v1/auth",
-    maxAge: durationToMilliseconds(env.REFRESH_TOKEN_EXPIRES_IN),
+    maxAge,
   };
 }
 
-export function setRefreshCookie(response: Response, token: string): Response {
-  return response.cookie(REFRESH_COOKIE_NAME, token, getRefreshCookieOptions());
+export function setRefreshCookie(response: Response, token: string, expiresAt?: Date): Response {
+  return response.cookie(REFRESH_COOKIE_NAME, token, getRefreshCookieOptions(expiresAt));
 }
 
 export function clearRefreshCookie(response: Response): Response {

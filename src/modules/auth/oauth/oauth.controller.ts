@@ -28,7 +28,7 @@ export function createOAuthController(
         if (result.intent === "link") {
           return response.redirect(getOAuthFrontendRedirect("success", "link"));
         }
-        setRefreshCookie(response, result.refreshToken);
+        setRefreshCookie(response, result.refreshToken, result.refreshTokenExpiresAt);
         return response.redirect(getOAuthFrontendRedirect("success"));
       } catch {
         logger.warn({ event: `${provider}_oauth_callback_failed` }, "OAuth callback failed");

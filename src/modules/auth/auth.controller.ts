@@ -71,16 +71,23 @@ export function createAuthController(authService: AuthService): {
       return sendSuccess(response, { accessToken: session.accessToken, user: session.user });
     }),
     refresh: asyncHandler(async (request, response) => {
-      const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME];
-      if (typeof refreshToken !== "string") {
-        throw new ApiError(401, "UNAUTHORIZED", "Refresh token is required.");
+      try {
+        const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME];
+        if (typeof refreshToken !== "string") {
+          throw new ApiError(401, "UNAUTHORIZED", "Refresh token is required.");
+        }
+        const session = await authService.refresh(refreshToken, {
+          userAgent: request.header("User-Agent") ?? undefined,
+          ip: request.ip,
+        });
+        setRefreshCookie(response, session.refreshToken, session.refreshTokenExpiresAt);
+        return sendSuccess(response, { accessToken: session.accessToken });
+      } catch (error) {
+        if (error instanceof ApiError && error.statusCode === 401) {
+          clearRefreshCookie(response);
+        }
+        throw error;
       }
-      const session = await authService.refresh(refreshToken, {
-        userAgent: request.header("User-Agent") ?? undefined,
-        ip: request.ip,
-      });
-      setRefreshCookie(response, session.refreshToken);
-      return sendSuccess(response, { accessToken: session.accessToken });
     }),
     logout: asyncHandler(async (request, response) => {
       const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME];

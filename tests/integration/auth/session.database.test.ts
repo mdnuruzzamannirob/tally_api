@@ -9,6 +9,7 @@ import { createApp } from "../../../src/app.js";
 import type { PrismaClient } from "../../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../../src/modules/auth/auth.service.js";
+import { hashToken } from "../../../src/core/security/crypto.js";
 import { clearTestDatabase, createTestPrismaClient } from "../../helpers/db.js";
 
 const runDatabaseTests = Boolean(process.env.TEST_DATABASE_URL);
@@ -100,6 +101,9 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
     const user = await createVerifiedUser("rotate@example.test");
     const loginResponse = await login(user.email);
     const firstToken = getRefreshToken(loginResponse.headers["set-cookie"]);
+    const firstRecord = await prisma.refreshToken.findUniqueOrThrow({
+      where: { tokenHash: hashToken(firstToken) },
+    });
 
     const refresh = await request(app)
       .post("/api/v1/auth/refresh")
@@ -108,6 +112,10 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
     expect(refresh.status).toBe(200);
     const secondToken = getRefreshToken(refresh.headers["set-cookie"]);
     expect(secondToken).not.toBe(firstToken);
+    const secondRecord = await prisma.refreshToken.findUniqueOrThrow({
+      where: { tokenHash: hashToken(secondToken) },
+    });
+    expect(secondRecord.expiresAt).toEqual(firstRecord.expiresAt);
     await expect(
       prisma.refreshToken.count({ where: { userId: user.id, revokedAt: null } }),
     ).resolves.toBe(1);
@@ -120,6 +128,28 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
     await expect(
       prisma.refreshToken.count({ where: { userId: user.id, revokedAt: null } }),
     ).resolves.toBe(0);
+  });
+
+  it("clears the refresh cookie when the refresh token has expired", async () => {
+    const user = await createVerifiedUser("expired-refresh@example.test");
+    const loginResponse = await login(user.email);
+    const refreshToken = getRefreshToken(loginResponse.headers["set-cookie"]);
+
+    await prisma.refreshToken.update({
+      where: { tokenHash: hashToken(refreshToken) },
+      data: { expiresAt: new Date(Date.now() - 1_000) },
+    });
+
+    const response = await request(app)
+      .post("/api/v1/auth/refresh")
+      .set(originHeaders)
+      .set("Cookie", `${REFRESH_COOKIE_NAME}=${refreshToken}`);
+
+    expect(response.status).toBe(401);
+    const clearedCookies = response.headers["set-cookie"];
+    const cookieHeaders =
+      typeof clearedCookies === "string" ? [clearedCookies] : (clearedCookies ?? []);
+    expect(cookieHeaders.some((cookie) => cookie.startsWith(`${REFRESH_COOKIE_NAME}=;`))).toBe(true);
   });
 
   it("revokes the current refresh token and clears its cookie on logout", async () => {

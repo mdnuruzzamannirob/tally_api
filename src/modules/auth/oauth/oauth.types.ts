@@ -14,4 +14,6 @@ export interface OAuthClient {
   exchangeCode(code: string, redirectUri: string): Promise<OAuthProfile>;
 }
 
-export type OAuthResult = { intent: "login"; refreshToken: string } | { intent: "link" };
+export type OAuthResult =
+  | { intent: "login"; refreshToken: string; refreshTokenExpiresAt: Date }
+  | { intent: "link" };

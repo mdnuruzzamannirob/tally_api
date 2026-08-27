@@ -64,11 +64,12 @@ export class OAuthService {
       verifiedAt: new Date(),
     });
     const refreshToken = generateOpaqueToken();
+    const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
     await this.repository.createRefreshSession({
       userId: user.userId,
       tokenHash: hashToken(refreshToken),
-      expiresAt: getRefreshTokenExpiresAt(),
+      expiresAt: refreshTokenExpiresAt,
     });
-    return { intent: "login", refreshToken };
+    return { intent: "login", refreshToken, refreshTokenExpiresAt };
   }
 }
