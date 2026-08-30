@@ -8,9 +8,10 @@ RUN pnpm install --frozen-lockfile
 FROM dependencies AS build
 
 COPY . .
-ARG PRISMA_GENERATE_DATABASE_URL
-RUN test -n "$PRISMA_GENERATE_DATABASE_URL"
-RUN DATABASE_URL="$PRISMA_GENERATE_DATABASE_URL" pnpm db:generate && pnpm build
+# Prisma client generation only needs a valid PostgreSQL URL shape; it does not
+# connect to the database during the image build. The real DATABASE_URL is
+# supplied to the running service by the deployment environment.
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" pnpm db:generate && pnpm build
 
 FROM node:20-alpine AS runtime
 
