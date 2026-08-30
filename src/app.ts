@@ -20,6 +20,9 @@ export function createApp(overrides: AppDependencies = {}): Express {
   const router = Object.keys(overrides).length ? createApiRouter(overrides) : appRouter;
 
   app.disable("x-powered-by");
+  // Render terminates TLS and forwards the original client IP. Without this,
+  // express-rate-limit sees the proxy IP and unrelated users share one bucket.
+  app.set("trust proxy", 1);
   app.use(requestIdMiddleware);
   app.use(requestLoggerMiddleware);
   app.use(helmet());
