@@ -2387,7 +2387,53 @@
         "items": { "type": "object", "properties": {}, "additionalProperties": true }
       },
       "InterviewData": { "type": "object", "properties": {}, "additionalProperties": true },
-      "DashboardData": { "type": "object", "properties": { "totalApplications": { "type": "integer", "minimum": 0 }, "activeApplications": { "type": "integer", "minimum": 0 }, "offers": { "type": "integer", "minimum": 0 }, "scheduledInterviews": { "type": "integer", "minimum": 0 }, "statusCounts": { "type": "object", "properties": { "WISHLIST": { "type": "integer", "minimum": 0 }, "APPLIED": { "type": "integer", "minimum": 0 }, "SCREENING": { "type": "integer", "minimum": 0 }, "INTERVIEW": { "type": "integer", "minimum": 0 }, "OFFER": { "type": "integer", "minimum": 0 }, "REJECTED": { "type": "integer", "minimum": 0 }, "WITHDRAWN": { "type": "integer", "minimum": 0 } }, "additionalProperties": true }, "followUps": { "type": "object", "properties": { "overdueCount": { "type": "integer", "minimum": 0 }, "todayCount": { "type": "integer", "minimum": 0 }, "overdue": { "type": "array", "items": { "type": "object", "properties": {}, "additionalProperties": true } }, "today": { "type": "array", "items": { "type": "object", "properties": {}, "additionalProperties": true } } }, "additionalProperties": true }, "upcomingInterviews": { "type": "array", "items": { "type": "object", "properties": {}, "additionalProperties": true } }, "recentApplications": { "type": "array", "items": { "type": "object", "properties": {}, "additionalProperties": true } } }, "additionalProperties": true }
+      "DashboardData": {
+        "type": "object",
+        "properties": {
+          "totalApplications": { "type": "integer", "minimum": 0 },
+          "activeApplications": { "type": "integer", "minimum": 0 },
+          "offers": { "type": "integer", "minimum": 0 },
+          "scheduledInterviews": { "type": "integer", "minimum": 0 },
+          "statusCounts": {
+            "type": "object",
+            "properties": {
+              "WISHLIST": { "type": "integer", "minimum": 0 },
+              "APPLIED": { "type": "integer", "minimum": 0 },
+              "SCREENING": { "type": "integer", "minimum": 0 },
+              "INTERVIEW": { "type": "integer", "minimum": 0 },
+              "OFFER": { "type": "integer", "minimum": 0 },
+              "REJECTED": { "type": "integer", "minimum": 0 },
+              "WITHDRAWN": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": true
+          },
+          "followUps": {
+            "type": "object",
+            "properties": {
+              "overdueCount": { "type": "integer", "minimum": 0 },
+              "todayCount": { "type": "integer", "minimum": 0 },
+              "overdue": {
+                "type": "array",
+                "items": { "type": "object", "properties": {}, "additionalProperties": true }
+              },
+              "today": {
+                "type": "array",
+                "items": { "type": "object", "properties": {}, "additionalProperties": true }
+              }
+            },
+            "additionalProperties": true
+          },
+          "upcomingInterviews": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          },
+          "recentApplications": {
+            "type": "array",
+            "items": { "type": "object", "properties": {}, "additionalProperties": true }
+          }
+        },
+        "additionalProperties": true
+      }
     },
     "responses": {
       "BadRequest": {
