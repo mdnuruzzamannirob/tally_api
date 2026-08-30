@@ -28,7 +28,3 @@ COPY --from=build /app/contracts ./contracts
 EXPOSE 5000
 USER node
 CMD ["node", "dist/server.js"]
-
-FROM build AS migration
-
-CMD ["pnpm", "db:deploy"]
