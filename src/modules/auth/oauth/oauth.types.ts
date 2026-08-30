@@ -15,5 +15,4 @@ export interface OAuthClient {
 }
 
 export type OAuthResult =
-  | { intent: "login"; refreshToken: string; refreshTokenExpiresAt: Date }
-  | { intent: "link" };
+  { intent: "login"; refreshToken: string; refreshTokenExpiresAt: Date } | { intent: "link" };

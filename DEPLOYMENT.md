@@ -45,6 +45,7 @@ curl http://localhost:5000/api/v1/health
 ```
 
 Verify:
+
 - ✅ Node.js v20+ installed
 - ✅ Docker & Docker Compose available
 - ✅ PostgreSQL database ready
@@ -63,6 +64,7 @@ nano .env.production
 ```
 
 Required variables:
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `API_BASE_URL` - Your API domain (e.g., https://api.yourdomain.com)
 - `WEB_APP_URL` - Your frontend domain (e.g., https://yourdomain.com)
@@ -178,6 +180,7 @@ server {
 ```
 
 Enable:
+
 ```bash
 sudo ln -s /etc/nginx/sites-available/tally-api /etc/nginx/sites-enabled/
 sudo nginx -t
@@ -187,6 +190,7 @@ sudo systemctl restart nginx
 ## Docker Compose Deployment Reference
 
 ### Start Services
+
 ```bash
 # Start all services
 docker-compose -f docker-compose.deploy.yml up -d
@@ -199,6 +203,7 @@ docker-compose -f docker-compose.deploy.yml logs -f
 ```
 
 ### Database Migrations
+
 ```bash
 # Run migrations
 docker-compose -f docker-compose.deploy.yml \
@@ -210,6 +215,7 @@ docker-compose -f docker-compose.deploy.yml \
 ```
 
 ### Stop & Cleanup
+
 ```bash
 # Stop services
 docker-compose -f docker-compose.deploy.yml down
@@ -221,6 +227,7 @@ docker-compose -f docker-compose.deploy.yml down -v
 ## Production Best Practices
 
 ### Security
+
 - ✅ Use HTTPS everywhere with valid SSL certificates
 - ✅ Set `COOKIE_SECURE=true` in production
 - ✅ Use strong, randomly-generated secrets (32+ bytes)
@@ -230,6 +237,7 @@ docker-compose -f docker-compose.deploy.yml down -v
 - ✅ Use secrets management (AWS Secrets Manager, Vault)
 
 ### Performance
+
 - ✅ Enable gzip compression in Nginx
 - ✅ Set up CDN for static assets
 - ✅ Use read replicas for database if needed
@@ -237,6 +245,7 @@ docker-compose -f docker-compose.deploy.yml down -v
 - ✅ Monitor API response times
 
 ### Monitoring & Logging
+
 - ✅ Set `LOG_LEVEL=info` for production (not debug)
 - ✅ Centralize logs (ELK, Datadog, CloudWatch)
 - ✅ Set up alerts for errors and downtime
@@ -244,6 +253,7 @@ docker-compose -f docker-compose.deploy.yml down -v
 - ✅ Track API usage and rate limiting
 
 ### Database
+
 - ✅ Use managed PostgreSQL (AWS RDS recommended)
 - ✅ Enable automated backups (daily minimum)
 - ✅ Test restore procedures regularly
@@ -251,6 +261,7 @@ docker-compose -f docker-compose.deploy.yml down -v
 - ✅ Enable SSL for database connections
 
 ### Deployment
+
 - ✅ Use CI/CD pipeline (GitHub Actions configured)
 - ✅ Test all changes in staging first
 - ✅ Keep deployment scripts version-controlled
@@ -260,6 +271,7 @@ docker-compose -f docker-compose.deploy.yml down -v
 ## Troubleshooting
 
 ### Container won't start
+
 ```bash
 # Check logs
 docker-compose -f docker-compose.deploy.yml logs api
@@ -271,6 +283,7 @@ docker-compose -f docker-compose.deploy.yml logs api
 ```
 
 ### Database migration fails
+
 ```bash
 # Check database connectivity
 docker-compose -f docker-compose.deploy.yml run \
@@ -285,6 +298,7 @@ ls -la prisma/migrations/
 ```
 
 ### Health check fails
+
 ```bash
 # Check API is responding
 curl -v http://localhost:5000/api/v1/health
@@ -298,6 +312,7 @@ docker-compose -f docker-compose.deploy.yml run \
 ```
 
 ### High memory usage
+
 ```bash
 # Check container memory
 docker stats tally_api
@@ -314,6 +329,7 @@ docker stats tally_api
 ## Scaling
 
 ### Horizontal Scaling (Multiple Instances)
+
 ```yaml
 # In docker-compose.deploy.yml
 services:
@@ -325,10 +341,13 @@ services:
 ```
 
 ### Load Balancing
+
 Use Nginx upstream or container orchestration (Kubernetes) for load balancing.
 
 ### Database Connection Pooling
+
 Prisma automatically manages connections. Monitor with:
+
 ```bash
 docker-compose -f docker-compose.deploy.yml run \
   --rm api pnpm inspect

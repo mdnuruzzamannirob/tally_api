@@ -149,7 +149,9 @@ describe.skipIf(!runDatabaseTests)("login, refresh, and logout", () => {
     const clearedCookies = response.headers["set-cookie"];
     const cookieHeaders =
       typeof clearedCookies === "string" ? [clearedCookies] : (clearedCookies ?? []);
-    expect(cookieHeaders.some((cookie) => cookie.startsWith(`${REFRESH_COOKIE_NAME}=;`))).toBe(true);
+    expect(cookieHeaders.some((cookie) => cookie.startsWith(`${REFRESH_COOKIE_NAME}=;`))).toBe(
+      true,
+    );
   });
 
   it("revokes the current refresh token and clears its cookie on logout", async () => {

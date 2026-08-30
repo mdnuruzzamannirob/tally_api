@@ -196,12 +196,14 @@ docker-compose -f docker-compose.deploy.yml logs -f api
 Key variables by category:
 
 **Database**
+
 ```env
 DATABASE_URL=postgresql://user:pass@host/db
 MIGRATION_DATABASE_URL=postgresql://user:pass@host/db
 ```
 
 **Authentication**
+
 ```env
 ACCESS_TOKEN_SECRET=min-32-bytes
 ACCESS_TOKEN_EXPIRES_IN=15m
@@ -209,12 +211,14 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 ```
 
 **API URLs**
+
 ```env
 API_BASE_URL=https://api.yourdomain.com
 WEB_APP_URL=https://yourdomain.com
 ```
 
 **Email**
+
 ```env
 EMAIL_PROVIDER=mailgun
 EMAIL_API_KEY=key
@@ -222,6 +226,7 @@ EMAIL_FROM=noreply@yourdomain.com
 ```
 
 **OAuth**
+
 ```env
 GOOGLE_CLIENT_ID=client-id
 GOOGLE_CLIENT_SECRET=secret
@@ -230,6 +235,7 @@ GITHUB_CLIENT_SECRET=secret
 ```
 
 **Security**
+
 ```env
 COOKIE_SECURE=true
 COOKIE_SAME_SITE=strict
@@ -242,6 +248,7 @@ LOG_LEVEL=info
 For production, use secret management services:
 
 **AWS Secrets Manager**
+
 ```bash
 # Store secrets
 aws secretsmanager create-secret --name tally-api-prod \
@@ -253,6 +260,7 @@ aws secretsmanager get-secret-value --secret-id tally-api-prod \
 ```
 
 **HashiCorp Vault**
+
 ```bash
 # Store secrets
 vault kv put secret/tally-api-prod @.env.production
@@ -553,6 +561,7 @@ docker-compose -f docker-compose.deploy.yml -f docker-compose.elk.yml up -d
 #### Using Cloud Logging
 
 **AWS CloudWatch**
+
 ```bash
 # Enable container logging to CloudWatch
 # In docker-compose.deploy.yml:
@@ -565,6 +574,7 @@ logging:
 ```
 
 **Google Cloud Logging**
+
 ```bash
 # Configure in docker-compose.deploy.yml
 logging:
@@ -642,6 +652,7 @@ keepalive_requests 100;
 ### Container Issues
 
 **Container won't start**
+
 ```bash
 # Check logs
 docker-compose -f docker-compose.deploy.yml logs api
@@ -659,6 +670,7 @@ sudo lsof -i :5000
 ```
 
 **Health check failing**
+
 ```bash
 # Test health endpoint directly
 docker exec -it tally_api curl http://localhost:5000/api/v1/health
@@ -670,6 +682,7 @@ docker-compose -f docker-compose.deploy.yml logs api --tail 100
 ### Database Issues
 
 **Connection errors**
+
 ```bash
 # Verify DATABASE_URL
 grep DATABASE_URL .env.production
@@ -684,6 +697,7 @@ docker run --rm curlimages/curl \
 ```
 
 **Migration failures**
+
 ```bash
 # Check migration status
 docker-compose -f docker-compose.deploy.yml run --rm api \
@@ -700,6 +714,7 @@ docker-compose -f docker-compose.deploy.yml run --rm api \
 ### Performance Issues
 
 **Slow queries**
+
 ```bash
 # Enable query logging
 docker-compose -f docker-compose.deploy.yml run --rm api \
@@ -711,6 +726,7 @@ docker-compose -f docker-compose.deploy.yml run --rm api \
 ```
 
 **High memory usage**
+
 ```bash
 # Check container memory
 docker stats tally_api
