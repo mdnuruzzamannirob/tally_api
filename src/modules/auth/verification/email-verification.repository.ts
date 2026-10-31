@@ -1,3 +1,4 @@
+import { ApiError } from "../../../core/errors/api-error.js";
 import type { PrismaClient } from "../../../generated/prisma/client.js";
 
 export class EmailVerificationRepository {
@@ -11,9 +12,21 @@ export class EmailVerificationRepository {
     expiresAt: Date;
   }) {
     return this.client.$transaction(async (transaction) => {
-      const user = await transaction.user.create({
-        data: { name: input.name, email: input.email, passwordHash: input.passwordHash },
-      });
+      const user = await transaction.user
+        .create({
+          data: { name: input.name, email: input.email, passwordHash: input.passwordHash },
+        })
+        .catch((error: unknown) => {
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "code" in error &&
+            error.code === "P2002"
+          ) {
+            throw new ApiError(409, "CONFLICT", "An account with this email already exists.");
+          }
+          throw error;
+        });
       await transaction.emailVerificationToken.create({
         data: { userId: user.id, tokenHash: input.tokenHash, expiresAt: input.expiresAt },
       });
@@ -32,14 +45,21 @@ export class EmailVerificationRepository {
     return this.client.emailVerificationToken.findUnique({ where: { tokenHash } });
   }
 
-  verifyUser(userId: string, verifiedAt: Date) {
-    return this.client.$transaction([
-      this.client.user.update({
+  verifyUser(userId: string, verifiedAt: Date, tokenHash: string) {
+    return this.client.$transaction(async (transaction) => {
+      // Serialize verification and recheck expiry when consuming the credential.
+      await transaction.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
+      const consumed = await transaction.emailVerificationToken.deleteMany({
+        where: { userId, tokenHash, expiresAt: { gt: verifiedAt } },
+      });
+      if (consumed.count !== 1) return false;
+      await transaction.user.update({
         where: { id: userId },
         data: { emailVerified: true, emailVerifiedAt: verifiedAt },
-      }),
-      this.client.emailVerificationToken.deleteMany({ where: { userId } }),
-    ]);
+      });
+      await transaction.emailVerificationToken.deleteMany({ where: { userId } });
+      return true;
+    });
   }
 
   replaceToken(userId: string, tokenHash: string, expiresAt: Date) {

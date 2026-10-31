@@ -119,4 +119,33 @@ describe.skipIf(!runDatabaseTests)("registration and email verification", () => 
       data: resend.body.data,
     });
   });
+  it("consumes a verification link only once under concurrent requests", async () => {
+    await request(app)
+      .post("/api/v1/auth/register")
+      .send({
+        email: "concurrent@example.test",
+        password: "safe-test-password",
+      })
+      .expect(201);
+    const token = emailService.sent.at(-1)!.token;
+    const results = await Promise.all([
+      request(app).post("/api/v1/auth/verify-email").send({ token }),
+      request(app).post("/api/v1/auth/verify-email").send({ token }),
+    ]);
+    expect(results.map((result) => result.status).sort()).toEqual([200, 400]);
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: "concurrent@example.test" },
+    });
+    expect(user.emailVerified).toBe(true);
+    expect(await prisma.emailVerificationToken.count({ where: { userId: user.id } })).toBe(0);
+  });
+  it("returns a conflict rather than an internal error for concurrent registrations", async () => {
+    const input = { email: "duplicate@example.test", password: "safe-test-password" };
+    const results = await Promise.all([
+      request(app).post("/api/v1/auth/register").send(input),
+      request(app).post("/api/v1/auth/register").send(input),
+    ]);
+    expect(results.map((result) => result.status).sort()).toEqual([201, 409]);
+    expect(await prisma.user.count({ where: { email: input.email } })).toBe(1);
+  });
 });

@@ -1,7 +1,7 @@
 import { startNotificationWorker } from "./modules/notifications/notifications.runtime.js";
 import { app } from "./app.js";
 import { env } from "./core/config/env.js";
-import { disconnectDatabase } from "./core/database/prisma.js";
+import { prisma, disconnectDatabase } from "./core/database/prisma.js";
 import { logger } from "./core/logger/logger.js";
 
 const port = env.PORT;
@@ -25,11 +25,27 @@ const server = app.listen(port, () => {
 });
 
 const stopNotificationWorker = startNotificationWorker();
+// Expired shared counters are kept briefly to avoid unbounded table growth.
+const rateLimitCleanup =
+  env.NODE_ENV === "production"
+    ? setInterval(() => {
+        void prisma.$executeRaw`DELETE FROM auth_rate_limits WHERE ctid IN (
+    SELECT ctid FROM auth_rate_limits WHERE reset_at < NOW() - INTERVAL '1 hour' LIMIT 5000
+  )`.catch(() =>
+          logger.warn(
+            { event: "rate_limit_cleanup_failed" },
+            "Could not clean up expired rate limits",
+          ),
+        );
+      }, 15 * 60_000)
+    : undefined;
+rateLimitCleanup?.unref();
 let isShuttingDown = false;
 
 async function shutdown(reason: string, exitCode = 0): Promise<void> {
   if (isShuttingDown) return;
   isShuttingDown = true;
+  if (rateLimitCleanup) clearInterval(rateLimitCleanup);
   const workerStopped = stopNotificationWorker();
 
   logger.info({ event: "server_shutdown_started", reason }, "Tally API shutting down");

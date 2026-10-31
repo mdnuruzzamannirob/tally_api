@@ -49,7 +49,18 @@ export class EmailVerificationService {
         "Verification token is invalid or expired.",
       );
     }
-    await this.repository.verifyUser(token.userId, new Date());
+    const consumed = await this.repository.verifyUser(
+      token.userId,
+      new Date(),
+      hashToken(rawToken),
+    );
+    if (!consumed) {
+      throw new ApiError(
+        400,
+        "INVALID_OR_EXPIRED_TOKEN",
+        "Verification token is invalid or expired.",
+      );
+    }
   }
 
   async resend(email: string): Promise<void> {

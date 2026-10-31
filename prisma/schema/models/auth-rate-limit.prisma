@@ -1,0 +1,10 @@
+model AuthRateLimit {
+  bucket String
+  keyHash String @map("key_hash")
+  hits Int
+  resetAt DateTime @db.Timestamptz(3) @map("reset_at")
+
+  @@id([bucket, keyHash])
+  @@index([resetAt])
+  @@map("auth_rate_limits")
+}

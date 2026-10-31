@@ -99,6 +99,11 @@ describe("auth primitives", () => {
     await request(app).post("/refresh").set("Origin", "https://not-allowed.example").expect(403);
     await request(app)
       .post("/refresh")
+      .set("Origin", "http://localhost:3001")
+      .set("X-Requested-With", "XMLHttpRequest")
+      .expect(204);
+    await request(app)
+      .post("/refresh")
       .set("Origin", "http://localhost:3000")
       .set("X-Requested-With", "XMLHttpRequest")
       .expect(204);

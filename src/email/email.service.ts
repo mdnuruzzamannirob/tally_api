@@ -20,7 +20,7 @@ function verificationMessage(input: { email: string; token: string }): EmailMess
     ...renderEmail({
       eyebrow: "Welcome to Tally",
       title: "Verify your email address",
-      body: "Thanks for joining Tally. Confirm your email address to finish setting up your account.",
+      body: "Thanks for joining Tally. Confirm your email address to finish setting up your account. This link expires in 24 hours.",
       buttonLabel: "Verify email address",
       buttonUrl: buildVerificationUrl(input.token),
       note: "If you did not create a Tally account, you can safely ignore this email.",
@@ -35,7 +35,7 @@ function passwordResetMessage(input: { email: string; token: string }): EmailMes
     ...renderEmail({
       eyebrow: "Tally account security",
       title: "Reset your password",
-      body: "We received a request to reset your Tally password. Click the button below to choose a new one.",
+      body: "We received a request to reset your Tally password. Choose a new password using the secure link below. This link expires in 30 minutes and can only be used once.",
       buttonLabel: "Reset password",
       buttonUrl: buildPasswordResetUrl(input.token),
       note: "If you did not request a password reset, no action is needed. This link is time-limited.",
