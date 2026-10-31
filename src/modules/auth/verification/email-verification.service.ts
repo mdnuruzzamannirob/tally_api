@@ -1,7 +1,7 @@
 import { authConfig } from "../../../core/config/auth.config.js";
 import { ApiError } from "../../../core/errors/api-error.js";
 import { generateOpaqueToken, hashToken } from "../../../core/security/crypto.js";
-import { hashPassword } from "../../../core/security/password.js";
+import { hashPassword, verifyPassword } from "../../../core/security/password.js";
 import type { EmailService } from "../../../email/email.types.js";
 import type { AuthRepository } from "../auth.repository.js";
 import type { RegisterInput } from "../auth.validators.js";
@@ -15,7 +15,18 @@ export class EmailVerificationService {
   ) {}
 
   async register(input: RegisterInput): Promise<void> {
-    if (await this.users.findUserByEmail(input.email)) {
+    const existingUser = await this.users.findUserByEmail(input.email);
+    if (existingUser) {
+      // Recover registrations whose account was saved before email delivery failed.
+      // Never change an existing account's password or profile during a retry.
+      if (
+        !existingUser.emailVerified &&
+        existingUser.passwordHash &&
+        (await verifyPassword(input.password, existingUser.passwordHash))
+      ) {
+        await this.resend(input.email);
+        return;
+      }
       throw new ApiError(409, "CONFLICT", "An account with this email already exists.");
     }
     const rawToken = generateOpaqueToken();

@@ -1,4 +1,5 @@
 import { logger } from "../../core/logger/logger.js";
+import { ApiError } from "../../core/errors/api-error.js";
 
 export function requireEmailApiKey(apiKey: string | undefined): string {
   if (!apiKey) throw new Error("Email provider credentials are not configured.");
@@ -14,7 +15,11 @@ export function reportDeliveryFailure(provider: string, error: unknown): never {
     },
     "Email delivery failed",
   );
-  throw new Error("Email delivery failed.");
+  throw new ApiError(
+    503,
+    "EMAIL_DELIVERY_FAILED",
+    "Unable to send email right now. Please try again shortly.",
+  );
 }
 
 export async function deliver(provider: string, url: string, init: RequestInit): Promise<void> {

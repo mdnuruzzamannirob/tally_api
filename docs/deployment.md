@@ -23,3 +23,17 @@ is set, allowing a separate privileged migration role.
 The runtime container exposes port `5000` and its health check calls
 `/api/v1/health`. Do not embed connection strings, OAuth credentials, or token
 secrets in images, Compose files, or source control.
+
+## Registration fails after the account is created
+
+If registration returns `EMAIL_DELIVERY_FAILED`, inspect the `email_delivery_failed`
+log event. Account creation happens before delivery, so an unverified account may
+already exist. After fixing delivery, repeat signup with the same email/password
+or use `/api/v1/auth/resend-verification`. Retrying signup never replaces an
+existing account's password or profile.
+
+For Resend, set `EMAIL_API_KEY` to a sending key and `EMAIL_FROM` to an address
+on a verified sending domain. The `onboarding@resend.dev` test sender restricts
+recipients and is unsuitable for public signup. Configure the verified sender in
+Render's environment and redeploy; changing a local `.env.production` does not
+change Render's environment. Do not bypass email verification to recover an account.
