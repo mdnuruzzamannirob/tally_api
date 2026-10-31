@@ -12,15 +12,15 @@ the selected provider's credentials and sender. The selected provider's `*_FROM`
 must be verified/allowed by that provider; there is deliberately no shared sender
 fallback for real delivery providers.
 
-| `EMAIL_PROVIDER` | Required settings                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `brevo`          | `BREVO_API_KEY`, `BREVO_FROM`                                                                      |
-| `resend`         | `RESEND_API_KEY`, `RESEND_FROM`                                                                    |
-| `sendgrid`       | `SENDGRID_API_KEY`, `SENDGRID_FROM`                                                                |
-| `mailgun`        | `MAILGUN_API_KEY`, `EMAIL_MAILGUN_DOMAIN`, `MAILGUN_FROM`                                         |
-| `gmail`          | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_FROM`                     |
-| `smtp`           | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`, `SMTP_FROM`       |
-| `console`        | `EMAIL_FROM`; local/test only                                                                      |
+| `EMAIL_PROVIDER` | Required settings                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| `brevo`          | `BREVO_API_KEY`, `BREVO_FROM`                                                               |
+| `resend`         | `RESEND_API_KEY`, `RESEND_FROM`                                                             |
+| `sendgrid`       | `SENDGRID_API_KEY`, `SENDGRID_FROM`                                                         |
+| `mailgun`        | `MAILGUN_API_KEY`, `EMAIL_MAILGUN_DOMAIN`, `MAILGUN_FROM`                                   |
+| `gmail`          | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_FROM`               |
+| `smtp`           | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`, `SMTP_FROM` |
+| `console`        | `EMAIL_FROM`; local/test only                                                               |
 
 There is no shared `EMAIL_API_KEY` or custom email API URL. This prevents one
 provider's key or sender from accidentally being used by another provider. No
