@@ -1,7 +1,15 @@
 import { z } from "zod";
 
 const nodeEnvironments = ["development", "test", "production"] as const;
-const emailProviders = ["console", "resend", "sendgrid", "mailgun", "smtp"] as const;
+const emailProviders = [
+  "console",
+  "resend",
+  "sendgrid",
+  "mailgun",
+  "smtp",
+  "gmail",
+  "brevo",
+] as const;
 const logLevels = ["trace", "debug", "info", "warn", "error", "fatal"] as const;
 const sameSiteValues = ["lax", "strict", "none"] as const;
 
@@ -10,6 +18,15 @@ const durationSchema = z.string().regex(/^\d+[smhdw]$/, "Must be a duration such
 const optionalString = z.preprocess(
   (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
   z.string().trim().min(1).optional(),
+);
+
+const optionalEmail = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().email().optional(),
+);
+const optionalPort = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.coerce.number().int().min(1).max(65_535).optional(),
 );
 
 const booleanSchema = z.preprocess((value) => {
@@ -32,6 +49,7 @@ const databaseUrlSchema = z
 const envSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvironments).default("development"),
+    NOTIFICATION_WORKER_ENABLED: booleanSchema.default(true),
     PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
     DATABASE_URL: databaseUrlSchema,
     TEST_DATABASE_URL: databaseUrlSchema.optional(),
@@ -41,15 +59,25 @@ const envSchema = z
     ACCESS_TOKEN_EXPIRES_IN: durationSchema.default("15m"),
     REFRESH_TOKEN_EXPIRES_IN: durationSchema.default("7d"),
     EMAIL_PROVIDER: z.enum(emailProviders).default("console"),
-    EMAIL_API_KEY: optionalString,
-    EMAIL_FROM: z.string().email(),
-    EMAIL_API_BASE_URL: z.preprocess(
-      (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
-      z.string().url().optional(),
-    ),
+    BREVO_API_KEY: optionalString,
+    RESEND_API_KEY: optionalString,
+    SENDGRID_API_KEY: optionalString,
+    MAILGUN_API_KEY: optionalString,
+    BREVO_FROM: optionalEmail,
+    RESEND_FROM: optionalEmail,
+    SENDGRID_FROM: optionalEmail,
+    MAILGUN_FROM: optionalEmail,
+    GMAIL_FROM: optionalEmail,
+    SMTP_FROM: optionalEmail,
+    GMAIL_CLIENT_ID: optionalString,
+    GMAIL_CLIENT_SECRET: optionalString,
+    GMAIL_REFRESH_TOKEN: optionalString,
+    RESEND_WEBHOOK_SECRET: optionalString,
+    // Used only by the console transport. Real providers use their own *_FROM setting.
+    EMAIL_FROM: optionalEmail,
     EMAIL_MAILGUN_DOMAIN: optionalString,
     EMAIL_SMTP_HOST: optionalString,
-    EMAIL_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).optional(),
+    EMAIL_SMTP_PORT: optionalPort,
     EMAIL_SMTP_USER: optionalString,
     EMAIL_SMTP_PASSWORD: optionalString,
     EMAIL_SMTP_SECURE: booleanSchema.default(true),
@@ -62,27 +90,58 @@ const envSchema = z
     LOG_LEVEL: z.enum(logLevels).default("info"),
   })
   .superRefine((value, context) => {
-    if (value.NODE_ENV !== "production") return;
-
-    if (Buffer.byteLength(value.ACCESS_TOKEN_SECRET, "utf8") < 32) {
+    if (
+      value.NODE_ENV === "production" &&
+      Buffer.byteLength(value.ACCESS_TOKEN_SECRET, "utf8") < 32
+    ) {
       context.addIssue({
         code: "custom",
         path: ["ACCESS_TOKEN_SECRET"],
         message: "Must contain at least 32 bytes in production.",
       });
     }
-    if (value.EMAIL_PROVIDER === "console") {
+    if (value.EMAIL_PROVIDER === "console" && value.NODE_ENV === "production") {
       context.addIssue({
         code: "custom",
         path: ["EMAIL_PROVIDER"],
         message: "Console email is not allowed in production.",
       });
-    } else if (value.EMAIL_PROVIDER !== "smtp" && !value.EMAIL_API_KEY) {
+    }
+    const providerKeys = {
+      resend: value.RESEND_API_KEY,
+      sendgrid: value.SENDGRID_API_KEY,
+      mailgun: value.MAILGUN_API_KEY,
+    } as const;
+    if (value.EMAIL_PROVIDER in providerKeys) {
+      const provider = value.EMAIL_PROVIDER as keyof typeof providerKeys;
+      if (!providerKeys[provider]) {
+        context.addIssue({
+          code: "custom",
+          path: [`${provider.toUpperCase()}_API_KEY`],
+          message: "Required for the selected email provider.",
+        });
+      }
+    }
+    if (value.EMAIL_PROVIDER === "brevo" && !value.BREVO_API_KEY) {
       context.addIssue({
         code: "custom",
-        path: ["EMAIL_API_KEY"],
-        message: "Required for the selected production email provider.",
+        path: ["BREVO_API_KEY"],
+        message: "Required for Brevo email delivery.",
       });
+    }
+    if (value.EMAIL_PROVIDER === "gmail") {
+      for (const key of [
+        "GMAIL_CLIENT_ID",
+        "GMAIL_CLIENT_SECRET",
+        "GMAIL_REFRESH_TOKEN",
+      ] as const) {
+        if (!value[key])
+          context.addIssue({
+            code: "custom",
+            path: [key],
+            message: "Required for Gmail API delivery.",
+          });
+      }
     }
     if (value.EMAIL_PROVIDER === "mailgun" && !value.EMAIL_MAILGUN_DOMAIN) {
       context.addIssue({
@@ -107,6 +166,28 @@ const envSchema = z
         }
       }
     }
+    const senderByProvider = {
+      brevo: value.BREVO_FROM,
+      resend: value.RESEND_FROM,
+      sendgrid: value.SENDGRID_FROM,
+      mailgun: value.MAILGUN_FROM,
+      gmail: value.GMAIL_FROM,
+      smtp: value.SMTP_FROM,
+      console: value.EMAIL_FROM,
+    } as const;
+    if (!senderByProvider[value.EMAIL_PROVIDER]) {
+      const key =
+        value.EMAIL_PROVIDER === "console"
+          ? "EMAIL_FROM"
+          : `${value.EMAIL_PROVIDER.toUpperCase()}_FROM`;
+      context.addIssue({
+        code: "custom",
+        path: [key],
+        message: "Required for the selected email provider.",
+      });
+    }
+    if (value.NODE_ENV !== "production") return;
+
     for (const key of [
       "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET",

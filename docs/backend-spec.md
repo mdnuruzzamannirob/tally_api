@@ -2312,9 +2312,7 @@ ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN=7d
 
 EMAIL_PROVIDER=console
-EMAIL_API_KEY=
 EMAIL_FROM=no-reply@tally.local
-EMAIL_API_BASE_URL=
 EMAIL_MAILGUN_DOMAIN=
 EMAIL_SMTP_HOST=
 EMAIL_SMTP_PORT=587
@@ -2359,13 +2357,12 @@ DATABASE_URL
 WEB_APP_URL
 ACCESS_TOKEN_SECRET
 EMAIL_PROVIDER
-EMAIL_FROM
 ```
 
 `ACCESS_TOKEN_SECRET` must contain at least 32 bytes of unpredictable material.
 
-Production must reject `EMAIL_PROVIDER=console`. Provider-specific credentials
-such as `EMAIL_API_KEY` are required whenever the selected adapter needs them.
+Production must reject `EMAIL_PROVIDER=console`. The selected provider's
+dedicated key and sender (for example `BREVO_API_KEY` and `BREVO_FROM`) are required.
 The development console provider does not deliver email; it logs the recipient,
 subject, and a clickable verification or password-reset link instead.
 
@@ -2533,3 +2530,7 @@ The backend is complete when:
 - Unit and integration tests pass.
 - Environment validation works.
 - Production build starts successfully.
+
+## Email and notification runtime
+
+See [email-notifications.md](email-notifications.md) for current notification endpoints, transactional alerts, reminder rules, delivery retries and signed Resend delivery events. The email notification preference now controls optional alert emails; account security messages remain mandatory for verified users.

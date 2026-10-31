@@ -1,3 +1,4 @@
+import { startNotificationWorker } from "./modules/notifications/notifications.runtime.js";
 import { app } from "./app.js";
 import { env } from "./core/config/env.js";
 import { disconnectDatabase } from "./core/database/prisma.js";
@@ -23,11 +24,13 @@ const server = app.listen(port, () => {
   );
 });
 
+const stopNotificationWorker = startNotificationWorker();
 let isShuttingDown = false;
 
 async function shutdown(reason: string, exitCode = 0): Promise<void> {
   if (isShuttingDown) return;
   isShuttingDown = true;
+  const workerStopped = stopNotificationWorker();
 
   logger.info({ event: "server_shutdown_started", reason }, "Tally API shutting down");
   const forceExit = setTimeout(() => {
@@ -47,6 +50,7 @@ async function shutdown(reason: string, exitCode = 0): Promise<void> {
       process.exit(1);
     }
     try {
+      await workerStopped;
       await disconnectDatabase();
       clearTimeout(forceExit);
       logger.info({ event: "server_shutdown_completed" }, "Tally API shutdown completed");

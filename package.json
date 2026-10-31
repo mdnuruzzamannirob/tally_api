@@ -26,6 +26,7 @@
     "contracts:validate": "pnpm contracts:validate:openapi && pnpm contracts:validate:postman",
     "contracts:validate:openapi": "tsx scripts/validate-openapi.ts",
     "contracts:validate:postman": "tsx scripts/validate-postman.ts",
+    "db:setup": "prisma generate && prisma migrate deploy",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
@@ -33,7 +34,11 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "audit:identity": "tsx scripts/audit-identity-boundary.ts",
-    "audit:repository": "tsx scripts/audit-repository-boundary.ts"
+    "audit:repository": "tsx scripts/audit-repository-boundary.ts",
+    "env:check": "tsx scripts/check-environment.ts",
+    "env:check:production": "cross-env NODE_ENV=production tsx scripts/check-environment.ts",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose stop postgres"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",

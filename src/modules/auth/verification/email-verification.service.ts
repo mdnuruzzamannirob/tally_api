@@ -62,5 +62,6 @@ export class EmailVerificationService {
       new Date(Date.now() + authConfig.verificationTokenLifetimeMs),
     );
     await this.emailService.sendVerificationEmail({ email: user.email, token: rawToken });
+    await this.repository.pruneDeliveredTokens(user.id, hashToken(rawToken));
   }
 }

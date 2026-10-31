@@ -15,7 +15,8 @@ const productionEnvironment = {
   NODE_ENV: "production",
   ACCESS_TOKEN_SECRET: "a".repeat(32),
   EMAIL_PROVIDER: "sendgrid",
-  EMAIL_API_KEY: "email-api-key",
+  SENDGRID_API_KEY: "email-api-key",
+  SENDGRID_FROM: "no-reply@tally.local",
   GOOGLE_CLIENT_ID: "google-client-id",
   GOOGLE_CLIENT_SECRET: "google-client-secret",
   GITHUB_CLIENT_ID: "github-client-id",
@@ -45,6 +46,47 @@ describe("environment configuration", () => {
     });
   });
 
+  it("requires real email credentials in local mode too", () => {
+    expect(() => parseEnvironment({ ...developmentEnvironment, EMAIL_PROVIDER: "resend" })).toThrow(
+      /RESEND_API_KEY/,
+    );
+    expect(
+      parseEnvironment({
+        ...developmentEnvironment,
+        EMAIL_PROVIDER: "resend",
+        RESEND_API_KEY: "local-test-key",
+        RESEND_FROM: "onboarding@resend.dev",
+      }).EMAIL_PROVIDER,
+    ).toBe("resend");
+  });
+
+  it("allows the Resend test sender in production so the app can start", () => {
+    expect(
+      parseEnvironment({
+        ...productionEnvironment,
+        EMAIL_PROVIDER: "resend",
+        RESEND_API_KEY: "resend-test-key",
+        RESEND_FROM: "onboarding@resend.dev",
+      }).RESEND_FROM,
+    ).toBe("onboarding@resend.dev");
+  });
+
+  it("requires Gmail API credentials when Gmail delivery is selected", () => {
+    expect(() => parseEnvironment({ ...developmentEnvironment, EMAIL_PROVIDER: "gmail" })).toThrow(
+      /GMAIL_CLIENT_ID/,
+    );
+    expect(
+      parseEnvironment({
+        ...developmentEnvironment,
+        EMAIL_PROVIDER: "gmail",
+        GMAIL_CLIENT_ID: "client",
+        GMAIL_CLIENT_SECRET: "secret",
+        GMAIL_REFRESH_TOKEN: "refresh",
+        GMAIL_FROM: "sender@example.test",
+      }).EMAIL_PROVIDER,
+    ).toBe("gmail");
+  });
+
   it("rejects unsafe production configuration", () => {
     expect(() =>
       parseEnvironment({
@@ -69,7 +111,7 @@ describe("environment configuration", () => {
       parseEnvironment({
         ...productionEnvironment,
         EMAIL_PROVIDER: "smtp",
-        EMAIL_API_KEY: undefined,
+        SENDGRID_API_KEY: undefined,
       }),
     ).toThrow(/EMAIL_SMTP_HOST|EMAIL_SMTP_PORT|EMAIL_SMTP_USER|EMAIL_SMTP_PASSWORD/);
   });
@@ -79,12 +121,50 @@ describe("environment configuration", () => {
       parseEnvironment({
         ...productionEnvironment,
         EMAIL_PROVIDER: "smtp",
-        EMAIL_API_KEY: undefined,
+        SENDGRID_API_KEY: undefined,
         EMAIL_SMTP_HOST: "smtp.example.test",
         EMAIL_SMTP_PORT: "587",
         EMAIL_SMTP_USER: "mailer",
         EMAIL_SMTP_PASSWORD: "secret",
+        SMTP_FROM: "sender@example.test",
       }),
     ).toMatchObject({ EMAIL_PROVIDER: "smtp", EMAIL_SMTP_PORT: 587 });
+  });
+});
+
+describe("provider-specific configuration", () => {
+  it.each([
+    ["resend", "RESEND_API_KEY"],
+    ["sendgrid", "SENDGRID_API_KEY"],
+    ["mailgun", "MAILGUN_API_KEY"],
+  ])("accepts a dedicated %s key and ignores blank fields for other providers", (provider, key) => {
+    const config = {
+      ...developmentEnvironment,
+      EMAIL_PROVIDER: provider,
+      [key]: "dedicated-key",
+      EMAIL_SMTP_PORT: "",
+      BREVO_FROM: "",
+      [`${provider.toUpperCase()}_FROM`]: "sender@example.test",
+      ...(provider === "mailgun" ? { EMAIL_MAILGUN_DOMAIN: "mg.example.test" } : {}),
+    };
+    expect(parseEnvironment(config).EMAIL_PROVIDER).toBe(provider);
+  });
+  it("does not use a different provider's dedicated key", () => {
+    expect(() =>
+      parseEnvironment({
+        ...developmentEnvironment,
+        EMAIL_PROVIDER: "sendgrid",
+        RESEND_API_KEY: "resend-only",
+      }),
+    ).toThrow(/SENDGRID_API_KEY/);
+  });
+  it("requires the selected provider's sender", () => {
+    expect(() =>
+      parseEnvironment({
+        ...developmentEnvironment,
+        EMAIL_PROVIDER: "sendgrid",
+        SENDGRID_API_KEY: "dedicated-key",
+      }),
+    ).toThrow(/SENDGRID_FROM/);
   });
 });

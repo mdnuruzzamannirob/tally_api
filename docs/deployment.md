@@ -32,8 +32,10 @@ already exist. After fixing delivery, repeat signup with the same email/password
 or use `/api/v1/auth/resend-verification`. Retrying signup never replaces an
 existing account's password or profile.
 
-For Resend, set `EMAIL_API_KEY` to a sending key and `EMAIL_FROM` to an address
+For Resend, set `RESEND_API_KEY` to a sending key and `RESEND_FROM` to an address
 on a verified sending domain. The `onboarding@resend.dev` test sender restricts
 recipients and is unsuitable for public signup. Configure the verified sender in
 Render's environment and redeploy; changing a local `.env.production` does not
 change Render's environment. Do not bypass email verification to recover an account.
+
+See [email and notification deployment](email-notifications.md) for the notification migration, worker and provider setup.

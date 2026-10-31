@@ -1,7 +1,15 @@
-export type EmailMessage = { to: string; subject: string; html: string };
+export type EmailMessage = {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  idempotencyKey?: string;
+};
+
+export type EmailReceipt = void | { id: string };
 
 export interface EmailProvider {
-  send(message: EmailMessage): Promise<void>;
+  send(message: EmailMessage): Promise<EmailReceipt>;
 }
 
 export interface EmailService {

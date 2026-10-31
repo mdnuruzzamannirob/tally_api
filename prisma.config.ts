@@ -1,6 +1,8 @@
-import "dotenv/config";
+import { loadEnvironment } from "./src/core/config/load-environment.js";
 
 import { defineConfig, env } from "prisma/config";
+
+loadEnvironment();
 
 const migrationUrl = process.env.MIGRATION_DATABASE_URL || env("DATABASE_URL");
 

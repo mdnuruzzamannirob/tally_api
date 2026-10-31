@@ -1,3 +1,6 @@
+import { createEmailWebhookRouter } from "./email/email-webhook.routes.js";
+import { EmailEventsRepository } from "./email/email-events.repository.js";
+import { prisma } from "./core/database/prisma.js";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -27,6 +30,7 @@ export function createApp(overrides: AppDependencies = {}): Express {
   app.use(requestLoggerMiddleware);
   app.use(helmet());
   app.use(cors(corsOptions));
+  app.use(`${API_PREFIX}/webhooks`, createEmailWebhookRouter(new EmailEventsRepository(prisma)));
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(cookieParser());
   app.use(compression());

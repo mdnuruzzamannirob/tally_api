@@ -1,3 +1,5 @@
+import { createNotificationsRouter } from "../modules/notifications/notifications.routes.js";
+import { notificationService } from "../modules/notifications/notifications.runtime.js";
 import { Router } from "express";
 
 import { createEmailService } from "../email/email.service.js";
@@ -111,6 +113,7 @@ export function createApiRouter(overrides: AppDependencies = {}): Router {
       github: dependencies.githubOAuthService,
     }),
   );
+  router.use("/notifications", createNotificationsRouter(notificationService));
   router.use("/users", createUsersRouter(dependencies.userService));
   router.use("/applications", createApplicationsRouter(dependencies.applicationService));
   router.use("/applications", createApplicationTagRouter(dependencies.tagService));

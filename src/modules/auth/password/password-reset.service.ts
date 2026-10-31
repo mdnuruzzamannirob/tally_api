@@ -23,6 +23,7 @@ export class PasswordResetService {
       new Date(Date.now() + authConfig.passwordResetTokenLifetimeMs),
     );
     await this.emailService.sendPasswordResetEmail({ email: user.email, token: rawToken });
+    await this.repository.pruneDeliveredTokens(user.id, hashToken(rawToken));
   }
 
   async reset(rawToken: string, password: string): Promise<void> {

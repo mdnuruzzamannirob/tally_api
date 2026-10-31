@@ -22,14 +22,13 @@ cp .env.production.example .env.production
 
 # 3. Build Docker image
 docker build -t tally-api:latest \
-  --build-arg PRISMA_GENERATE_DATABASE_URL="$DATABASE_URL" .
+  --build-arg PRISMA_GENERATE_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" .
 
-# 4. Run with Docker Compose
-docker-compose -f docker-compose.deploy.yml up -d
+# 4. Apply migrations before starting this release
+docker compose -f docker-compose.deploy.yml --profile migration run --rm migrate
 
-# 5. Run migrations
-docker-compose -f docker-compose.deploy.yml \
-  --profile migration run migrate
+# 5. Start API
+docker compose -f docker-compose.deploy.yml up -d api
 
 # 6. Verify health
 curl http://localhost:5000/api/v1/health
@@ -80,7 +79,7 @@ Required variables:
 docker build \
   --target runtime \
   -t tally-api:latest \
-  --build-arg PRISMA_GENERATE_DATABASE_URL="$DATABASE_URL" \
+  --build-arg PRISMA_GENERATE_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
   .
 
 # (Optional) Push to container registry
@@ -95,11 +94,11 @@ docker push your-registry/tally-api:latest
 docker-compose -f docker-compose.deploy.yml \
   --profile migration run --rm migrate
 
-# Option B: Manual with built image
+# Option B: Build and run the migration image
+docker build --target migration -t tally-api:migration .
 docker run --rm \
   --env-file .env.production \
-  -e PRISMA_GENERATE_DATABASE_URL="$DATABASE_URL" \
-  tally-api:latest \
+  tally-api:migration \
   pnpm db:deploy
 ```
 
@@ -383,3 +382,5 @@ docker-compose -f docker-compose.deploy.yml run \
 
 **Last Updated**: 2026-08-30
 **Version**: 1.0.0
+
+See [Email and notifications](docs/email-notifications.md) for provider setup and reminder operation.

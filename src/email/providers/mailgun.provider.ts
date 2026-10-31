@@ -1,12 +1,11 @@
 import { emailConfig } from "../../core/config/email.config.js";
-import type { EmailMessage, EmailProvider } from "../email.types.js";
+import type { EmailMessage, EmailProvider, EmailReceipt } from "../email.types.js";
 import { deliver, requireEmailApiKey } from "./provider.utils.js";
 
 export class MailgunEmailProvider implements EmailProvider {
-  send(message: EmailMessage): Promise<void> {
+  send(message: EmailMessage): Promise<EmailReceipt> {
     const apiKey = requireEmailApiKey(emailConfig.apiKey);
-    const url =
-      emailConfig.apiBaseUrl ?? `https://api.mailgun.net/v3/${emailConfig.mailgunDomain}/messages`;
+    const url = `https://api.mailgun.net/v3/${emailConfig.mailgunDomain}/messages`;
     return deliver("mailgun", url, {
       headers: { Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}` },
       body: new URLSearchParams({
@@ -14,6 +13,7 @@ export class MailgunEmailProvider implements EmailProvider {
         to: message.to,
         subject: message.subject,
         html: message.html,
+        ...(message.text ? { text: message.text } : {}),
       }),
     });
   }

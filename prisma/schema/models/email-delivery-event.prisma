@@ -1,0 +1,10 @@
+model EmailDeliveryEvent {
+  id String @id
+  messageId String @map("message_id")
+  type String
+  occurredAt DateTime @db.Timestamptz(3) @map("occurred_at")
+  receivedAt DateTime @default(now()) @db.Timestamptz(3) @map("received_at")
+
+  @@index([messageId, occurredAt])
+  @@map("email_delivery_events")
+}

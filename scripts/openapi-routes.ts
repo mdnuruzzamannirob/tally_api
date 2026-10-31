@@ -10,6 +10,21 @@ export type OpenApiRoute = {
 };
 
 export const openApiRoutes: OpenApiRoute[] = [
+  { method: "get", path: "/notifications", operationId: "listNotifications", auth: "bearer" },
+  {
+    method: "patch",
+    path: "/notifications/read-all",
+    operationId: "readAllNotifications",
+    auth: "bearer",
+  },
+  {
+    method: "patch",
+    path: "/notifications/{id}/read",
+    operationId: "readNotification",
+    auth: "bearer",
+    params: ["id"],
+  },
+  { method: "post", path: "/webhooks/resend", operationId: "resendWebhook", body: "ResendWebhook" },
   { method: "get", path: "/health", operationId: "health" },
   {
     method: "post",

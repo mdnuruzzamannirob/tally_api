@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "../../generated/prisma/client.js";
 import type {
   CreateInterviewInput,
@@ -58,24 +59,35 @@ export class InterviewRepository {
     applicationId: string,
     input: CreateInterviewInput,
   ): Promise<InterviewApplicationResult> {
-    const application = await this.client.application.findFirst({
-      where: { id: applicationId, userId },
-      select: { id: true },
+    return this.client.$transaction(async (transaction) => {
+      const application = await transaction.application.findFirst({
+        where: { id: applicationId, userId },
+        select: { id: true },
+      });
+      if (!application) return { kind: "application-not-found" };
+      const interview = await transaction.interview.create({
+        data: {
+          applicationId,
+          type: input.type,
+          scheduledAt: input.scheduledAt,
+          ...(input.interviewerName ? { interviewerName: input.interviewerName } : {}),
+          ...(input.meetingLink ? { meetingLink: input.meetingLink } : {}),
+          ...(input.location ? { location: input.location } : {}),
+          ...(input.notes ? { notes: input.notes } : {}),
+          ...(input.status ? { status: input.status } : {}),
+        },
+      });
+      await transaction.notification.create({
+        data: {
+          userId,
+          eventKey: `interview:create:${randomUUID()}`,
+          title: "Interview scheduled",
+          body: `Your interview is ${interview.status.toLowerCase()} for ${interview.scheduledAt.toISOString()}. Open the application for details.`,
+          href: `/applications/${interview.applicationId}`,
+        },
+      });
+      return { kind: "created", interview };
     });
-    if (!application) return { kind: "application-not-found" };
-    const interview = await this.client.interview.create({
-      data: {
-        applicationId,
-        type: input.type,
-        scheduledAt: input.scheduledAt,
-        ...(input.interviewerName ? { interviewerName: input.interviewerName } : {}),
-        ...(input.meetingLink ? { meetingLink: input.meetingLink } : {}),
-        ...(input.location ? { location: input.location } : {}),
-        ...(input.notes ? { notes: input.notes } : {}),
-        ...(input.status ? { status: input.status } : {}),
-      },
-    });
-    return { kind: "created", interview };
   }
 
   async update(
@@ -83,33 +95,57 @@ export class InterviewRepository {
     id: string,
     input: UpdateInterviewInput,
   ): Promise<InterviewMutationResult> {
-    const existing = await this.client.interview.findFirst({
-      where: { id, application: { userId } },
-      select: { id: true },
+    return this.client.$transaction(async (transaction) => {
+      const existing = await transaction.interview.findFirst({
+        where: { id, application: { userId } },
+        select: { id: true },
+      });
+      if (!existing) return { kind: "not-found" };
+      const interview = await transaction.interview.update({
+        where: { id },
+        data: {
+          ...(input.type !== undefined ? { type: input.type } : {}),
+          ...(input.scheduledAt !== undefined ? { scheduledAt: input.scheduledAt } : {}),
+          ...(input.interviewerName !== undefined
+            ? { interviewerName: input.interviewerName }
+            : {}),
+          ...(input.meetingLink !== undefined ? { meetingLink: input.meetingLink } : {}),
+          ...(input.location !== undefined ? { location: input.location } : {}),
+          ...(input.notes !== undefined ? { notes: input.notes } : {}),
+          ...(input.status !== undefined ? { status: input.status } : {}),
+        },
+      });
+      await transaction.notification.create({
+        data: {
+          userId,
+          eventKey: `interview:update:${randomUUID()}`,
+          title: "Interview updated",
+          body: `Your interview is ${interview.status.toLowerCase()} for ${interview.scheduledAt.toISOString()}. Open the application for details.`,
+          href: `/applications/${interview.applicationId}`,
+        },
+      });
+      return { kind: "updated", interview };
     });
-    if (!existing) return { kind: "not-found" };
-    const interview = await this.client.interview.update({
-      where: { id },
-      data: {
-        ...(input.type !== undefined ? { type: input.type } : {}),
-        ...(input.scheduledAt !== undefined ? { scheduledAt: input.scheduledAt } : {}),
-        ...(input.interviewerName !== undefined ? { interviewerName: input.interviewerName } : {}),
-        ...(input.meetingLink !== undefined ? { meetingLink: input.meetingLink } : {}),
-        ...(input.location !== undefined ? { location: input.location } : {}),
-        ...(input.notes !== undefined ? { notes: input.notes } : {}),
-        ...(input.status !== undefined ? { status: input.status } : {}),
-      },
-    });
-    return { kind: "updated", interview };
   }
 
   async delete(userId: string, id: string): Promise<boolean> {
-    const existing = await this.client.interview.findFirst({
-      where: { id, application: { userId } },
-      select: { id: true },
+    return this.client.$transaction(async (transaction) => {
+      const existing = await transaction.interview.findFirst({
+        where: { id, application: { userId } },
+        select: { id: true, applicationId: true },
+      });
+      if (!existing) return false;
+      await transaction.interview.delete({ where: { id } });
+      await transaction.notification.create({
+        data: {
+          userId,
+          eventKey: `interview-delete:${randomUUID()}`,
+          title: "Interview removed",
+          body: "An interview was removed from your application.",
+          href: `/applications/${existing.applicationId}`,
+        },
+      });
+      return true;
     });
-    if (!existing) return false;
-    await this.client.interview.delete({ where: { id } });
-    return true;
   }
 }

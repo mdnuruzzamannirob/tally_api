@@ -1,0 +1,20 @@
+model Notification {
+  id String @id @default(cuid())
+  userId String @map("user_id")
+  eventKey String @unique @map("event_key")
+  title String
+  body String
+  href String
+  required Boolean @default(false)
+  readAt DateTime? @db.Timestamptz(3) @map("read_at")
+  emailStatus String @default("PENDING") @map("email_status")
+  providerMessageId String? @map("provider_message_id")
+  attempts Int @default(0)
+  nextAttemptAt DateTime @default(now()) @db.Timestamptz(3) @map("next_attempt_at")
+  createdAt DateTime @default(now()) @db.Timestamptz(3) @map("created_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([emailStatus, nextAttemptAt])
+  @@map("notifications")
+}

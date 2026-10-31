@@ -20,6 +20,14 @@ export class EmailVerificationRepository {
     });
   }
 
+  async pruneDeliveredTokens(userId: string, tokenHash: string) {
+    const delivered = await this.client.emailVerificationToken.findUnique({ where: { tokenHash } });
+    if (!delivered) return;
+    await this.client.emailVerificationToken.deleteMany({
+      where: { userId, createdAt: { lt: delivered.createdAt } },
+    });
+  }
+
   findToken(tokenHash: string) {
     return this.client.emailVerificationToken.findUnique({ where: { tokenHash } });
   }
@@ -36,7 +44,9 @@ export class EmailVerificationRepository {
 
   replaceToken(userId: string, tokenHash: string, expiresAt: Date) {
     return this.client.$transaction([
-      this.client.emailVerificationToken.deleteMany({ where: { userId } }),
+      this.client.emailVerificationToken.deleteMany({
+        where: { userId, expiresAt: { lte: new Date() } },
+      }),
       this.client.emailVerificationToken.create({ data: { userId, tokenHash, expiresAt } }),
     ]);
   }

@@ -137,6 +137,7 @@ async function generateOpenApi(): Promise<void> {
       {
         auth: "Authentication",
         users: "Users",
+        notifications: "Notifications",
         applications: "Applications",
         tags: "Tags",
         notes: "Notes",
@@ -153,6 +154,25 @@ async function generateOpenApi(): Promise<void> {
     operationId.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (value) => value.toUpperCase());
 
   const schemas: Record<string, unknown> = {
+    ResendWebhook: schema(
+      "object",
+      { type: string(), created_at: string("date-time"), data: dataObject({ email_id: string() }) },
+      ["type", "created_at", "data"],
+    ),
+    NotificationsData: dataObject({
+      unread: { type: "integer", minimum: 0 },
+      items: {
+        type: "array",
+        items: dataObject({
+          id: string(),
+          title: string(),
+          body: string(),
+          href: string(),
+          readAt: { type: ["string", "null"], format: "date-time" },
+          createdAt: string("date-time"),
+        }),
+      },
+    }),
     Register: schema("object", { name: string(), email: string("email"), password: string() }, [
       "email",
       "password",
@@ -358,6 +378,10 @@ async function generateOpenApi(): Promise<void> {
   };
 
   const responseDataByOperation: Record<string, string> = {
+    listNotifications: "NotificationsData",
+    readNotification: "MessageData",
+    readAllNotifications: "MessageData",
+    resendWebhook: "MessageData",
     register: "MessageData",
     login: "AuthData",
     logout: "MessageData",
@@ -433,6 +457,14 @@ async function generateOpenApi(): Promise<void> {
     },
   });
   const parameters = (route: (typeof openApiRoutes)[number]) => [
+    ...(route.operationId === "resendWebhook"
+      ? ["svix-id", "svix-timestamp", "svix-signature"].map((name) => ({
+          name,
+          in: "header",
+          required: true,
+          schema: string(),
+        }))
+      : []),
     ...(route.params ?? []).map((name) => ({ name, in: "path", required: true, schema: string() })),
     ...(route.query ?? []).map((name) => ({
       name,
@@ -453,7 +485,11 @@ async function generateOpenApi(): Promise<void> {
     }
     if (route.params?.length) responses["404"] = { $ref: "#/components/responses/NotFound" };
     if (route.method !== "get") responses["409"] = { $ref: "#/components/responses/Conflict" };
-    if (route.operationId === "health") {
+    if (
+      ["health", "register", "resendVerification", "forgotPassword", "resendWebhook"].includes(
+        route.operationId,
+      )
+    ) {
       responses["503"] = { $ref: "#/components/responses/ServiceUnavailable" };
     }
     return responses;
@@ -550,7 +586,9 @@ async function generateOpenApi(): Promise<void> {
       ...(route.auth
         ? { security: [{ [route.auth === "bearer" ? "bearerAuth" : "refreshCookieAuth"]: [] }] }
         : {}),
-      ...(route.params || route.query ? { parameters: parameters(route) } : {}),
+      ...(route.params || route.query || route.operationId === "resendWebhook"
+        ? { parameters: parameters(route) }
+        : {}),
       ...(route.body ? { requestBody: requestBody(route.body) } : {}),
       responses: response(route),
     };
@@ -572,6 +610,7 @@ async function generateOpenApi(): Promise<void> {
     tags: [
       { name: "System", description: "Service health and operational endpoints." },
       { name: "Authentication", description: "Identity, sessions, passwords, and OAuth." },
+      { name: "Notifications", description: "Notification inbox and read state." },
       { name: "Users", description: "User profile and preferences." },
       { name: "Applications", description: "Job application lifecycle management." },
       { name: "Tags", description: "Application categorization." },
@@ -745,6 +784,8 @@ async function generatePostman(): Promise<void> {
   };
 
   const folderNames: Record<string, string> = {
+    notifications: "09 - Notifications",
+    webhooks: "00 - System",
     health: "00 - System",
     auth: "01 - Authentication",
     users: "02 - Users",
@@ -772,6 +813,7 @@ async function generatePostman(): Promise<void> {
     operationId.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (value) => value.toUpperCase());
 
   const pathVariable = (route: OpenApiRoute, parameter: string): string => {
+    if (route.path.startsWith("/notifications/{id}")) return "notificationId";
     if (parameter === "tagId") return "tagId";
     if (route.path.startsWith("/applications/{id}")) return "applicationId";
     if (route.path.startsWith("/tags/{id}")) return "tagId";
@@ -1101,6 +1143,7 @@ async function generatePostman(): Promise<void> {
       { key: "resetToken", value: "", type: "string" },
       { key: "applicationId", value: "", type: "string" },
       { key: "tagId", value: "", type: "string" },
+      { key: "notificationId", value: "", type: "string" },
       { key: "noteId", value: "", type: "string" },
       { key: "interviewId", value: "", type: "string" },
       { key: "oauthProvider", value: "google", type: "string" },

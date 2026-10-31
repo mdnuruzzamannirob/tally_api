@@ -91,14 +91,14 @@ GITHUB_CLIENT_SECRET=from-github-settings
 
 # Email (choose one provider)
 EMAIL_PROVIDER=mailgun
-EMAIL_API_KEY=your-mailgun-api-key
-EMAIL_FROM=noreply@yourdomain.com
+MAILGUN_API_KEY=your-mailgun-api-key
+MAILGUN_FROM=noreply@yourdomain.com
 EMAIL_MAILGUN_DOMAIN=yourdomain.com
 
 # Security
 NODE_ENV=production
 COOKIE_SECURE=true
-COOKIE_SAME_SITE=strict
+COOKIE_SAME_SITE=none
 LOG_LEVEL=info
 ```
 
@@ -221,8 +221,8 @@ WEB_APP_URL=https://yourdomain.com
 
 ```env
 EMAIL_PROVIDER=mailgun
-EMAIL_API_KEY=key
-EMAIL_FROM=noreply@yourdomain.com
+MAILGUN_API_KEY=key
+MAILGUN_FROM=noreply@yourdomain.com
 ```
 
 **OAuth**
@@ -238,7 +238,7 @@ GITHUB_CLIENT_SECRET=secret
 
 ```env
 COOKIE_SECURE=true
-COOKIE_SAME_SITE=strict
+COOKIE_SAME_SITE=none
 NODE_ENV=production
 LOG_LEVEL=info
 ```
@@ -875,3 +875,5 @@ Production deployment should verify:
 **Last Updated**: 2026-08-30
 **Version**: 2.0.0
 **Audience**: DevOps Engineers, System Administrators
+
+For current email, notification worker and webhook setup, follow [email-notifications.md](email-notifications.md). Apply migrations before starting the API release.
