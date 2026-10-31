@@ -55,21 +55,10 @@ check_prerequisites() {
 build() {
     log_info "Building Docker image..."
 
-    local database_url
-    if [ -f "$PROJECT_DIR/.env.production" ]; then
-        database_url=$(grep "^DATABASE_URL=" "$PROJECT_DIR/.env.production" | cut -d= -f2-)
-    fi
-
-    if [ -z "$database_url" ]; then
-        log_error "DATABASE_URL not found in .env.production"
-        exit 1
-    fi
-
     docker build \
         --target runtime \
         -t "$DOCKER_IMAGE:latest" \
         -t "$DOCKER_IMAGE:$(date +%Y%m%d-%H%M%S)" \
-        --build-arg PRISMA_GENERATE_DATABASE_URL="$database_url" \
         "$PROJECT_DIR"
 
     log_info "Docker image built successfully ✓"

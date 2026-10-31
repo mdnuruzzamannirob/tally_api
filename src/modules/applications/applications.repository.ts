@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "../../generated/prisma/client.js";
 import type {
   ChangeApplicationStatusInput,
@@ -220,6 +221,15 @@ export class ApplicationRepository {
           fromStatus: application.status,
           toStatus: input.toStatus,
           ...(input.note ? { note: input.note } : {}),
+        },
+      });
+      await transaction.notification.create({
+        data: {
+          userId,
+          eventKey: `application-status:${randomUUID()}`,
+          title: "Application status updated",
+          body: `Your application status changed to ${input.toStatus.toLowerCase()}.`,
+          href: `/applications/${id}`,
         },
       });
       return { kind: "changed", id, status: input.toStatus };

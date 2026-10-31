@@ -4,7 +4,7 @@ services:
       context: .
       target: runtime
       args:
-        PRISMA_GENERATE_DATABASE_URL: ${PRISMA_GENERATE_DATABASE_URL}
+        PRISMA_GENERATE_DATABASE_URL: ${PRISMA_GENERATE_DATABASE_URL:-postgresql://dummy:dummy@localhost:5432/dummy}
     env_file:
       - path: .env.production
         required: false
@@ -29,7 +29,7 @@ services:
       context: .
       target: migration
       args:
-        PRISMA_GENERATE_DATABASE_URL: ${PRISMA_GENERATE_DATABASE_URL}
+        PRISMA_GENERATE_DATABASE_URL: ${PRISMA_GENERATE_DATABASE_URL:-postgresql://dummy:dummy@localhost:5432/dummy}
     env_file:
       - path: .env.production
         required: false

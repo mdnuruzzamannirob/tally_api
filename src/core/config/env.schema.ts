@@ -32,6 +32,7 @@ const databaseUrlSchema = z
 const envSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvironments).default("development"),
+    NOTIFICATION_WORKER_ENABLED: booleanSchema.default(true),
     PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
     DATABASE_URL: databaseUrlSchema,
     TEST_DATABASE_URL: databaseUrlSchema.optional(),
@@ -42,6 +43,7 @@ const envSchema = z
     REFRESH_TOKEN_EXPIRES_IN: durationSchema.default("7d"),
     EMAIL_PROVIDER: z.enum(emailProviders).default("console"),
     EMAIL_API_KEY: optionalString,
+    RESEND_WEBHOOK_SECRET: optionalString,
     EMAIL_FROM: z.string().email(),
     EMAIL_API_BASE_URL: z.preprocess(
       (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
@@ -69,6 +71,17 @@ const envSchema = z
         code: "custom",
         path: ["ACCESS_TOKEN_SECRET"],
         message: "Must contain at least 32 bytes in production.",
+      });
+    }
+    if (
+      value.EMAIL_PROVIDER === "resend" &&
+      value.EMAIL_FROM.toLowerCase().endsWith("@resend.dev")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["EMAIL_FROM"],
+        message:
+          "Use a verified sending domain for Resend in production; resend.dev is restricted to testing.",
       });
     }
     if (value.EMAIL_PROVIDER === "console") {

@@ -1,6 +1,7 @@
 export const loggerRedact = {
   paths: [
     "req.headers.authorization",
+    "req.headers.svix-signature",
     "req.headers.cookie",
     "req.headers.x-api-key",
     "req.headers.referer",

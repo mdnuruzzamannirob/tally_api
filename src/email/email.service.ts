@@ -64,8 +64,8 @@ function emailTemplate(input: {
 class DefaultEmailService implements EmailService {
   constructor(private readonly provider: EmailProvider) {}
 
-  private send(message: EmailMessage): Promise<void> {
-    return this.provider.send(message);
+  private async send(message: EmailMessage): Promise<void> {
+    await this.provider.send(message);
   }
 
   sendVerificationEmail(input: { email: string; token: string }): Promise<void> {
@@ -77,7 +77,7 @@ class DefaultEmailService implements EmailService {
   }
 }
 
-export function createEmailService(): EmailService {
+export function createEmailProvider(): EmailProvider {
   const providers: Record<typeof emailConfig.provider, EmailProvider> = {
     console: new ConsoleEmailProvider(),
     resend: new ResendEmailProvider(),
@@ -85,5 +85,9 @@ export function createEmailService(): EmailService {
     mailgun: new MailgunEmailProvider(),
     smtp: new SmtpEmailProvider(),
   };
-  return new DefaultEmailService(providers[emailConfig.provider]);
+  return providers[emailConfig.provider];
+}
+
+export function createEmailService(): EmailService {
+  return new DefaultEmailService(createEmailProvider());
 }

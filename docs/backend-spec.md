@@ -2533,3 +2533,7 @@ The backend is complete when:
 - Unit and integration tests pass.
 - Environment validation works.
 - Production build starts successfully.
+
+## Email and notification runtime
+
+See [email-notifications.md](email-notifications.md) for current notification endpoints, transactional alerts, reminder rules, delivery retries and signed Resend delivery events. The email notification preference now controls optional alert emails; account security messages remain mandatory for verified users.

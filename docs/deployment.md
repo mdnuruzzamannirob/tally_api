@@ -37,3 +37,5 @@ on a verified sending domain. The `onboarding@resend.dev` test sender restricts
 recipients and is unsuitable for public signup. Configure the verified sender in
 Render's environment and redeploy; changing a local `.env.production` does not
 change Render's environment. Do not bypass email verification to recover an account.
+
+See [email and notification deployment](email-notifications.md) for the notification migration, worker, verified sender and Resend webhook setup.

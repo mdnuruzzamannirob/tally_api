@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../../../generated/prisma/client.js";
 import type { OAuthIntent, OAuthProvider } from "./oauth.types.js";
 
@@ -106,6 +107,16 @@ export class OAuthRepository {
             provider: input.provider,
             providerAccountId: input.providerAccountId,
             email: input.email,
+          },
+        });
+        await transaction.notification.create({
+          data: {
+            userId: input.userId,
+            eventKey: `provider-linked:${randomUUID()}`,
+            title: "Sign-in account connected",
+            body: `A ${input.provider.toLowerCase()} account was connected to your Tally account. If this wasn't you, review your sign-in methods immediately.`,
+            href: "/settings",
+            required: true,
           },
         });
         return "linked";

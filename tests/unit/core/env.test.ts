@@ -45,6 +45,16 @@ describe("environment configuration", () => {
     });
   });
 
+  it("rejects the Resend testing sender in production", () => {
+    expect(() =>
+      parseEnvironment({
+        ...productionEnvironment,
+        EMAIL_PROVIDER: "resend",
+        EMAIL_FROM: "onboarding@resend.dev",
+      }),
+    ).toThrow(/verified sending domain/);
+  });
+
   it("rejects unsafe production configuration", () => {
     expect(() =>
       parseEnvironment({

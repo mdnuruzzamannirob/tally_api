@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../../../generated/prisma/client.js";
 
 export class ConnectedAccountsRepository {
@@ -21,6 +22,16 @@ export class ConnectedAccountsRepository {
           return { kind: "last-login-method" as const };
         }
         await transaction.oauthAccount.delete({ where: { id: account.id } });
+        await transaction.notification.create({
+          data: {
+            userId,
+            eventKey: `provider-unlinked:${randomUUID()}`,
+            title: "Sign-in account disconnected",
+            body: `Your ${provider.toLowerCase()} account was disconnected from Tally. If this wasn't you, reset your password immediately.`,
+            href: "/settings",
+            required: true,
+          },
+        });
         return { kind: "unlinked" as const };
       },
       { isolationLevel: "Serializable" },

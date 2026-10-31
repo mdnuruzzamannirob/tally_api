@@ -18,6 +18,7 @@ async function setup(verified = false) {
   const users = { findUserByEmail: vi.fn().mockResolvedValue(user) };
   const repository = {
     createUser: vi.fn(),
+    pruneDeliveredTokens: vi.fn().mockResolvedValue(undefined),
     replaceToken: vi.fn().mockResolvedValue(undefined),
     findToken: vi.fn(),
     verifyUser: vi.fn(),
