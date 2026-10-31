@@ -37,7 +37,7 @@ machine error code, without recipient addresses, action tokens or provider respo
 
 ## Deployment checklist
 
-1. In Resend, add a domain you own and complete its DNS verification. Use an address on that domain for `EMAIL_FROM`; production rejects `@resend.dev` test senders.
+1. In Resend, add a domain you own and complete its DNS verification. Use an address on that domain for `EMAIL_FROM` to send to other recipients. `@resend.dev` is restricted by Resend to account-owner testing.
 2. In Render's secret/environment settings set `EMAIL_PROVIDER=resend`, `EMAIL_API_KEY`, `EMAIL_FROM`, `WEB_APP_URL=https://tallywebsite.vercel.app`, and `NOTIFICATION_WORKER_ENABLED=true`. Keep the existing database, JWT, OAuth and secure-cookie settings.
 3. Run `pnpm db:generate` during build. Run `pnpm db:deploy` against the deployment database **before** starting this release. This adds `notifications` and `email_delivery_events`; do not run a database reset.
    For Docker Compose use `docker compose -f docker-compose.deploy.yml --profile migration run --rm migrate` before `docker compose -f docker-compose.deploy.yml up -d api`. The Dockerfile includes a dedicated `migration` target.
@@ -80,3 +80,26 @@ old operational records according to your retention needs.
 References: [Resend sender restrictions](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain),
 [idempotency](https://resend.com/docs/dashboard/emails/idempotency-keys),
 [webhook verification](https://resend.com/docs/webhooks/verify-webhooks-requests).
+
+## Local development startup error
+
+A worker `PrismaClientKnownRequestError` alone is not sufficient to identify the
+cause. Worker logs now include the Prisma code and a safe remediation hint.
+`P2021`/`P2022` indicate missing tables/columns; raw-query `P2010` with PostgreSQL
+`42P01`/`42703` indicates the same schema issue. `P1001`/`P1002`/`P1017` indicate
+connection problems.
+
+Start your local PostgreSQL service, check `.env` points to the intended local
+database (including `MIGRATION_DATABASE_URL` if set), then run:
+
+```sh
+npm run db:setup
+npm run dev
+```
+
+`db:setup` generates the client and applies checked-in migrations without
+resetting the database. It does not create a missing PostgreSQL server/database.
+Development `EMAIL_PROVIDER=console` logs email links; it does not send inbox mail.
+The frontend `useTypeScriptCli` experiment line is informational, not a startup error.
+
+For actual local env profiles and startup commands, see [local-setup.md](local-setup.md). The Resend webhook secret is optional for outbound email; localhost needs a separate tunneled webhook only when testing delivery callbacks.

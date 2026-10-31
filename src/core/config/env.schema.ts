@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const nodeEnvironments = ["development", "test", "production"] as const;
-const emailProviders = ["console", "resend", "sendgrid", "mailgun", "smtp"] as const;
+const emailProviders = ["console", "resend", "sendgrid", "mailgun", "smtp", "gmail"] as const;
 const logLevels = ["trace", "debug", "info", "warn", "error", "fatal"] as const;
 const sameSiteValues = ["lax", "strict", "none"] as const;
 
@@ -43,6 +43,9 @@ const envSchema = z
     REFRESH_TOKEN_EXPIRES_IN: durationSchema.default("7d"),
     EMAIL_PROVIDER: z.enum(emailProviders).default("console"),
     EMAIL_API_KEY: optionalString,
+    GMAIL_CLIENT_ID: optionalString,
+    GMAIL_CLIENT_SECRET: optionalString,
+    GMAIL_REFRESH_TOKEN: optionalString,
     RESEND_WEBHOOK_SECRET: optionalString,
     EMAIL_FROM: z.string().email(),
     EMAIL_API_BASE_URL: z.preprocess(
@@ -64,38 +67,47 @@ const envSchema = z
     LOG_LEVEL: z.enum(logLevels).default("info"),
   })
   .superRefine((value, context) => {
-    if (value.NODE_ENV !== "production") return;
-
-    if (Buffer.byteLength(value.ACCESS_TOKEN_SECRET, "utf8") < 32) {
+    if (
+      value.NODE_ENV === "production" &&
+      Buffer.byteLength(value.ACCESS_TOKEN_SECRET, "utf8") < 32
+    ) {
       context.addIssue({
         code: "custom",
         path: ["ACCESS_TOKEN_SECRET"],
         message: "Must contain at least 32 bytes in production.",
       });
     }
-    if (
-      value.EMAIL_PROVIDER === "resend" &&
-      value.EMAIL_FROM.toLowerCase().endsWith("@resend.dev")
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["EMAIL_FROM"],
-        message:
-          "Use a verified sending domain for Resend in production; resend.dev is restricted to testing.",
-      });
-    }
-    if (value.EMAIL_PROVIDER === "console") {
+    if (value.EMAIL_PROVIDER === "console" && value.NODE_ENV === "production") {
       context.addIssue({
         code: "custom",
         path: ["EMAIL_PROVIDER"],
         message: "Console email is not allowed in production.",
       });
-    } else if (value.EMAIL_PROVIDER !== "smtp" && !value.EMAIL_API_KEY) {
+    } else if (
+      value.EMAIL_PROVIDER !== "console" &&
+      value.EMAIL_PROVIDER !== "smtp" &&
+      value.EMAIL_PROVIDER !== "gmail" &&
+      !value.EMAIL_API_KEY
+    ) {
       context.addIssue({
         code: "custom",
         path: ["EMAIL_API_KEY"],
-        message: "Required for the selected production email provider.",
+        message: "Required for the selected email provider.",
       });
+    }
+    if (value.EMAIL_PROVIDER === "gmail") {
+      for (const key of [
+        "GMAIL_CLIENT_ID",
+        "GMAIL_CLIENT_SECRET",
+        "GMAIL_REFRESH_TOKEN",
+      ] as const) {
+        if (!value[key])
+          context.addIssue({
+            code: "custom",
+            path: [key],
+            message: "Required for Gmail API delivery.",
+          });
+      }
     }
     if (value.EMAIL_PROVIDER === "mailgun" && !value.EMAIL_MAILGUN_DOMAIN) {
       context.addIssue({
@@ -120,6 +132,8 @@ const envSchema = z
         }
       }
     }
+    if (value.NODE_ENV !== "production") return;
+
     for (const key of [
       "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET",

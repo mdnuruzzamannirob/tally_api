@@ -1,3 +1,4 @@
+import { GmailApiProvider } from "./providers/gmail-api.provider.js";
 import { emailConfig } from "../core/config/email.config.js";
 import { buildPasswordResetUrl, buildVerificationUrl } from "./email-links.js";
 import type { EmailMessage, EmailProvider, EmailService } from "./email.types.js";
@@ -80,6 +81,7 @@ class DefaultEmailService implements EmailService {
 export function createEmailProvider(): EmailProvider {
   const providers: Record<typeof emailConfig.provider, EmailProvider> = {
     console: new ConsoleEmailProvider(),
+    gmail: new GmailApiProvider(),
     resend: new ResendEmailProvider(),
     sendgrid: new SendGridEmailProvider(),
     mailgun: new MailgunEmailProvider(),

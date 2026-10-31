@@ -1,3 +1,4 @@
+import { notificationWorkerError } from "./notification-worker-error.js";
 import { prisma } from "../../core/database/prisma.js";
 import { env } from "../../core/config/env.js";
 import { logger } from "../../core/logger/logger.js";
@@ -18,13 +19,7 @@ export function startNotificationWorker(): () => Promise<void> {
     active = notificationService
       .run()
       .catch((error: unknown) => {
-        logger.error(
-          {
-            event: "notification_worker_failed",
-            errorName: error instanceof Error ? error.name : "UnknownError",
-          },
-          "Notification worker failed",
-        );
+        logger.error(notificationWorkerError(error), "Notification worker failed");
       })
       .finally(() => {
         active = undefined;

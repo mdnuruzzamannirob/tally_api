@@ -45,14 +45,43 @@ describe("environment configuration", () => {
     });
   });
 
-  it("rejects the Resend testing sender in production", () => {
-    expect(() =>
+  it("requires real email credentials in local mode too", () => {
+    expect(() => parseEnvironment({ ...developmentEnvironment, EMAIL_PROVIDER: "resend" })).toThrow(
+      /EMAIL_API_KEY/,
+    );
+    expect(
+      parseEnvironment({
+        ...developmentEnvironment,
+        EMAIL_PROVIDER: "resend",
+        EMAIL_API_KEY: "local-test-key",
+        EMAIL_FROM: "onboarding@resend.dev",
+      }).EMAIL_PROVIDER,
+    ).toBe("resend");
+  });
+
+  it("allows the Resend test sender in production so the app can start", () => {
+    expect(
       parseEnvironment({
         ...productionEnvironment,
         EMAIL_PROVIDER: "resend",
         EMAIL_FROM: "onboarding@resend.dev",
-      }),
-    ).toThrow(/verified sending domain/);
+      }).EMAIL_FROM,
+    ).toBe("onboarding@resend.dev");
+  });
+
+  it("requires Gmail API credentials when Gmail delivery is selected", () => {
+    expect(() => parseEnvironment({ ...developmentEnvironment, EMAIL_PROVIDER: "gmail" })).toThrow(
+      /GMAIL_CLIENT_ID/,
+    );
+    expect(
+      parseEnvironment({
+        ...developmentEnvironment,
+        EMAIL_PROVIDER: "gmail",
+        GMAIL_CLIENT_ID: "client",
+        GMAIL_CLIENT_SECRET: "secret",
+        GMAIL_REFRESH_TOKEN: "refresh",
+      }).EMAIL_PROVIDER,
+    ).toBe("gmail");
   });
 
   it("rejects unsafe production configuration", () => {

@@ -6,6 +6,11 @@ export const emailConfig = {
   apiKey: env.EMAIL_API_KEY,
   apiBaseUrl: env.EMAIL_API_BASE_URL,
   mailgunDomain: env.EMAIL_MAILGUN_DOMAIN,
+  gmail: {
+    clientId: env.GMAIL_CLIENT_ID,
+    clientSecret: env.GMAIL_CLIENT_SECRET,
+    refreshToken: env.GMAIL_REFRESH_TOKEN,
+  },
   smtp: {
     host: env.EMAIL_SMTP_HOST,
     port: env.EMAIL_SMTP_PORT,
