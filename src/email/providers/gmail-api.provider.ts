@@ -58,6 +58,7 @@ export class GmailApiProvider implements EmailProvider {
       to: message.to,
       subject: message.subject,
       html: message.html,
+      ...(message.text ? { text: message.text } : {}),
     })
       .compile()
       .build();

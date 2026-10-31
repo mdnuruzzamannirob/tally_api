@@ -21,15 +21,36 @@ if (result.env) {
   );
   console.info(`API: ${env.API_BASE_URL} | Web: ${env.WEB_APP_URL}`);
   console.info(`Database: ${database.hostname}:${database.port || "5432"}${database.pathname}`);
-  console.info(`Email provider: ${env.EMAIL_PROVIDER} | sender: ${env.EMAIL_FROM}`);
+  const senderByProvider = {
+    brevo: env.BREVO_FROM,
+    resend: env.RESEND_FROM,
+    sendgrid: env.SENDGRID_FROM,
+    mailgun: env.MAILGUN_FROM,
+    gmail: env.GMAIL_FROM,
+    smtp: env.SMTP_FROM,
+    console: undefined,
+  } as const;
+  const sender = senderByProvider[env.EMAIL_PROVIDER] ?? env.EMAIL_FROM;
+  console.info(`Email provider: ${env.EMAIL_PROVIDER} | sender: ${sender}`);
+  const configured = {
+    brevo: Boolean(env.BREVO_API_KEY),
+    resend: Boolean(env.RESEND_API_KEY),
+    sendgrid: Boolean(env.SENDGRID_API_KEY),
+    mailgun: Boolean(env.MAILGUN_API_KEY),
+    gmail: Boolean(env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN),
+    smtp: Boolean(
+      env.EMAIL_SMTP_HOST && env.EMAIL_SMTP_PORT && env.EMAIL_SMTP_USER && env.EMAIL_SMTP_PASSWORD,
+    ),
+    console: true,
+  } as const;
   console.info(
-    `Email credentials: ${env.EMAIL_API_KEY || env.EMAIL_SMTP_PASSWORD || (env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN) ? "configured" : "not configured"}`,
+    `Email credentials: ${configured[env.EMAIL_PROVIDER] ? "configured" : "not configured"}`,
   );
   console.info(`Notification worker: ${env.NOTIFICATION_WORKER_ENABLED ? "enabled" : "disabled"}`);
   console.info(
     `Resend webhook: ${env.RESEND_WEBHOOK_SECRET ? "configured" : "not configured (email sending still works)"}`,
   );
-  if (env.EMAIL_FROM.toLowerCase().endsWith("@resend.dev"))
+  if (env.EMAIL_PROVIDER === "resend" && sender?.toLowerCase().endsWith("@resend.dev"))
     console.warn(
       "Resend test sender: use your Resend account's own recipient address; verify a domain for other recipients.",
     );

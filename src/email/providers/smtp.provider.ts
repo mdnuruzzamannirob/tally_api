@@ -21,6 +21,7 @@ export class SmtpEmailProvider implements EmailProvider {
         to: message.to,
         subject: message.subject,
         html: message.html,
+        ...(message.text ? { text: message.text } : {}),
       });
     } catch (error) {
       reportDeliveryFailure("smtp", error);

@@ -1,4 +1,10 @@
-export type EmailMessage = { to: string; subject: string; html: string; idempotencyKey?: string };
+export type EmailMessage = {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  idempotencyKey?: string;
+};
 
 export type EmailReceipt = void | { id: string };
 

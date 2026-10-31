@@ -319,9 +319,7 @@ ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN=7d
 
 EMAIL_PROVIDER=console
-EMAIL_API_KEY=
 EMAIL_FROM=no-reply@tally.local
-EMAIL_API_BASE_URL=
 EMAIL_MAILGUN_DOMAIN=
 EMAIL_SMTP_HOST=
 EMAIL_SMTP_PORT=587
@@ -358,8 +356,8 @@ ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN=7d
 
 EMAIL_PROVIDER=sendgrid
-EMAIL_API_KEY=...
-EMAIL_FROM=no-reply@tally.example.com
+SENDGRID_API_KEY=...
+SENDGRID_FROM=no-reply@tally.example.com
 
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
@@ -386,11 +384,11 @@ DATABASE_URL
 WEB_APP_URL
 ACCESS_TOKEN_SECRET
 EMAIL_PROVIDER
-EMAIL_FROM
 ```
 
 Production rejects `EMAIL_PROVIDER=console` and requires the selected
-provider's credentials (for example `EMAIL_API_KEY`).
+provider's dedicated credentials and sender (for example `SENDGRID_API_KEY`
+and `SENDGRID_FROM`).
 
 The separate production migration job requires `MIGRATION_DATABASE_URL`; the
 runtime backend validator must not require or receive that privileged secret.
@@ -709,8 +707,8 @@ ACCESS_TOKEN_SECRET
 ACCESS_TOKEN_EXPIRES_IN
 REFRESH_TOKEN_EXPIRES_IN
 EMAIL_PROVIDER
-EMAIL_API_KEY
-EMAIL_FROM
+<SELECTED_PROVIDER>_API_KEY
+<SELECTED_PROVIDER>_FROM
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
 GITHUB_CLIENT_ID
@@ -886,8 +884,8 @@ Required configuration:
 
 ```txt
 EMAIL_PROVIDER
-EMAIL_API_KEY
-EMAIL_FROM
+<SELECTED_PROVIDER>_API_KEY
+<SELECTED_PROVIDER>_FROM
 ```
 
 Provider-specific configuration:
@@ -895,8 +893,8 @@ Provider-specific configuration:
 - Mailgun also requires `EMAIL_MAILGUN_DOMAIN`.
 - SMTP requires `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER`,
   `EMAIL_SMTP_PASSWORD`, and optionally `EMAIL_SMTP_SECURE`.
-- `EMAIL_API_BASE_URL` may override the default provider API endpoint for a
-  compatible proxy or regional endpoint.
+- Provider endpoints are fixed by their adapter; configure a provider-specific
+  key and sender instead of a shared API URL.
 
 Rules:
 

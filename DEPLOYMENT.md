@@ -383,4 +383,4 @@ docker-compose -f docker-compose.deploy.yml run \
 **Last Updated**: 2026-08-30
 **Version**: 1.0.0
 
-See [Email and notifications](docs/email-notifications.md) for Render/Resend setup and reminder operation.
+See [Email and notifications](docs/email-notifications.md) for provider setup and reminder operation.

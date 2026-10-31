@@ -6,7 +6,7 @@ import { deliver, requireEmailApiKey } from "./provider.utils.js";
 export class ResendEmailProvider implements EmailProvider {
   send(message: EmailMessage): Promise<EmailReceipt> {
     const apiKey = requireEmailApiKey(emailConfig.apiKey);
-    return deliver("resend", emailConfig.apiBaseUrl ?? "https://api.resend.com/emails", {
+    return deliver("resend", "https://api.resend.com/emails", {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
@@ -19,6 +19,7 @@ export class ResendEmailProvider implements EmailProvider {
         to: [message.to],
         subject: message.subject,
         html: message.html,
+        ...(message.text ? { text: message.text } : {}),
       }),
     });
   }

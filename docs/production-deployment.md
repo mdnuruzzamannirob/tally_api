@@ -91,8 +91,8 @@ GITHUB_CLIENT_SECRET=from-github-settings
 
 # Email (choose one provider)
 EMAIL_PROVIDER=mailgun
-EMAIL_API_KEY=your-mailgun-api-key
-EMAIL_FROM=noreply@yourdomain.com
+MAILGUN_API_KEY=your-mailgun-api-key
+MAILGUN_FROM=noreply@yourdomain.com
 EMAIL_MAILGUN_DOMAIN=yourdomain.com
 
 # Security
@@ -221,8 +221,8 @@ WEB_APP_URL=https://yourdomain.com
 
 ```env
 EMAIL_PROVIDER=mailgun
-EMAIL_API_KEY=key
-EMAIL_FROM=noreply@yourdomain.com
+MAILGUN_API_KEY=key
+MAILGUN_FROM=noreply@yourdomain.com
 ```
 
 **OAuth**

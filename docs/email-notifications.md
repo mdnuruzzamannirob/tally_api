@@ -1,105 +1,98 @@
 # Email and notifications
 
-## Behavior
+## Setup
 
-- Signup and resend-verification send verification emails immediately. Forgot-password sends a reset email immediately. Provider rejection returns `503 EMAIL_DELIVERY_FAILED`; verification is never bypassed.
-- A previous verification/reset token stays usable if a replacement email fails. After the provider accepts a replacement, older tokens are removed. Consuming a password-reset token invalidates sibling reset tokens and revokes existing refresh sessions in the same transaction.
-- Setting or changing a password also invalidates all outstanding password-recovery links.
-- Interview creation, edits/removal, application status changes, password set/change/reset, and explicit social-account linking/unlinking create a persisted notification in the same transaction as the change.
-- Interview reminders are created once per scheduled time during the 24 hours before the interview. A reschedule creates a new reminder. Cancelled, removed, archived or past interviews are skipped before email delivery.
-- Follow-up reminders are created once per due timestamp for unarchived applications excluding rejected/withdrawn applications. Rescheduling invalidates a pending old reminder.
-- In-app notifications are always available. `notificationsEnabled` controls optional email for interviews, status changes and follow-ups. Verified users receive password and social-account security emails even when optional notifications are disabled. Unverified addresses are not sent notification emails.
-- The inbox returns the latest 50 notifications plus the total unread count. Read operations are scoped to the authenticated user. Mark-all-read includes older notifications.
+The backend uses the provider selected by `EMAIL_PROVIDER`; all provider adapters
+share the same verification, password-reset and notification templates. The
+frontend contains only public API/application URLs; keep API keys, OAuth secrets,
+passwords and webhook secrets in the backend environment or the hosting platform.
 
-## Delivery and retries
+Local `.env` and `.env.production` contain separate provider sections. Fill only
+the selected provider's credentials and sender. The selected provider's `*_FROM`
+must be verified/allowed by that provider; there is deliberately no shared sender
+fallback for real delivery providers.
 
-The API starts a non-overlapping worker every 60 seconds (including an initial run).
-`NOTIFICATION_WORKER_ENABLED=false` disables it. At least one always-on API instance
-must have the worker enabled. A service that sleeps cannot guarantee timely reminders;
-use an always-on Render instance for scheduled alerts.
+| `EMAIL_PROVIDER` | Required settings                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `brevo`          | `BREVO_API_KEY`, `BREVO_FROM`                                                                      |
+| `resend`         | `RESEND_API_KEY`, `RESEND_FROM`                                                                    |
+| `sendgrid`       | `SENDGRID_API_KEY`, `SENDGRID_FROM`                                                                |
+| `mailgun`        | `MAILGUN_API_KEY`, `EMAIL_MAILGUN_DOMAIN`, `MAILGUN_FROM`                                         |
+| `gmail`          | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_FROM`                     |
+| `smtp`           | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`, `SMTP_FROM`       |
+| `console`        | `EMAIL_FROM`; local/test only                                                                      |
 
-Notifications are leased in PostgreSQL with `FOR UPDATE SKIP LOCKED`; concurrent
-replicas do not normally claim the same email. Crashed leases become available after
-five minutes. Each run claims up to five emails and each email gets at most five job
-attempts, with exponential delays. Failed jobs remain in the database for diagnosis.
+There is no shared `EMAIL_API_KEY` or custom email API URL. This prevents one
+provider's key or sender from accidentally being used by another provider. No
+fallback to a second provider occurs automatically.
 
-Resend transport retries temporary HTTP 429/5xx and network failures up to three
-times with a stable idempotency key, bounded delays and a ten-second timeout per
-attempt. Resend deduplicates requests for 24 hours. This is at-least-once delivery;
-a crash lasting beyond the provider's deduplication window can still cause a duplicate.
-Other providers do not get ambiguous transport retries; notification jobs still retry.
-SMTP has connection, greeting and socket timeouts.
+Run `pnpm env:check` for local or `pnpm env:check:production` for production.
+These validate configuration only, not provider credentials or network delivery.
+Changing local `.env.production` does not update Render's environment. Restart the
+local process or redeploy Render after changing environment variables.
 
-`email_accepted` logs a provider message ID when supplied. Notification rows save
-that ID as `provider_message_id`. `ACCEPTED` means accepted by the provider, not
-confirmed delivery to the recipient. Provider failures log HTTP status and a sanitized
-machine error code, without recipient addresses, action tokens or provider response text.
+## Brevo
 
-## Deployment checklist
+Create a free Brevo account, complete account verification and request activation
+of transactional email if needed. Under Settings → Senders, Domains, IPs → Senders,
+add and verify `BREVO_FROM`. Under Settings → SMTP & API → API Keys, create an API
+key with Transactional email sending permission and paste it into `BREVO_API_KEY`.
+Use an API key, not an SMTP key. Brevo may rewrite a Gmail sender; account approval
+and inbox delivery are not guaranteed. Monitor Brevo's own transactional dashboard.
 
-1. In Resend, add a domain you own and complete its DNS verification. Use an address on that domain for `EMAIL_FROM` to send to other recipients. `@resend.dev` is restricted by Resend to account-owner testing.
-2. In Render's secret/environment settings set `EMAIL_PROVIDER=resend`, `EMAIL_API_KEY`, `EMAIL_FROM`, `WEB_APP_URL=https://tallywebsite.vercel.app`, and `NOTIFICATION_WORKER_ENABLED=true`. Keep the existing database, JWT, OAuth and secure-cookie settings.
-3. Run `pnpm db:generate` during build. Run `pnpm db:deploy` against the deployment database **before** starting this release. This adds `notifications` and `email_delivery_events`; do not run a database reset.
-   For Docker Compose use `docker compose -f docker-compose.deploy.yml --profile migration run --rm migrate` before `docker compose -f docker-compose.deploy.yml up -d api`. The Dockerfile includes a dedicated `migration` target.
-4. In Resend create a webhook for `https://tally-api-stag.onrender.com/api/v1/webhooks/resend`. Subscribe to email events such as `email.sent`, `email.delivered`, `email.bounced`, `email.failed`, `email.delivery_delayed`, `email.complained` and `email.suppressed`.
-5. Set its `whsec_...` signing secret as `RESEND_WEBHOOK_SECRET` in Render and redeploy. The endpoint verifies the exact raw body, signature and a five-minute timestamp tolerance. Events are stored idempotently using the Svix event ID. Signing secrets and API keys are different credentials.
-6. Deploy the frontend with the updated API contract. Existing users should enable Email notifications in Settings if they want optional emails; the default remains off.
-7. Verify signup, resend, password recovery, a password change, an interview within the next 24 hours and a due follow-up. Check the notification bell and mark-read controls. Use Resend's dashboard for delivery/spam/suppression diagnosis.
+## Gmail API
 
-A sending-only Resend key can send mail but cannot list domains. A 401 on the domains
-API is not evidence that sending is broken. Domain/key scope must be checked in the
-dashboard. No actual production email or deployment is performed by the test suite.
+Enable Gmail API in Google Cloud and create a web OAuth client with
+`https://developers.google.com/oauthplayground` as an authorized redirect URI.
+In OAuth Playground use your own OAuth credentials, request only
+`https://www.googleapis.com/auth/gmail.send`, authorize the sending account and
+exchange the code for a refresh token. Store the client ID, client secret, refresh
+token and Gmail sender in the backend environment. External OAuth apps in Testing
+may receive refresh tokens that expire after seven days. Gmail API uses HTTPS; it
+does not require an SMTP port or a custom domain.
 
-## Operational queries
+## Local and production
 
-```sql
-SELECT id, email_status, attempts, next_attempt_at, provider_message_id
-FROM notifications
-WHERE email_status = 'FAILED'
-ORDER BY created_at DESC;
+Local development uses `tally`; automated tests use a separate `tally_test`
+database on the same local PostgreSQL server. The production database is separate.
+Docker uses `POSTGRES_*` to configure its local database; the application connects
+through `DATABASE_URL`. The optional `MIGRATION_DATABASE_URL` is a connection to
+the same target database with another role/direct endpoint, not another database.
 
-SELECT n.id, n.email_status, e.type, e.occurred_at
-FROM notifications n
-LEFT JOIN email_delivery_events e ON e.message_id = n.provider_message_id
-ORDER BY e.occurred_at DESC NULLS LAST
-LIMIT 100;
-```
+From `tally_api`, run `pnpm env:check`, start PostgreSQL with
+`docker compose up -d postgres` (use `sudo` if your Docker setup requires it), run
+`pnpm db:setup`, then `pnpm dev`. Apply test migrations separately with
+`NODE_ENV=test pnpm db:deploy`. Run `pnpm dev` in `tally_web` and open localhost:3000.
+Existing Docker volumes are not reset; create `tally_test` separately if missing.
 
-Fix provider configuration before manually requeuing a failed job. Requeuing an
-already accepted message after 24 hours may send a duplicate. Inbox notifications
-and webhook events currently have no automatic retention policy; archive or delete
-old operational records according to your retention needs.
+For Render, add the selected provider's credentials and sender in its environment,
+apply `pnpm db:deploy` to the intended production database before starting the
+release, then deploy the backend and frontend. Keep the production database, OAuth,
+JWT, URL and secure-cookie variables configured. No deployment is performed by tests.
 
-## API
+## Behavior and operations
 
-- `GET /api/v1/notifications`: `{ items, unread }` in the standard success envelope.
-- `PATCH /api/v1/notifications/:id/read`: mark one owned item as read.
-- `PATCH /api/v1/notifications/read-all`: mark all owned items as read.
-- `POST /api/v1/webhooks/resend`: raw JSON with `svix-id`, `svix-timestamp`, `svix-signature`; uses signature authentication rather than a user JWT.
+- Signup and resend send verification links; forgot-password sends reset links.
+  Failed replacement delivery does not invalidate an earlier delivered link.
+- Password changes/resets and connected-account changes produce security alerts.
+  Interview changes, upcoming interviews, follow-ups and application status changes
+  create notifications. Optional notification emails require user opt-in; security
+  emails remain enabled for verified users. Test environment disables the worker.
+- The worker polls every minute; it creates interview reminders within 24 hours and
+  follow-up reminders when due. Notification jobs are stored in PostgreSQL, leased
+  across replicas and retried up to five times. Provider acceptance does not mean
+  inbox delivery. Render Free can sleep, so scheduled reminders can be delayed.
+- `GET /api/v1/notifications` lists the latest 50 items and unread count;
+  `PATCH /api/v1/notifications/:id/read` and `/read-all` mark owned items read.
+- Resend alone has a delivery-event endpoint at `/api/v1/webhooks/resend` and
+  optional `RESEND_WEBHOOK_SECRET`; other providers' webhooks are not integrated.
+  A local HTTPS tunnel is required only for incoming webhook tests, not sending.
+- Resend retries certain temporary errors with an idempotency key. Other provider
+  requests are not retried inline; notification jobs may retry after failure.
+  Ambiguous failures can cause duplicate messages for providers without idempotency.
+  Delivery events and inbox notifications have no automatic retention policy.
 
-References: [Resend sender restrictions](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain),
-[idempotency](https://resend.com/docs/dashboard/emails/idempotency-keys),
-[webhook verification](https://resend.com/docs/webhooks/verify-webhooks-requests).
-
-## Local development startup error
-
-A worker `PrismaClientKnownRequestError` alone is not sufficient to identify the
-cause. Worker logs now include the Prisma code and a safe remediation hint.
-`P2021`/`P2022` indicate missing tables/columns; raw-query `P2010` with PostgreSQL
-`42P01`/`42703` indicates the same schema issue. `P1001`/`P1002`/`P1017` indicate
-connection problems.
-
-Start your local PostgreSQL service, check `.env` points to the intended local
-database (including `MIGRATION_DATABASE_URL` if set), then run:
-
-```sh
-npm run db:setup
-npm run dev
-```
-
-`db:setup` generates the client and applies checked-in migrations without
-resetting the database. It does not create a missing PostgreSQL server/database.
-Development `EMAIL_PROVIDER=console` logs email links; it does not send inbox mail.
-The frontend `useTypeScriptCli` experiment line is informational, not a startup error.
-
-For actual local env profiles and startup commands, see [local-setup.md](local-setup.md). The Resend webhook secret is optional for outbound email; localhost needs a separate tunneled webhook only when testing delivery callbacks.
+Provider-specific quotas, verified senders and account approval apply. Automated
+tests mock providers; after setup, test signup, verification, password reset,
+notification opt-in, a scheduled interview and the inbox with an account you own.
+Never paste secrets into chat or source control.

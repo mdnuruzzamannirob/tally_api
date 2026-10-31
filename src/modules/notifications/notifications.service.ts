@@ -1,14 +1,10 @@
+import { renderEmail } from "../../email/email-template.js";
+export { escapeHtml } from "../../email/email-template.js";
 import { logger } from "../../core/logger/logger.js";
 import { env } from "../../core/config/env.js";
 import type { EmailProvider } from "../../email/email.types.js";
-import type { NotificationInput, NotificationRepository } from "./notifications.repository.js";
+import type { NotificationRepository } from "./notifications.repository.js";
 
-export function escapeHtml(value: string): string {
-  return value.replace(
-    /[&<>"']/g,
-    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
-  );
-}
 export class NotificationService {
   constructor(
     private readonly repository: NotificationRepository,
@@ -19,9 +15,6 @@ export class NotificationService {
   }
   markRead(userId: string, id?: string) {
     return this.repository.markRead(userId, id);
-  }
-  async publish(input: NotificationInput) {
-    await this.repository.create(input);
   }
   async run() {
     await this.repository.collectReminders(new Date());
@@ -41,7 +34,16 @@ export class NotificationService {
           to: job.user.email,
           subject: job.title,
           idempotencyKey: job.id,
-          html: `<h1>${escapeHtml(job.title)}</h1><p>${escapeHtml(job.body)}</p><p><a href="${escapeHtml(url)}">Open Tally</a></p>`,
+          ...renderEmail({
+            eyebrow: job.required ? "Tally account security" : "Tally notifications",
+            title: job.title,
+            body: job.body,
+            buttonLabel: "Open Tally",
+            buttonUrl: url,
+            note: job.required
+              ? "If you do not recognize this activity, secure your account."
+              : "You can manage email notifications in your settings.",
+          }),
         });
         await this.repository.finish(job.id, "ACCEPTED", undefined, receipt?.id);
       } catch {

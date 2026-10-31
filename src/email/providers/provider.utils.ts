@@ -50,6 +50,8 @@ export async function deliver(
     }
     const body = (await response.json().catch(() => null)) as {
       id?: unknown;
+      messageId?: unknown;
+      code?: unknown;
       name?: unknown;
       message?: unknown;
     } | null;
@@ -63,16 +65,23 @@ export async function deliver(
         providerCode: "invalid_receipt",
       });
     }
+    if (response.ok && provider === "brevo" && typeof body?.messageId !== "string") {
+      reportDeliveryFailure(provider, new Error("Invalid provider receipt"), {
+        status: response.status,
+        providerCode: "invalid_receipt",
+      });
+    }
     if (response.ok) {
+      const messageId = provider === "brevo" ? body?.messageId : body?.id;
       logger.info(
         {
           event: "email_accepted",
           provider,
-          ...(typeof body?.id === "string" ? { providerMessageId: body.id } : {}),
+          ...(typeof messageId === "string" ? { providerMessageId: messageId } : {}),
         },
         "Email accepted by provider",
       );
-      return typeof body?.id === "string" ? { id: body.id } : undefined;
+      return typeof messageId === "string" ? { id: messageId } : undefined;
     }
     if ((response.status === 429 || response.status >= 500) && attempt + 1 < attempts) {
       const retryAfter = Number(response.headers.get("retry-after"));
@@ -85,8 +94,9 @@ export async function deliver(
       continue;
     }
     // Store only a machine error name, never provider text containing addresses or tokens.
+    const rawCode = provider === "brevo" ? body?.code : body?.name;
     const providerCode =
-      typeof body?.name === "string" && /^[a-z_]{1,80}$/.test(body.name) ? body.name : undefined;
+      typeof rawCode === "string" && /^[a-z_]{1,80}$/.test(rawCode) ? rawCode : undefined;
     reportDeliveryFailure(provider, new Error("Provider rejected email"), {
       status: response.status,
       ...(providerCode ? { providerCode } : {}),
