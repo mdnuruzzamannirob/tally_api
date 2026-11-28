@@ -1,5 +1,7 @@
 # Documentation Reconciliation Report
 
+> Historical planning snapshot. Status tables and old test results below are not current verification. See [the documentation index](README.md) for maintained setup and evidence references.
+
 ## Job Application Tracker
 
 **Review date:** 2026-08-09

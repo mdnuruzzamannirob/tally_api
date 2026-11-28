@@ -3,7 +3,7 @@
 ## Job Application Tracker
 
 **Version:** 1.0
-**Status:** Final for MVP
+**Status:** Design reference; not a verified release sign-off
 **Related Documents:**
 
 - Product Requirements Document v1.1

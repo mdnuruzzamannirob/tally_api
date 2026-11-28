@@ -14,7 +14,7 @@ Run the database-backed integration suite after applying migrations to the
 dedicated test database:
 
 ```sh
-pnpm db:deploy
+DATABASE_URL="$TEST_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_DATABASE_URL" pnpm db:deploy
 pnpm test:integration
 ```
 
@@ -24,3 +24,8 @@ database tests cannot be silently skipped. Run both suites with:
 ```sh
 pnpm test:all
 ```
+
+Check the hostname and database name before running migrations or tests. Test
+helpers delete users and related records. A test-looking name alone does not
+prove the database is disposable. Never inherit the development/production
+database URL when provisioning integration fixtures.

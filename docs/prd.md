@@ -3,7 +3,7 @@
 ## Job Application Tracker
 
 **Version:** 1.1
-**Status:** Final for MVP
+**Status:** Design reference; not a verified release sign-off
 **Product Type:** Full-stack Web Application + Progressive Web App
 **Primary Stack Constraints:** Next.js, TypeScript, Express TypeScript backend, RTK Query, PostgreSQL, PWA
 

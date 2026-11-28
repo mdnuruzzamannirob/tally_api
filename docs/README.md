@@ -1,21 +1,22 @@
-# Tally API Documentation
+# Tally API documentation
 
-These files are tracked with the standalone API repository.
+Maintained operational entry points:
 
-`contracts/openapi.json` is the versioned OpenAPI 3.1 artifact. The separate
-web repository pins it for compatibility validation without sharing a workspace
-package. The API exposes it at `/api/v1/openapi.json` and Swagger UI at
-`/api/v1/docs`.
+- [Deployment](deployment.md)
+- [Release verification](release-verification.md)
+- [Testing and database isolation](testing.md)
+- [Email and notifications](email-notifications.md)
+- [API contracts](../contracts/README.md)
+- [Authentication review](auth-system-review.md)
 
-- `prd.md` — shared product requirements snapshot
-- `backend-spec.md` — API architecture and endpoint contract
-- `database-spec.md` — Prisma/PostgreSQL design
-- `operations-spec.md` — API setup, CI, deployment, and operations
-- `definition-of-done.md` — backend/database release checks
-- `backend-implementation-plan.md` — phased API delivery plan
-- `backend-refactor-plan.md` — phased migration of the implemented API to the final layered architecture
-- `reconciliation-report.md` — prior cross-document consistency review
-- `release-verification.md` — release smoke test, deployment sign-off, and frontend E2E handoff
+Design references describe intended behavior rather than verified release status:
 
-When an API change affects the frontend contract, update the corresponding
-contract details in the separate `web` repository in the same delivery.
+- [Product requirements](prd.md)
+- [Backend architecture](backend-spec.md)
+- [Database model](database-spec.md)
+- [Operations requirements](operations-spec.md)
+- [Release checklist](definition-of-done.md)
+
+[Implementation planning](backend-implementation-plan.md), [refactor planning](backend-refactor-plan.md), and [reconciliation](reconciliation-report.md) are historical snapshots.
+
+The versioned OpenAPI artifact is `contracts/openapi.json`; the API serves it at `/api/v1/openapi.json` and Swagger UI at `/api/v1/docs`. Coordinate contract changes with the independently versioned frontend. Current execution evidence is maintained in the sibling frontend's metrics inventory, rather than duplicated here.

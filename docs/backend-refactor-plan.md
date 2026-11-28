@@ -1,5 +1,7 @@
 # Backend Refactor Plan
 
+> Historical planning snapshot. Status tables and old test results below are not current verification. See [the documentation index](README.md) for maintained setup and evidence references.
+
 ## 1. Purpose
 
 The backend feature set is already implemented. This document defines the

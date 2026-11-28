@@ -1,5 +1,7 @@
 # Backend Implementation Plan
 
+> Historical planning snapshot. Status tables and old test results below are not current verification. See [the documentation index](README.md) for maintained setup and evidence references.
+
 ## Job Application Tracker
 
 This plan turns the PRD, backend specification, database specification, operations specification, and Definition of Done into small, sequential backend delivery phases.
