@@ -4,6 +4,7 @@ Maintained operational entry points:
 
 - [Deployment](deployment.md)
 - [Release verification](release-verification.md)
+- [Recovery and rollback boundaries](recovery.md)
 - [Testing and database isolation](testing.md)
 - [Email and notifications](email-notifications.md)
 - [API contracts](../contracts/README.md)

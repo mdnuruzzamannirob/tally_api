@@ -18,6 +18,9 @@ FROM build AS migration
 
 CMD ["pnpm", "db:deploy"]
 
+FROM build AS production-dependencies
+RUN CI=true pnpm prune --prod --ignore-scripts
+
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
@@ -25,7 +28,7 @@ ENV NODE_ENV=production
 ENV PORT=5000
 
 COPY --from=build /app/package.json ./
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/src/generated ./src/generated
 COPY --from=build /app/contracts ./contracts

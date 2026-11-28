@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   NotificationService,
   escapeHtml,
@@ -30,6 +30,36 @@ function setup(required: boolean, optedIn: boolean, attempts = 1) {
   };
 }
 describe("notification delivery policy", () => {
+  afterEach(() => vi.useRealTimers());
+  it("does not send stale reminders or unverified-account mail", async () => {
+    const stale = setup(false, true);
+    stale.repository.isRelevant.mockResolvedValue(false);
+    await stale.service.run();
+    expect(stale.provider.send).not.toHaveBeenCalled();
+    expect(stale.repository.finish).toHaveBeenCalledWith("notification-1", "SKIPPED");
+    const unverified = setup(true, true);
+    const jobs = await unverified.repository.claim();
+    jobs[0]!.user.emailVerified = false;
+    await unverified.service.run();
+    expect(unverified.provider.send).not.toHaveBeenCalled();
+    expect(unverified.repository.finish).toHaveBeenCalledWith("notification-1", "SKIPPED");
+  });
+  it("persists the exact exponential retry deadline with the same delivery key", async () => {
+    vi.useFakeTimers();
+    const now = new Date("2030-01-01T00:00:00.000Z");
+    vi.setSystemTime(now);
+    const { service, repository, provider } = setup(false, true, 2);
+    provider.send.mockRejectedValue(new Error("temporary provider failure"));
+    await service.run();
+    expect(repository.finish).toHaveBeenCalledWith(
+      "notification-1",
+      "PENDING",
+      new Date(now.getTime() + 240_000),
+    );
+    expect(provider.send).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: "notification-1" }),
+    );
+  });
   it("honors opt-out for optional emails", async () => {
     const { service, repository, provider } = setup(false, false);
     await service.run();

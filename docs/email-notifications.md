@@ -72,6 +72,15 @@ JWT, URL and secure-cookie variables configured. No deployment is performed by t
 
 ## Behavior and operations
 
+Delivery processing is **at least once**, not exactly once. The database lease
+lasts five minutes, claims increment attempts, and a failed attempt schedules a
+retry after `60 seconds × 2^attempts`; after five claims an exhausted job becomes
+failed. A provider may accept a message before a process crash or failed state
+update, so an eventual retry can duplicate delivery. The Resend adapter forwards
+the stable job ID as an idempotency key; the other adapters do not provide an
+equivalent application-level deduplication guarantee. Provider acceptance is not
+proof of inbox delivery.
+
 - Signup and resend send verification links; forgot-password sends reset links.
   Failed replacement delivery does not invalidate an earlier delivered link.
 - Password changes/resets and connected-account changes produce security alerts.

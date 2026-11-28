@@ -39,3 +39,8 @@ Render's environment and redeploy; changing a local `.env.production` does not
 change Render's environment. Do not bypass email verification to recover an account.
 
 See [email and notification deployment](email-notifications.md) for the notification migration, worker and provider setup.
+
+Use the [recovery runbook](recovery.md) for release identifiers, proxy assumptions,
+backup/restore rehearsal, and rollback boundaries. A local runtime smoke and
+synthetic restore were verified; hosted rollout and external providers require
+their own release checks.

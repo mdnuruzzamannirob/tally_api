@@ -208,4 +208,45 @@ describe.skipIf(!runDatabaseTests)("JSON import", () => {
       (await prisma.application.findFirstOrThrow({ where: { userId: user.id } })).appliedAt,
     ).toEqual(new Date("2024-02-29T00:00:00.000Z"));
   });
+
+  it("rolls back deletes and profile changes when a write fails inside import", async () => {
+    const user = await prisma.user.create({
+      data: { email: "rollback@example.test", name: "Original profile" },
+    });
+    const existing = await prisma.application.create({
+      data: { userId: user.id, company: "Original application", role: "Engineer" },
+    });
+    const tag = await prisma.tag.create({ data: { userId: user.id, name: "original" } });
+    const failingClient = prisma.$extends({
+      query: {
+        tag: {
+          create() {
+            throw new Error("Simulated storage failure");
+          },
+        },
+      },
+    });
+    const isolatedApp = createApp({
+      checkDatabase: async () => undefined,
+      importService: new ImportService(
+        new ImportRepository(failingClient as unknown as PrismaClient),
+      ),
+    });
+    const response = await request(isolatedApp)
+      .post("/api/v1/import/json")
+      .set("Authorization", `Bearer ${createAccessToken({ sub: user.id, emailVerified: false })}`)
+      .send(validBackup());
+    expect(response.status).toBe(500);
+    expect(await prisma.application.findUnique({ where: { id: existing.id } })).toMatchObject({
+      company: "Original application",
+    });
+    expect(await prisma.tag.findUnique({ where: { id: tag.id } })).toMatchObject({
+      name: "original",
+    });
+    expect(await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).toMatchObject({
+      name: "Original profile",
+      theme: "SYSTEM",
+    });
+    expect(await prisma.application.count({ where: { userId: user.id } })).toBe(1);
+  });
 });
