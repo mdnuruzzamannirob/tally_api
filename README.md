@@ -91,17 +91,24 @@ failures have retained evidence. See the paired workspace's
 [metrics inventory](../tally_web/PROJECT_METRICS_INVENTORY.md); these results were
 not rerun to write this README.
 
-## Demo and operational status
+## Normal production and optional demo
 
-Follow [demo operations](docs/demo.md) and [the demo template](.env.demo.example)
+The production service keeps normal signup/login, OAuth and configured email
+behavior, with `DEMO_MODE=false` (the default). Recruiters get the recording and
+their own normal-account testing instructions in the
+[frontend README](https://github.com/mdnuruzzamannirob/tally#for-recruiters).
+
+For an optional isolated profile, follow [demo operations](docs/demo.md) and [the demo template](.env.demo.example)
 for a dedicated disposable database/service. Demo mode is off by default; it
 blocks account security/OAuth actions, turns off the worker and substitutes a
 fail-closed mail transport. Production demos still require secure cookies and a
 strong signing secret.
 
-The last public health probe returned 503 on 28 November 2026. A working public
-demo, live OAuth/mail acceptance, hosted CI and production backup/PITR policy are
-not established by the local results. Reminder delivery is at-least-once. The
+On 29 November 2026, the paused Supabase project was resumed and API health
+returned 200. All six existing migrations were already applied. Hosted API CI
+passed, and the live normal-account GitHub/session/data workflow was checked.
+Google OAuth, email/password signup delivery and production backup/PITR policy
+remain unverified by that check. Reminder delivery is at-least-once. The
 [recovery runbook](docs/recovery.md) distinguishes local restore rehearsal from
 production recovery guarantees.
 

@@ -1,5 +1,11 @@
 # Isolated recruiter demo
 
+This is an optional isolated profile. The production Tally application retains
+normal account signup/login, OAuth and configured email behavior, with
+`DEMO_MODE=false` (the default). Recruiter recording and normal-account testing
+instructions live in the frontend README. Do not switch the normal service to
+this profile as part of database recovery.
+
 The demo profile is opt-in and separate from normal accounts. `DEMO_MODE=false`
 is the default. Do not enable it on a database containing real user information;
 provision a dedicated PostgreSQL database and API service.
