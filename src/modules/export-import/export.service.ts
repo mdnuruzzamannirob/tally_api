@@ -36,7 +36,7 @@ export class ExportService {
         employmentType: application.employmentType,
         source: application.source,
         status: application.status,
-        appliedAt: application.appliedAt,
+        appliedAt: application.appliedAt?.toISOString().slice(0, 10) ?? null,
         salaryMin: application.salaryMin?.toString() ?? null,
         salaryMax: application.salaryMax?.toString() ?? null,
         currency: application.currency,

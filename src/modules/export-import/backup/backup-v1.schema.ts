@@ -26,7 +26,15 @@ const calendarDate = z
     return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
   }, "Invalid date.")
   .transform((value) => new Date(`${value}T00:00:00.000Z`));
-const nullableCalendarDate = calendarDate.nullable();
+const nullableCalendarDate = z.preprocess(
+  // Earlier version-1 exports serialized the SQL date as a UTC-midnight ISO
+  // timestamp. Accept that exact legacy shape without relaxing date validity.
+  (value) =>
+    typeof value === "string" && /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/.test(value)
+      ? value.slice(0, 10)
+      : value,
+  calendarDate.nullable(),
+);
 const nullableTimestamp = isoTimestamp.nullable();
 const decimal = z.union([z.number().finite().nonnegative(), z.string().regex(/^\d+(\.\d+)?$/)]);
 const nullableDecimal = decimal.nullable();

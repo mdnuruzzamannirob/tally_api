@@ -70,18 +70,35 @@ describe("import backup validator", () => {
     expect(() => importBackupSchema.parse(inconsistent)).toThrow();
   });
 
-  it.each(["2026-02-31", "2026-02-29", "2024-02-30", "2026-13-01", "2026-01-00"])(
-    "rejects impossible calendar date %s",
-    (appliedAt) => {
-      const backup = validBackup();
-      expect(
-        importBackupSchema.safeParse({
-          ...backup,
-          applications: backup.applications.map((application) => ({ ...application, appliedAt })),
-        }).success,
-      ).toBe(false);
-    },
-  );
+  it.each([
+    "2026-02-31",
+    "2026-02-29",
+    "2024-02-30",
+    "2026-13-01",
+    "2026-01-00",
+    "2026-02-31T00:00:00.000Z",
+    "2024-02-29T12:00:00.000Z",
+  ])("rejects impossible calendar date %s", (appliedAt) => {
+    const backup = validBackup();
+    expect(
+      importBackupSchema.safeParse({
+        ...backup,
+        applications: backup.applications.map((application) => ({ ...application, appliedAt })),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts the UTC-midnight date shape from earlier version-1 exports", () => {
+    const backup = validBackup();
+    const parsed = importBackupSchema.parse({
+      ...backup,
+      applications: backup.applications.map((application) => ({
+        ...application,
+        appliedAt: "2024-02-29T00:00:00.000Z",
+      })),
+    });
+    expect(parsed.applications[0]?.appliedAt).toEqual(new Date("2024-02-29T00:00:00.000Z"));
+  });
 
   it.each(["2024-02-29", "2026-02-28", null])("preserves valid calendar date %s", (appliedAt) => {
     const backup = validBackup();
