@@ -2,6 +2,7 @@
 
 Maintained operational entry points:
 
+- [Project setup and API overview](../README.md)
 - [Deployment](deployment.md)
 - [Isolated recruiter demo](demo.md)
 - [Release verification](release-verification.md)
