@@ -9,6 +9,7 @@ import express from "express";
 import helmet from "helmet";
 
 import { API_PREFIX, JSON_BODY_LIMIT } from "./core/config/app.config.js";
+import { env } from "./core/config/env.js";
 import { corsOptions } from "./core/config/cors.config.js";
 import { errorMiddleware } from "./http/middleware/error-handler.middleware.js";
 import { notFoundMiddleware } from "./http/middleware/not-found.middleware.js";
@@ -30,7 +31,8 @@ export function createApp(overrides: AppDependencies = {}): Express {
   app.use(requestLoggerMiddleware);
   app.use(helmet());
   app.use(cors(corsOptions));
-  app.use(`${API_PREFIX}/webhooks`, createEmailWebhookRouter(new EmailEventsRepository(prisma)));
+  if (!env.DEMO_MODE)
+    app.use(`${API_PREFIX}/webhooks`, createEmailWebhookRouter(new EmailEventsRepository(prisma)));
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(cookieParser());
   app.use(compression());

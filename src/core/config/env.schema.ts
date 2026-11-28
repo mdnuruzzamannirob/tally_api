@@ -49,6 +49,7 @@ const databaseUrlSchema = z
 const envSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvironments).default("development"),
+    DEMO_MODE: booleanSchema.default(false),
     NOTIFICATION_WORKER_ENABLED: booleanSchema.default(true),
     PORT: z.coerce.number().int().min(1).max(65_535).default(5000),
     DATABASE_URL: databaseUrlSchema,
@@ -100,7 +101,18 @@ const envSchema = z
         message: "Must contain at least 32 bytes in production.",
       });
     }
-    if (value.EMAIL_PROVIDER === "console" && value.NODE_ENV === "production") {
+    if (
+      value.DEMO_MODE &&
+      (value.EMAIL_PROVIDER !== "console" || value.NOTIFICATION_WORKER_ENABLED)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["DEMO_MODE"],
+        message:
+          "Demo requires EMAIL_PROVIDER=console and NOTIFICATION_WORKER_ENABLED=false. Delivery is disabled by the demo transport.",
+      });
+    }
+    if (value.EMAIL_PROVIDER === "console" && value.NODE_ENV === "production" && !value.DEMO_MODE) {
       context.addIssue({
         code: "custom",
         path: ["EMAIL_PROVIDER"],
@@ -194,7 +206,7 @@ const envSchema = z
       "GITHUB_CLIENT_ID",
       "GITHUB_CLIENT_SECRET",
     ] as const) {
-      if (!value[key])
+      if (!value[key] && !value.DEMO_MODE)
         context.addIssue({ code: "custom", path: [key], message: "Required in production." });
     }
     if (!value.COOKIE_SECURE) {

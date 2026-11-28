@@ -10,5 +10,6 @@ coverage/
 !.env.example
 !.env.test.example
 !.env.production.example
+!.env.demo.example
 
 postgres-data/

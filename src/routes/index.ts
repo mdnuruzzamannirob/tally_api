@@ -45,6 +45,8 @@ import { UserRepository } from "../modules/users/users.repository.js";
 import { UserService } from "../modules/users/users.service.js";
 import { createUsersRouter } from "../modules/users/users.routes.js";
 import { createOpenApiRouter } from "./openapi.routes.js";
+import { env } from "../core/config/env.js";
+import { createDemoRouter, demoBoundary } from "../modules/demo/demo.routes.js";
 
 export interface AppDependencies {
   checkDatabase?: () => Promise<void>;
@@ -98,6 +100,10 @@ export function createApiRouter(overrides: AppDependencies = {}): Router {
   router.use(globalApiRateLimit);
   router.use(createOpenApiRouter());
   router.use(createHealthRouter(dependencies.healthService));
+  if (env.DEMO_MODE) {
+    router.use(createDemoRouter(dependencies.authService));
+    router.use(demoBoundary);
+  }
   router.use("/auth", createAuthRouter(dependencies.authService));
   router.use(
     "/auth",

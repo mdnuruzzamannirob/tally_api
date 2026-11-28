@@ -23,6 +23,119 @@
     { "name": "Export & Import", "description": "Portable backup and CSV workflows." }
   ],
   "paths": {
+    "/auth/demo": {
+      "post": {
+        "operationId": "startDemo",
+        "tags": ["Authentication"],
+        "summary": "Start Demo",
+        "description": "Available only when DEMO_MODE=true. Requires the configured frontend Origin and X-Requested-With: XMLHttpRequest. Workspaces expire after 24 hours; reset restores only the authenticated visitor's fictional data. Normal deployments return 404.",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" }
+          },
+          {
+            "name": "X-Requested-With",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "const": "XMLHttpRequest" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resource created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    { "properties": { "data": { "$ref": "#/components/schemas/AuthData" } } }
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resource created successfully.",
+                  "data": {
+                    "accessToken": "eyJhbGciOiJIUzI1NiJ9.example.signature",
+                    "user": {
+                      "id": "cm0user123",
+                      "name": "Nirob Hasan",
+                      "email": "nirob@example.com",
+                      "emailVerified": true,
+                      "hasPassword": true,
+                      "providers": [],
+                      "preferences": {
+                        "theme": "dark",
+                        "defaultLandingPage": "dashboard",
+                        "timeZone": "Asia/Dhaka",
+                        "notificationsEnabled": true
+                      }
+                    }
+                  },
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/auth/demo/reset": {
+      "post": {
+        "operationId": "resetDemo",
+        "tags": ["Authentication"],
+        "summary": "Reset Demo",
+        "description": "Available only when DEMO_MODE=true. Requires the configured frontend Origin and X-Requested-With: XMLHttpRequest. Workspaces expire after 24 hours; reset restores only the authenticated visitor's fictional data. Normal deployments return 404.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" }
+          },
+          {
+            "name": "X-Requested-With",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "const": "XMLHttpRequest" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful API response.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessEnvelope" },
+                "example": {
+                  "success": true,
+                  "message": "Request completed successfully.",
+                  "data": {},
+                  "meta": { "requestId": "req_01HZXEXAMPLE" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
     "/notifications": {
       "get": {
         "operationId": "listNotifications",

@@ -26,6 +26,27 @@ const productionEnvironment = {
 };
 
 describe("environment configuration", () => {
+  it("allows an isolated production demo without live delivery or OAuth credentials", () => {
+    const demo = {
+      ...developmentEnvironment,
+      NODE_ENV: "production",
+      DEMO_MODE: "true",
+      NOTIFICATION_WORKER_ENABLED: "false",
+      ACCESS_TOKEN_SECRET: "a".repeat(32),
+      COOKIE_SECURE: "true",
+      COOKIE_SAME_SITE: "none",
+    };
+    expect(parseEnvironment(demo).DEMO_MODE).toBe(true);
+    expect(() => parseEnvironment({ ...demo, NOTIFICATION_WORKER_ENABLED: "true" })).toThrow(
+      /Demo requires/,
+    );
+    expect(() => parseEnvironment({ ...demo, EMAIL_PROVIDER: "sendgrid" })).toThrow();
+    expect(() => parseEnvironment({ ...demo, COOKIE_SECURE: "false" })).toThrow(/Must be true/);
+    expect(() => parseEnvironment({ ...demo, ACCESS_TOKEN_SECRET: "short" })).toThrow(/32 bytes/);
+    expect(() => parseEnvironment({ ...demo, DEMO_MODE: "false" })).toThrow(
+      /Console email|Required in production/,
+    );
+  });
   it("parses development defaults into typed values", () => {
     const env = parseEnvironment(developmentEnvironment);
 

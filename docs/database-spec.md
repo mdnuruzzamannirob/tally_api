@@ -1232,12 +1232,10 @@ Seed should create:
 - Sample interviews
 - Sample status history
 
-Recommended demo credentials:
-
-```txt
-email: demo@tally.local
-password: password123
-```
+Public demos use per-visitor workspaces through `POST /auth/demo` in the isolated
+demo profile. There are no shared credentials. See [demo operations](./demo.md).
+Local CLI seeding requires an operator-supplied `TALLY_SEED_PASSWORD` and creates
+a new fictional user without overwriting existing accounts.
 
 Seed must not run automatically in production.
 

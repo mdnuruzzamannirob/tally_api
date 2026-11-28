@@ -3,6 +3,7 @@
 Maintained operational entry points:
 
 - [Deployment](deployment.md)
+- [Isolated recruiter demo](demo.md)
 - [Release verification](release-verification.md)
 - [Recovery and rollback boundaries](recovery.md)
 - [Testing and database isolation](testing.md)

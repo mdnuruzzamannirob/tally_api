@@ -54,7 +54,9 @@ if (result.env) {
     console.warn(
       "Resend test sender: use your Resend account's own recipient address; verify a domain for other recipients.",
     );
-  if (env.EMAIL_PROVIDER === "console")
+  if (env.DEMO_MODE)
+    console.warn("Demo profile: email delivery fails closed, OAuth/account actions are disabled.");
+  else if (env.EMAIL_PROVIDER === "console")
     console.warn("Console provider logs emails; it does not send them.");
   // This validates configuration, not provider credentials, DNS, or connectivity.
 }

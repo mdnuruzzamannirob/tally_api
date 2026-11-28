@@ -9,6 +9,7 @@ import { MailgunEmailProvider } from "./providers/mailgun.provider.js";
 import { ResendEmailProvider } from "./providers/resend.provider.js";
 import { SendGridEmailProvider } from "./providers/sendgrid.provider.js";
 import { SmtpEmailProvider } from "./providers/smtp.provider.js";
+import { env } from "../core/config/env.js";
 
 export type { EmailService } from "./email.types.js";
 export { buildPasswordResetUrl, buildVerificationUrl } from "./email-links.js";
@@ -60,6 +61,13 @@ class DefaultEmailService implements EmailService {
 }
 
 export function createEmailProvider(): EmailProvider {
+  // Fail closed: demo requests must never deliver mail, even if provider keys exist.
+  if (env.DEMO_MODE)
+    return {
+      send: async () => {
+        throw new Error("Email delivery is disabled in the demo.");
+      },
+    };
   const providers: Record<typeof emailConfig.provider, EmailProvider> = {
     console: new ConsoleEmailProvider(),
     brevo: new BrevoEmailProvider(),

@@ -219,6 +219,280 @@
       "name": "01 - Authentication",
       "item": [
         {
+          "name": "Start Demo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+              { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+            ],
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/auth/demo",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "demo"]
+            },
+            "description": "Start Demo. See {{openApiUrl}} for the authoritative schema."
+          },
+          "response": [
+            {
+              "name": "201 - Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": { "type": "noauth" },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo"]
+                },
+                "description": "Start Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Resource created successfully.\",\n  \"data\": {},\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "400 - Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": { "type": "noauth" },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo"]
+                },
+                "description": "Start Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The request is invalid.\",\n  \"error\": {\n    \"code\": \"BAD_REQUEST\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "409 - Conflict",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": { "type": "noauth" },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo"]
+                },
+                "description": "Start Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The request conflicts with existing data.\",\n  \"error\": {\n    \"code\": \"CONFLICT\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "429 - Rate Limited",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": { "type": "noauth" },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo"]
+                },
+                "description": "Start Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Too many requests.\",\n  \"error\": {\n    \"code\": \"RATE_LIMITED\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset Demo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+              { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/demo/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "demo", "reset"]
+            },
+            "description": "Reset Demo. See {{openApiUrl}} for the authoritative schema."
+          },
+          "response": [
+            {
+              "name": "200 - Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo", "reset"]
+                },
+                "description": "Reset Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Request completed successfully.\",\n  \"data\": {},\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "400 - Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo", "reset"]
+                },
+                "description": "Reset Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The request is invalid.\",\n  \"error\": {\n    \"code\": \"BAD_REQUEST\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "401 - Unauthorized",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo", "reset"]
+                },
+                "description": "Reset Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Authentication is required.\",\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "409 - Conflict",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo", "reset"]
+                },
+                "description": "Reset Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The request conflicts with existing data.\",\n  \"error\": {\n    \"code\": \"CONFLICT\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "429 - Rate Limited",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json", "type": "text" },
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/demo/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "demo", "reset"]
+                },
+                "description": "Reset Demo. See {{openApiUrl}} for the authoritative schema."
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Too many requests.\",\n  \"error\": {\n    \"code\": \"RATE_LIMITED\"\n  },\n  \"meta\": {\n    \"requestId\": \"req_01HZXEXAMPLE\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Register a user",
           "request": {
             "method": "POST",
@@ -509,7 +783,8 @@
             "method": "POST",
             "header": [
               { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+              { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+              { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
             ],
             "auth": { "type": "noauth" },
             "url": {
@@ -538,7 +813,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -561,7 +837,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -584,7 +861,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -607,7 +885,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -630,7 +909,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -655,7 +935,8 @@
             "method": "POST",
             "header": [
               { "key": "Accept", "value": "application/json", "type": "text" },
-              { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+              { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+              { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
             ],
             "auth": { "type": "noauth" },
             "url": {
@@ -685,7 +966,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -708,7 +990,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -731,7 +1014,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -754,7 +1038,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {
@@ -777,7 +1062,8 @@
                 "method": "POST",
                 "header": [
                   { "key": "Accept", "value": "application/json", "type": "text" },
-                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" }
+                  { "key": "Origin", "value": "{{webAppUrl}}", "type": "text" },
+                  { "key": "X-Requested-With", "value": "XMLHttpRequest", "type": "text" }
                 ],
                 "auth": { "type": "noauth" },
                 "url": {

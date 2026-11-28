@@ -7,9 +7,24 @@ export type OpenApiRoute = {
   query?: string[];
   params?: string[];
   response?: "created" | "redirect" | "file";
+  demoOnly?: boolean;
 };
 
 export const openApiRoutes: OpenApiRoute[] = [
+  {
+    method: "post",
+    path: "/auth/demo",
+    operationId: "startDemo",
+    response: "created",
+    demoOnly: true,
+  },
+  {
+    method: "post",
+    path: "/auth/demo/reset",
+    operationId: "resetDemo",
+    auth: "bearer",
+    demoOnly: true,
+  },
   { method: "get", path: "/notifications", operationId: "listNotifications", auth: "bearer" },
   {
     method: "patch",

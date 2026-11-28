@@ -384,6 +384,7 @@ async function generateOpenApi(): Promise<void> {
     resendWebhook: "MessageData",
     register: "MessageData",
     login: "AuthData",
+    startDemo: "AuthData",
     logout: "MessageData",
     refresh: "AccessTokenData",
     getCurrentUser: "UserData",
@@ -457,6 +458,17 @@ async function generateOpenApi(): Promise<void> {
     },
   });
   const parameters = (route: (typeof openApiRoutes)[number]) => [
+    ...(route.demoOnly
+      ? [
+          { name: "Origin", in: "header", required: true, schema: string("uri") },
+          {
+            name: "X-Requested-With",
+            in: "header",
+            required: true,
+            schema: { type: "string", const: "XMLHttpRequest" },
+          },
+        ]
+      : []),
     ...(route.operationId === "resendWebhook"
       ? ["svix-id", "svix-timestamp", "svix-signature"].map((name) => ({
           name,
@@ -479,6 +491,11 @@ async function generateOpenApi(): Promise<void> {
       "429": { $ref: "#/components/responses/RateLimited" },
       "500": { $ref: "#/components/responses/InternalError" },
     };
+    if (route.demoOnly) {
+      responses["403"] = { $ref: "#/components/responses/Forbidden" };
+      responses["404"] = { $ref: "#/components/responses/NotFound" };
+      responses["503"] = { $ref: "#/components/responses/ServiceUnavailable" };
+    }
     if (route.auth) {
       responses["401"] = { $ref: "#/components/responses/Unauthorized" };
       responses["403"] = { $ref: "#/components/responses/Forbidden" };
@@ -526,7 +543,8 @@ async function generateOpenApi(): Promise<void> {
       };
     }
 
-    const dataExample = successExamples[route.operationId] ?? {};
+    const dataExample =
+      successExamples[route.operationId === "startDemo" ? "login" : route.operationId] ?? {};
     return {
       [route.response === "created" ? "201" : "200"]: {
         description:
@@ -582,11 +600,13 @@ async function generateOpenApi(): Promise<void> {
       operationId: route.operationId,
       tags: [operationTag(route.path)],
       summary: operationSummary(route.operationId),
-      description: `${operationSummary(route.operationId)} using the versioned Tally API.`,
+      description: route.demoOnly
+        ? "Available only when DEMO_MODE=true. Requires the configured frontend Origin and X-Requested-With: XMLHttpRequest. Workspaces expire after 24 hours; reset restores only the authenticated visitor's fictional data. Normal deployments return 404."
+        : `${operationSummary(route.operationId)} using the versioned Tally API.`,
       ...(route.auth
         ? { security: [{ [route.auth === "bearer" ? "bearerAuth" : "refreshCookieAuth"]: [] }] }
         : {}),
-      ...(route.params || route.query || route.operationId === "resendWebhook"
+      ...(route.demoOnly || route.params || route.query || route.operationId === "resendWebhook"
         ? { parameters: parameters(route) }
         : {}),
       ...(route.body ? { requestBody: requestBody(route.body) } : {}),
@@ -916,8 +936,11 @@ async function generatePostman(): Promise<void> {
       header: [
         { key: "Accept", value: "application/json", type: "text" },
         ...(route.body ? [{ key: "Content-Type", value: "application/json", type: "text" }] : []),
-        ...(route.auth === "cookie"
-          ? [{ key: "Origin", value: "{{webAppUrl}}", type: "text" }]
+        ...(route.auth === "cookie" || route.demoOnly
+          ? [
+              { key: "Origin", value: "{{webAppUrl}}", type: "text" },
+              { key: "X-Requested-With", value: "XMLHttpRequest", type: "text" },
+            ]
           : []),
       ],
       auth: requestAuth(route),
