@@ -69,4 +69,28 @@ describe("import backup validator", () => {
     inconsistentApplication.statusHistory = [];
     expect(() => importBackupSchema.parse(inconsistent)).toThrow();
   });
+
+  it.each(["2026-02-31", "2026-02-29", "2024-02-30", "2026-13-01", "2026-01-00"])(
+    "rejects impossible calendar date %s",
+    (appliedAt) => {
+      const backup = validBackup();
+      expect(
+        importBackupSchema.safeParse({
+          ...backup,
+          applications: backup.applications.map((application) => ({ ...application, appliedAt })),
+        }).success,
+      ).toBe(false);
+    },
+  );
+
+  it.each(["2024-02-29", "2026-02-28", null])("preserves valid calendar date %s", (appliedAt) => {
+    const backup = validBackup();
+    const parsed = importBackupSchema.parse({
+      ...backup,
+      applications: backup.applications.map((application) => ({ ...application, appliedAt })),
+    });
+    expect(parsed.applications[0]?.appliedAt).toEqual(
+      appliedAt ? new Date(`${appliedAt}T00:00:00.000Z`) : null,
+    );
+  });
 });

@@ -7,6 +7,8 @@ import { createAccessToken } from "../../../src/core/security/jwt.js";
 import type { EmailService } from "../../../src/email/email.service.js";
 import { ImportService } from "../../../src/modules/export-import/import.service.js";
 import { ImportRepository } from "../../../src/modules/export-import/export-import.repository.js";
+import { ExportRepository } from "../../../src/modules/export-import/export-import.repository.js";
+import { ExportService } from "../../../src/modules/export-import/export.service.js";
 import type { PrismaClient } from "../../../src/generated/prisma/client.js";
 import { AuthRepository } from "../../../src/modules/auth/auth.repository.js";
 import { AuthService } from "../../../src/modules/auth/auth.service.js";
@@ -93,6 +95,7 @@ describe.skipIf(!runDatabaseTests)("JSON import", () => {
       checkDatabase: async () => undefined,
       authService: new AuthService(new AuthRepository(prisma), new TestEmailService()),
       importService: new ImportService(new ImportRepository(prisma)),
+      exportService: new ExportService(new ExportRepository(prisma)),
     });
   });
 
@@ -156,5 +159,53 @@ describe.skipIf(!runDatabaseTests)("JSON import", () => {
     await expect(
       prisma.application.findUnique({ where: { id: existing.id } }),
     ).resolves.not.toBeNull();
+  });
+
+  it("rejects an impossible date before replacing applications or profile", async () => {
+    const user = await prisma.user.create({
+      data: { email: "date-import@example.test", name: "Keep profile" },
+    });
+    const existing = await prisma.application.create({
+      data: { userId: user.id, company: "Keep", role: "Role" },
+    });
+    const backup = validBackup();
+    backup.applications[0]!.appliedAt = "2026-02-31";
+    const response = await request(app)
+      .post("/api/v1/import/json")
+      .set("Authorization", `Bearer ${createAccessToken({ sub: user.id, emailVerified: false })}`)
+      .send(backup);
+    expect(response.status).toBe(400);
+    expect(await prisma.application.findUnique({ where: { id: existing.id } })).not.toBeNull();
+    expect(await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).toMatchObject({
+      name: "Keep profile",
+    });
+  });
+
+  it("preserves a leap-day date through export and reimport", async () => {
+    const user = await prisma.user.create({ data: { email: "date-roundtrip@example.test" } });
+    await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: "Leap",
+        role: "Role",
+        appliedAt: new Date("2024-02-29T00:00:00.000Z"),
+      },
+    });
+    const authorization = `Bearer ${createAccessToken({ sub: user.id, emailVerified: false })}`;
+    const exported = await request(app)
+      .get("/api/v1/export/json")
+      .set("Authorization", authorization);
+    expect(exported.status).toBe(200);
+    const backup =
+      typeof exported.body.version === "number" ? exported.body : JSON.parse(exported.text);
+    expect(backup.applications[0].appliedAt).toBe("2024-02-29");
+    const imported = await request(app)
+      .post("/api/v1/import/json")
+      .set("Authorization", authorization)
+      .send(backup);
+    expect(imported.status).toBe(200);
+    expect(
+      (await prisma.application.findFirstOrThrow({ where: { userId: user.id } })).appliedAt,
+    ).toEqual(new Date("2024-02-29T00:00:00.000Z"));
   });
 });
